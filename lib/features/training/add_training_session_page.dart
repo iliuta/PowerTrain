@@ -453,24 +453,65 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           // Duration
           Row(
             children: [
-              const Text('Duration: '),
+              const SizedBox(width: 80, child: Text('Duration:')),
+              IconButton(
+                icon: const Icon(Icons.remove),
+                onPressed: interval.duration > 10
+                    ? () {
+                        final newDuration = (interval.duration - 10).clamp(10, 3600);
+                        onUpdate(UnitTrainingInterval(
+                          title: interval.title,
+                          duration: newDuration,
+                          targets: interval.targets,
+                          resistanceLevel: interval.resistanceLevel,
+                          repeat: interval.repeat,
+                        ));
+                      }
+                    : null,
+              ),
               Expanded(
-                child: Slider(
-                  value: interval.duration.toDouble(),
-                  min: 30,
-                  max: 3600,
-                  divisions: (3600 - 30) ~/ 30,
-                  label: '${Duration(seconds: interval.duration).inMinutes}:${(interval.duration % 60).toString().padLeft(2, '0')}',
+                child: TextFormField(
+                  key: ValueKey('duration_${interval.duration}'),
+                  initialValue: '${Duration(seconds: interval.duration).inMinutes}:${(interval.duration % 60).toString().padLeft(2, '0')}',
+                  textAlign: TextAlign.center,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                  keyboardType: TextInputType.number,
                   onChanged: (value) {
-                    onUpdate(UnitTrainingInterval(
-                      title: interval.title,
-                      duration: value.round(),
-                      targets: interval.targets,
-                      resistanceLevel: interval.resistanceLevel,
-                      repeat: interval.repeat,
-                    ));
+                    // Parse MM:SS format
+                    final parts = value.split(':');
+                    if (parts.length == 2) {
+                      final minutes = int.tryParse(parts[0]) ?? 0;
+                      final seconds = int.tryParse(parts[1]) ?? 0;
+                      final totalSeconds = (minutes * 60 + seconds).clamp(10, 3600);
+                      onUpdate(UnitTrainingInterval(
+                        title: interval.title,
+                        duration: totalSeconds,
+                        targets: interval.targets,
+                        resistanceLevel: interval.resistanceLevel,
+                        repeat: interval.repeat,
+                      ));
+                    }
                   },
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: interval.duration < 3600
+                    ? () {
+                        final newDuration = (interval.duration + 10).clamp(10, 3600);
+                        onUpdate(UnitTrainingInterval(
+                          title: interval.title,
+                          duration: newDuration,
+                          targets: interval.targets,
+                          resistanceLevel: interval.resistanceLevel,
+                          repeat: interval.repeat,
+                        ));
+                      }
+                    : null,
               ),
             ],
           ),
@@ -646,23 +687,57 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           // Repeat count
           Row(
             children: [
-              const Text('Repeat: '),
+              const SizedBox(width: 80, child: Text('Repeat:')),
+              IconButton(
+                icon: const Icon(Icons.remove),
+                onPressed: (interval.repeat ?? 1) > 1
+                    ? () {
+                        setState(() {
+                          _intervals[key] = GroupTrainingInterval(
+                            intervals: interval.intervals,
+                            repeat: ((interval.repeat ?? 1) - 1).clamp(1, 20),
+                          );
+                        });
+                      }
+                    : null,
+              ),
               Expanded(
-                child: Slider(
-                  value: (interval.repeat ?? 1).toDouble(),
-                  min: 1,
-                  max: 20,
-                  divisions: 19,
-                  label: '${interval.repeat ?? 1}x',
+                child: TextFormField(
+                  key: ValueKey('repeat_${interval.repeat}'),
+                  initialValue: '${interval.repeat ?? 1}',
+                  textAlign: TextAlign.center,
+                  decoration: const InputDecoration(
+                    suffixText: 'x',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                  keyboardType: TextInputType.number,
                   onChanged: (value) {
-                    setState(() {
-                      _intervals[key] = GroupTrainingInterval(
-                        intervals: interval.intervals,
-                        repeat: value.round(),
-                      );
-                    });
+                    final intValue = int.tryParse(value);
+                    if (intValue != null) {
+                      setState(() {
+                        _intervals[key] = GroupTrainingInterval(
+                          intervals: interval.intervals,
+                          repeat: intValue.clamp(1, 20),
+                        );
+                      });
+                    }
                   },
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: (interval.repeat ?? 1) < 20
+                    ? () {
+                        setState(() {
+                          _intervals[key] = GroupTrainingInterval(
+                            intervals: interval.intervals,
+                            repeat: ((interval.repeat ?? 1) + 1).clamp(1, 20),
+                          );
+                        });
+                      }
+                    : null,
               ),
             ],
           ),
