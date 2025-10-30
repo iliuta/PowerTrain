@@ -13,6 +13,7 @@ class TrainingSessionChart extends StatefulWidget {
   final DeviceType machineType;
   final double height;
   final LiveDataDisplayConfig? config;
+  final double? currentProgress;
 
   const TrainingSessionChart({
     super.key,
@@ -20,6 +21,7 @@ class TrainingSessionChart extends StatefulWidget {
     required this.machineType,
     this.height = 120,
     this.config,
+    this.currentProgress,
   });
 
   @override
@@ -69,6 +71,7 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
                             intensityKey: intensityKey,
                             machineType: widget.machineType,
                             hoveredIndex: _hoveredIntervalIndex,
+                            currentProgress: widget.currentProgress,
                           ),
                         ),
                       ),
@@ -265,6 +268,7 @@ class _TrainingChartPainter extends CustomPainter {
   final String intensityKey;
   final int? hoveredIndex;
   final DeviceType machineType;
+  final double? currentProgress;
 
   _TrainingChartPainter({
     required this.intervals,
@@ -272,6 +276,7 @@ class _TrainingChartPainter extends CustomPainter {
     required this.intensityKey,
     required this.machineType,
     this.hoveredIndex,
+    this.currentProgress,
   });
 
   @override
@@ -393,6 +398,32 @@ class _TrainingChartPainter extends CustomPainter {
       Offset(size.width, size.height),
       baselinePaint,
     );
+    
+    // Draw progress indicator line
+    if (currentProgress != null && currentProgress! >= 0 && currentProgress! <= 1) {
+      final progressX = currentProgress! * size.width;
+      final progressPaint = Paint()
+        ..color = Colors.blue
+        ..strokeWidth = 3
+        ..style = PaintingStyle.stroke;
+      
+      // Draw vertical line
+      canvas.drawLine(
+        Offset(progressX, 0),
+        Offset(progressX, size.height),
+        progressPaint,
+      );
+      
+      // Draw circle at the bottom
+      final circlePaint = Paint()
+        ..color = Colors.blue
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(
+        Offset(progressX, size.height),
+        4,
+        circlePaint,
+      );
+    }
   }
 
   double _getIntensityValue(ExpandedUnitTrainingInterval interval) {
@@ -456,6 +487,7 @@ class _TrainingChartPainter extends CustomPainter {
            oldDelegate.totalDuration != totalDuration ||
            oldDelegate.intensityKey != intensityKey ||
            oldDelegate.machineType != machineType ||
-           oldDelegate.hoveredIndex != hoveredIndex;
+           oldDelegate.hoveredIndex != hoveredIndex ||
+           oldDelegate.currentProgress != currentProgress;
   }
 }

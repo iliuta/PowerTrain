@@ -33,6 +33,9 @@ class TrainingSessionBody extends StatelessWidget {
             timeLeft: controller.mainTimeLeft,
             elapsed: controller.elapsed,
             formatTime: _formatTime,
+            intervals: controller.intervals,
+            machineType: session.ftmsMachineType,
+            config: config,
           ),
           const SizedBox(height: 8),
           Expanded(
