@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
-import 'package:ftms/features/training/training_interval_list.dart';
+import 'package:ftms/features/training/widgets/training_interval_list.dart';
 
 void main() {
   group('TrainingIntervalList', () {
@@ -31,7 +31,7 @@ void main() {
       // Current interval should show time left in bold
       expect(find.text('00:100'), findsOneWidget);
       // Next interval should show its duration
-      expect(find.text('30s'), findsOneWidget);
+      expect(find.text('00:30'), findsOneWidget);
       // Targets should be displayed
       expect(find.textContaining('Targets:'), findsNWidgets(2));
     });

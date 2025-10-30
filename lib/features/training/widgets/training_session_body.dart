@@ -4,7 +4,7 @@ import '../../../core/config/live_data_display_config.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../training_session_controller.dart';
 import 'session_progress_bar.dart';
-import '../training_interval_list.dart';
+import 'training_interval_list.dart';
 import 'live_ftms_data_widget.dart';
 
 /// Body content for the training session screen
@@ -33,6 +33,9 @@ class TrainingSessionBody extends StatelessWidget {
             timeLeft: controller.mainTimeLeft,
             elapsed: controller.elapsed,
             formatTime: _formatTime,
+            intervals: controller.intervals,
+            machineType: session.ftmsMachineType,
+            config: config,
           ),
           const SizedBox(height: 8),
           Expanded(
