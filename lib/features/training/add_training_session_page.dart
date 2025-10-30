@@ -470,32 +470,17 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     : null,
               ),
               Expanded(
-                child: TextFormField(
-                  key: ValueKey('duration_${interval.duration}'),
-                  initialValue: '${Duration(seconds: interval.duration).inMinutes}:${(interval.duration % 60).toString().padLeft(2, '0')}',
-                  textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    // Parse MM:SS format
-                    final parts = value.split(':');
-                    if (parts.length == 2) {
-                      final minutes = int.tryParse(parts[0]) ?? 0;
-                      final seconds = int.tryParse(parts[1]) ?? 0;
-                      final totalSeconds = (minutes * 60 + seconds).clamp(10, 3600);
-                      onUpdate(UnitTrainingInterval(
-                        title: interval.title,
-                        duration: totalSeconds,
-                        targets: interval.targets,
-                        resistanceLevel: interval.resistanceLevel,
-                        repeat: interval.repeat,
-                      ));
-                    }
-                  },
+                  child: Text(
+                    '${Duration(seconds: interval.duration).inMinutes}:${(interval.duration % 60).toString().padLeft(2, '0')}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
               IconButton(
@@ -702,28 +687,17 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     : null,
               ),
               Expanded(
-                child: TextFormField(
-                  key: ValueKey('repeat_${interval.repeat}'),
-                  initialValue: '${interval.repeat ?? 1}',
-                  textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    suffixText: 'x',
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final intValue = int.tryParse(value);
-                    if (intValue != null) {
-                      setState(() {
-                        _intervals[key] = GroupTrainingInterval(
-                          intervals: interval.intervals,
-                          repeat: intValue.clamp(1, 20),
-                        );
-                      });
-                    }
-                  },
+                  child: Text(
+                    '${interval.repeat ?? 1}x',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
               IconButton(
