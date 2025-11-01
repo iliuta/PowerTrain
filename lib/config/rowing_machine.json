@@ -8,7 +8,7 @@
       "display": "speedometer",
       "formatter": "rowerPaceFormatter",
       "unit": "seconds/500m",
-      "min": 360,
+      "min": 300,
       "max": 60,
       "availableAsTarget": true,
       "targetRange": 0.08,
@@ -35,6 +35,13 @@
       "icon": "power",
       "min": 0,
       "max": 1500
+    },
+    {
+      "name": "Resistance Level",
+      "label": "Resistance",
+      "display": "number",
+      "formatter": "intFormatter",
+      "icon": "tune"
     },
     {
       "name": "Heart Rate",

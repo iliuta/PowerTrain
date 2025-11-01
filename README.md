@@ -71,16 +71,16 @@ flutter pub get
 
 #### Android (on a test phone)
 1. Connect your Android device via USB and enable developer mode.
-2. Build and install the APK:
+2. Build and install the APK for dev:
    ```zsh
    flutter build apk --release
-   flutter run -d <device_id>
+   flutter run -d <device_id> -PdevBuild
    ```
 The Android device ID can be found with `flutter devices`. It must be in developer mode.
 
    ```zsh
    flutter devicces
-   flutter install -d <device_id>
+   flutter install -d <device_id> -PdevBuild
    ```
 
 #### macOS

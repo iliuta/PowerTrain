@@ -37,12 +37,12 @@ class TrainingSessionBody extends StatelessWidget {
             machineType: session.ftmsMachineType,
             config: config,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Expanded(
             child: Row(
               children: [
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: TrainingIntervalList(
                     intervals: controller.intervals,
                     currentInterval: controller.currentInterval,
@@ -52,7 +52,7 @@ class TrainingSessionBody extends StatelessWidget {
                     config: config,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
                 Expanded(
                   flex: 3,
                   child: LiveFTMSDataWidget(

@@ -12,9 +12,9 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.iliuta.ftms"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    namespace = "com.iliuta.ftms"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.iliuta.ftms"
+        applicationId = project.hasProperty('devBuild') ? "com.iliuta.ftms.test" : "com.iliuta.ftms"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
