@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 
-import '../../core/config/live_data_display_config.dart';
-import '../../core/config/live_data_field_format_strategy.dart';
-import '../../core/widgets/live_data_icon_registry.dart';
+import '../../../core/config/live_data_display_config.dart';
+import '../../../core/config/live_data_field_format_strategy.dart';
+import '../../../core/widgets/live_data_icon_registry.dart';
 
 class IntervalTargetFieldsDisplay extends StatelessWidget {
   final Map<String, dynamic>? targets;
@@ -51,24 +51,22 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
       }
       
       children.add(Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (field.icon != null)
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Icon(getLiveDataIcon(field.icon), size: 16),
             ),
+          const SizedBox(width: 4),
           Flexible(
+            flex: 1,
             child: Text(
-              '${field.label}: ', 
-              style: labelStyle ?? const TextStyle(fontWeight: FontWeight.w500),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              formattedValue, 
+              formattedValue,
               style: valueStyle,
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              softWrap: false,
             ),
           ),
         ],

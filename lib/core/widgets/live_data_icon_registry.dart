@@ -9,7 +9,8 @@ final Map<String, IconData> liveDataIconRegistry = {
   'power': Icons.flash_on,
   'distance': Icons.straighten,
   'calories': Icons.local_fire_department,
-  'speed': Icons.speed
+  'speed': Icons.speed,
+  'resistance': Icons.tune
 };
 
 /// Utility to select the correct icon for FTMS display fields.

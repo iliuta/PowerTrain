@@ -5,7 +5,7 @@ import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 
 import '../../../core/config/live_data_display_config.dart';
-import '../interval_target_fields_display.dart';
+import 'interval_target_fields_display.dart';
 
 /// A visual chart showing training session intensity over time with interactive hover
 class TrainingSessionChart extends StatefulWidget {

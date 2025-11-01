@@ -25,7 +25,8 @@ class FtmsLiveDataDisplayWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final int columns = _calculateColumnCount(constraints.maxWidth, config.fields.length);
+        final orientation = MediaQuery.of(context).orientation;
+        final int columns = orientation == Orientation.portrait ? 3 : 4;
         final rows = _buildRows(columns);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -36,11 +37,6 @@ class FtmsLiveDataDisplayWidget extends StatelessWidget {
         );
       },
     );
-  }
-
-  int _calculateColumnCount(double maxWidth, int fieldCount) {
-    // Force 3 columns for better space utilization
-    return 3.clamp(1, fieldCount);
   }
 
   List<List<Widget>> _buildRows(int columns) {
