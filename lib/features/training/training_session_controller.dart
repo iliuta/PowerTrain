@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -46,9 +47,9 @@ class TrainingSessionController extends ChangeNotifier {
   bool wasAutoPaused = false; // Track if session was auto-paused due to disconnection
   int elapsed = 0;
   int intervalElapsed = 0;
-  int currentInterval = 0;
+  int currentIntervalIndex = 0;
   bool timerActive = false;
-  List<dynamic>? _lastFtmsParams;
+  Map<String, LiveDataFieldValue>? _lastFtmsParams;
   String? lastGeneratedFitFile;
   bool stravaUploadAttempted = false;
   bool stravaUploadSuccessful = false;
@@ -107,10 +108,10 @@ class TrainingSessionController extends ChangeNotifier {
 
   List<int> get intervalStartTimes => _intervalStartTimes;
 
-  ExpandedUnitTrainingInterval get current => _intervals[currentInterval];
+  ExpandedUnitTrainingInterval get current => _intervals[currentIntervalIndex];
 
   List<ExpandedUnitTrainingInterval> get remainingIntervals =>
-      _intervals.sublist(currentInterval);
+      _intervals.sublist(currentIntervalIndex);
 
   int get mainTimeLeft => _totalDuration - elapsed;
 
@@ -124,20 +125,15 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control after a short delay, then start session and set initial resistance if needed
     Future.delayed(const Duration(seconds: 2), () async {
       try {
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
+        await _requestMachineControl();
         notifyListeners();
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.startOrResume);
+        await _startOrResumeOnMachine();
         final firstResistance =
             _intervals.isNotEmpty ? _intervals[0].resistanceLevel : null;
         if (firstResistance != null) {
           await Future.delayed(const Duration(milliseconds: 200));
-          await _ftmsService.writeCommand(
-              MachineControlPointOpcodeType.setTargetResistanceLevel,
-              resistanceLevel: firstResistance);
+          await _setResistanceWithControl(firstResistance);
         }
       } catch (e) {
         debugPrint('Failed to request control/start: $e');
@@ -169,7 +165,7 @@ class TrainingSessionController extends ChangeNotifier {
     }
   }
 
-  Future<void> setResistanceWithControl(int resistance) async {
+  Future<void> _setResistanceWithControl(int resistance) async {
     try {
       if (!hasControl) {
         debugPrint('Not in control, skipping resistance set');
@@ -186,47 +182,49 @@ class TrainingSessionController extends ChangeNotifier {
   void _onFtmsData(DeviceData? data) {
     if (data == null) return;
 
+    final paramValueMap = _dataProcessor.processDeviceData(data);
+
     if (timerActive || sessionPaused) {
       // Record training data if recording is active and configured
-      if (_dataRecorder != null && _isRecordingConfigured && timerActive) {
-        try {
-          final paramValueMap = _dataProcessor.processDeviceData(data);
-          // Pass FtmsParameter map directly to training data recorder
-          _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
-        } catch (e) {
-          debugPrint('Failed to record data point: $e');
-        }
-      }
+      _recordDataPoint(paramValueMap);
       return;
     }
 
-    final params = data.getDeviceDataParameterValues();
     // Only start timer if at least one value has changed since last update
     if (_lastFtmsParams != null) {
-      bool changed = false;
-      for (int i = 0; i < params.length; i++) {
-        final prev = _lastFtmsParams![i];
-        final curr = params[i].value;
-        if (prev != curr) {
-          changed = true;
-          break;
-        }
-      }
-      if (changed) {
+      if (_hasDeviceDataChangedValues(paramValueMap)) {
         _startTimer();
         // Record the data point that triggered the timer start
-        if (_dataRecorder != null && _isRecordingConfigured && timerActive) {
-          try {
-            final paramValueMap = _dataProcessor.processDeviceData(data);
-            _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
-          } catch (e) {
-            debugPrint('Failed to record data point: $e');
-          }
-        }
+        _recordDataPoint(paramValueMap);
       }
     }
     // Store current values for next comparison
-    _lastFtmsParams = params.map((p) => p.value).toList();
+    _lastFtmsParams = paramValueMap;
+  }
+
+  void _recordDataPoint(Map<String, LiveDataFieldValue> paramValueMap) {
+    if (_dataRecorder != null && _isRecordingConfigured && timerActive) {
+      try {
+        _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
+      } catch (e) {
+        debugPrint('Failed to record data point: $e');
+      }
+    }
+  }
+
+  bool _hasDeviceDataChangedValues(Map<String, LiveDataFieldValue> params) {
+    if (_lastFtmsParams == null) return true;
+    for (final key in params.keys) {
+      final prevValue = _lastFtmsParams![key]?.value;
+      final currValue = params[key]?.value;
+      debugPrint('Comparing $key: prev=$prevValue, curr=$currValue, equal=${prevValue == currValue}');
+      if (prevValue != currValue) {
+        debugPrint('Value changed for $key');
+        return true;
+      }
+    }
+    debugPrint('No values changed');
+    return false;
   }
 
   void _onConnectionStateChanged(BluetoothConnectionState state) {
@@ -273,10 +271,9 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send resume command to FTMS device after reconnection
     Future.delayed(const Duration(milliseconds: 500), () async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
+        await _requestMachineControl();
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.startOrResume);
+        await _startOrResumeOnMachine();
         logger.i('📤 Requested control and sent startOrResume command after reconnection');
       } catch (e) {
         logger.e('Failed to request control/send resume command after reconnection: $e');
@@ -299,26 +296,17 @@ class TrainingSessionController extends ChangeNotifier {
     debugPrint(
         '🕐 Timer tick: elapsed=$elapsed, sessionCompleted=$sessionCompleted, sessionPaused=$sessionPaused, timerActive=$timerActive');
     if (elapsed >= _totalDuration) {
-      _timer?.cancel();
-      timerActive = false;
-      sessionCompleted = true;
-      _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
-
-      // Finish recording and generate FIT file (async)
-      _finishRecording().then((_) {
-        // Only notify listeners after recording is completely finished
-        notifyListeners();
-      });
+      stopSession();
     } else {
       // Update current interval first
-      int previousInterval = currentInterval;
-      while (currentInterval < _intervals.length - 1 &&
-          elapsed >= _intervalStartTimes[currentInterval + 1]) {
-        currentInterval++;
+      int previousIntervalIndex = currentIntervalIndex;
+      while (currentIntervalIndex < _intervals.length - 1 &&
+          elapsed >= _intervalStartTimes[currentIntervalIndex + 1]) {
+        currentIntervalIndex++;
       }
 
       // Calculate current interval timing using the correct current interval
-      intervalElapsed = elapsed - _intervalStartTimes[currentInterval];
+      intervalElapsed = elapsed - _intervalStartTimes[currentIntervalIndex];
 
       // Play warning sound when interval is about to finish (5 seconds or less remaining)
       final remainingTime = current.duration - intervalElapsed;
@@ -327,10 +315,10 @@ class TrainingSessionController extends ChangeNotifier {
       }
 
       // If interval changed and resistanceLevel is set, send command
-      if (currentInterval != previousInterval) {
-        final resistance = _intervals[currentInterval].resistanceLevel;
+      if (currentIntervalIndex != previousIntervalIndex) {
+        final resistance = _intervals[currentIntervalIndex].resistanceLevel;
         if (resistance != null) {
-          setResistanceWithControl(resistance);
+          _setResistanceWithControl(resistance);
         }
       }
       notifyListeners();
@@ -456,9 +444,9 @@ class TrainingSessionController extends ChangeNotifier {
 
     // Request control first, then send pause command to FTMS device
     Future.microtask(() async {
+      if (_disposed) return;
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
+        await _requestMachineControl();
         await Future.delayed(const Duration(milliseconds: 200));
         await _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
         logger.i('📤 Requested control and sent pause command');
@@ -481,10 +469,9 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send resume command to FTMS device
     Future.microtask(() async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
+        await _requestMachineControl();
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.startOrResume);
+        await _startOrResumeOnMachine();
         logger.i('📤 Requested control and sent startOrResume command for manual resume');
       } catch (e) {
         logger.e('Failed to request control/send resume command: $e');
@@ -493,6 +480,15 @@ class TrainingSessionController extends ChangeNotifier {
 
     // Restart timer - it will start automatically when FTMS data changes
     notifyListeners();
+  }
+
+  Future<void> _startOrResumeOnMachine() async {
+    await _ftmsService.writeCommand(MachineControlPointOpcodeType.startOrResume);
+  }
+
+  Future<void> _requestMachineControl() async {
+    await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
+    hasControl = true;
   }
 
   /// Stop the training session completely
@@ -507,8 +503,7 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send stop + reset commands to FTMS device
     Future.microtask(() async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
+        await _requestMachineControl();
         await Future.delayed(const Duration(milliseconds: 200));
         await _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
         await Future.delayed(const Duration(milliseconds: 200));

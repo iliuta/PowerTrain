@@ -203,7 +203,7 @@ void main() {
 
         expect(controller.intervals.length, 3);
         expect(controller.totalDuration, 210); // 60 + 120 + 30
-        expect(controller.currentInterval, 0);
+        expect(controller.currentIntervalIndex, 0);
         expect(controller.elapsed, 0);
         expect(controller.intervalElapsed, 0);
         expect(controller.sessionCompleted, false);
@@ -378,10 +378,10 @@ void main() {
       test('current interval getter returns correct interval', () {
         expect(controller.current.title, 'Warmup');
         
-        controller.currentInterval = 1;
+        controller.currentIntervalIndex = 1;
         expect(controller.current.title, 'Main');
         
-        controller.currentInterval = 2;
+        controller.currentIntervalIndex = 2;
         expect(controller.current.title, 'Cooldown');
       });
 
@@ -389,7 +389,7 @@ void main() {
         expect(controller.remainingIntervals.length, 3);
         expect(controller.remainingIntervals[0].title, 'Warmup');
         
-        controller.currentInterval = 1;
+        controller.currentIntervalIndex = 1;
         expect(controller.remainingIntervals.length, 2);
         expect(controller.remainingIntervals[0].title, 'Main');
       });
@@ -406,7 +406,7 @@ void main() {
         controller.intervalElapsed = 20;
         expect(controller.intervalTimeLeft, 40); // 60 - 20
         
-        controller.currentInterval = 1;
+        controller.currentIntervalIndex = 1;
         controller.intervalElapsed = 50;
         expect(controller.intervalTimeLeft, 70); // 120 - 50
       });
@@ -427,6 +427,29 @@ void main() {
 
       tearDown(() {
         controller.dispose();
+      });
+
+      test('does not start timer if values have not changed', () async {
+        final sameData1 = MockDeviceData([
+          MockParameter('Instantaneous Power', 100),
+        ]);
+
+        final sameData2 = MockDeviceData([
+          MockParameter('Instantaneous Power', 100),
+        ]);
+
+        // Send initial data
+        ftmsBloc.ftmsDeviceDataControllerSink.add(sameData1);
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(controller.timerActive, false);
+
+        // Send same data
+        await Future.delayed(const Duration(milliseconds: 100));
+        ftmsBloc.ftmsDeviceDataControllerSink.add(sameData2);
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(controller.timerActive, false);
       });
 
       test('processes FTMS data and starts timer when values change', () async {
@@ -452,28 +475,6 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 50));
 
         expect(controller.timerActive, true);
-      });
-
-      test('does not start timer if values have not changed', () async {
-        final sameData1 = MockDeviceData([
-          MockParameter('Instantaneous Power', 100),
-        ]);
-
-        final sameData2 = MockDeviceData([
-          MockParameter('Instantaneous Power', 100),
-        ]);
-
-        // Send initial data
-        ftmsBloc.ftmsDeviceDataControllerSink.add(sameData1);
-        await Future.delayed(const Duration(milliseconds: 50));
-
-        expect(controller.timerActive, false);
-
-        // Send same data
-        ftmsBloc.ftmsDeviceDataControllerSink.add(sameData2);
-        await Future.delayed(const Duration(milliseconds: 50));
-
-        expect(controller.timerActive, false);
       });
 
       test('ignores data when timer is already active', () async {
@@ -623,7 +624,7 @@ void main() {
         );
 
         // Initial state
-        expect(controller.currentInterval, 0);
+        expect(controller.currentIntervalIndex, 0);
         expect(controller.elapsed, 0);
         expect(controller.sessionCompleted, false);
 

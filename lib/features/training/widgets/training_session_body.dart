@@ -45,7 +45,7 @@ class TrainingSessionBody extends StatelessWidget {
                   flex: 1,
                   child: TrainingIntervalList(
                     intervals: controller.intervals,
-                    currentInterval: controller.currentInterval,
+                    currentInterval: controller.currentIntervalIndex,
                     intervalElapsed: controller.intervalElapsed,
                     intervalTimeLeft: controller.intervalTimeLeft,
                     formatMMSS: _formatMMSS,
