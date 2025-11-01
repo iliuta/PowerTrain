@@ -45,8 +45,8 @@ class TrainingSessionController extends ChangeNotifier {
   bool sessionPaused = false; // Add pause state
   bool isDeviceConnected = true; // Track device connection state
   bool wasAutoPaused = false; // Track if session was auto-paused due to disconnection
-  int elapsed = 0;
-  int intervalElapsed = 0;
+  int sessionElapsed = 0;
+  int currentIntervalElapsed = 0;
   int currentIntervalIndex = 0;
   bool timerActive = false;
   Map<String, LiveDataFieldValue>? _lastFtmsParams;
@@ -113,9 +113,9 @@ class TrainingSessionController extends ChangeNotifier {
   List<ExpandedUnitTrainingInterval> get remainingIntervals =>
       _intervals.sublist(currentIntervalIndex);
 
-  int get mainTimeLeft => _totalDuration - elapsed;
+  int get mainTimeLeft => _totalDuration - sessionElapsed;
 
-  int get intervalTimeLeft => current.duration - intervalElapsed;
+  int get intervalTimeLeft => current.duration - currentIntervalElapsed;
 
   bool get deviceConnected => isDeviceConnected;
 
@@ -127,14 +127,6 @@ class TrainingSessionController extends ChangeNotifier {
       try {
         await _requestMachineControl();
         notifyListeners();
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _startOrResumeOnMachine();
-        final firstResistance =
-            _intervals.isNotEmpty ? _intervals[0].resistanceLevel : null;
-        if (firstResistance != null) {
-          await Future.delayed(const Duration(milliseconds: 200));
-          await _setResistanceWithControl(firstResistance);
-        }
       } catch (e) {
         debugPrint('Failed to request control/start: $e');
       }
@@ -193,6 +185,7 @@ class TrainingSessionController extends ChangeNotifier {
     // Only start timer if at least one value has changed since last update
     if (_lastFtmsParams != null) {
       if (_hasDeviceDataChangedValues(paramValueMap)) {
+        _startSessionOnMachine();
         _startTimer();
         // Record the data point that triggered the timer start
         _recordDataPoint(paramValueMap);
@@ -290,32 +283,42 @@ class TrainingSessionController extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
   }
 
+   void _startSessionOnMachine() async {
+    await _requestMachineControl();
+    await Future.delayed(const Duration(milliseconds: 200));
+    await _ftmsService.writeCommand(MachineControlPointOpcodeType.reset);
+    await Future.delayed(const Duration(milliseconds: 200));
+    await _startOrResumeOnMachine();
+
+    final firstResistance =
+    _intervals.isNotEmpty ? _intervals[0].resistanceLevel : null;
+    if (firstResistance != null) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      await _setResistanceWithControl(firstResistance);
+    }
+  }
+
   void _onTick() {
     if (sessionCompleted || sessionPaused) return;
-    elapsed++;
-    debugPrint(
-        '🕐 Timer tick: elapsed=$elapsed, sessionCompleted=$sessionCompleted, sessionPaused=$sessionPaused, timerActive=$timerActive');
-    if (elapsed >= _totalDuration) {
+
+    _incrementSessionElapsedTime();
+
+    if (_isSessionTimeElapsed()) {
       stopSession();
     } else {
       // Update current interval first
       int previousIntervalIndex = currentIntervalIndex;
-      while (currentIntervalIndex < _intervals.length - 1 &&
-          elapsed >= _intervalStartTimes[currentIntervalIndex + 1]) {
-        currentIntervalIndex++;
-      }
 
-      // Calculate current interval timing using the correct current interval
-      intervalElapsed = elapsed - _intervalStartTimes[currentIntervalIndex];
+      _updateCurrentIntervalIndex();
 
-      // Play warning sound when interval is about to finish (5 seconds or less remaining)
-      final remainingTime = current.duration - intervalElapsed;
-      if (remainingTime <= 4 || remainingTime == current.duration) {
+      _updateCurrentIntervalElapsedTime();
+
+      if (_isCurrentIntervalAboutToFinish()) {
         _playWarningSound();
       }
 
       // If interval changed and resistanceLevel is set, send command
-      if (currentIntervalIndex != previousIntervalIndex) {
+      if (_hasCurrentIntervalChanged(previousIntervalIndex)) {
         final resistance = _intervals[currentIntervalIndex].resistanceLevel;
         if (resistance != null) {
           _setResistanceWithControl(resistance);
@@ -324,6 +327,34 @@ class TrainingSessionController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void _incrementSessionElapsedTime() {
+    sessionElapsed++;
+    debugPrint(
+        '🕐 Timer tick: elapsed=$sessionElapsed, sessionCompleted=$sessionCompleted, sessionPaused=$sessionPaused, timerActive=$timerActive');
+  }
+
+  void _updateCurrentIntervalElapsedTime() {
+    currentIntervalElapsed = sessionElapsed - _getCurrentIntervalStartTime();
+  }
+
+  bool _isCurrentIntervalAboutToFinish() {
+    final intervalRemainingTime = current.duration - currentIntervalElapsed;
+    return intervalRemainingTime <= 4 || intervalRemainingTime == current.duration;
+  }
+
+  int _getCurrentIntervalStartTime() => _intervalStartTimes[currentIntervalIndex];
+
+  void _updateCurrentIntervalIndex() {
+    while (currentIntervalIndex < _intervals.length - 1 &&
+        sessionElapsed >= _intervalStartTimes[currentIntervalIndex + 1]) {
+      currentIntervalIndex++;
+    }
+  }
+
+  bool _hasCurrentIntervalChanged(int previousIntervalIndex) => currentIntervalIndex != previousIntervalIndex;
+
+  bool _isSessionTimeElapsed() => sessionElapsed >= _totalDuration;
 
   Future<void> _playWarningSound() async {
     if (_audioPlayer == null) {

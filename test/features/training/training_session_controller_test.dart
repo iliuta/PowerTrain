@@ -204,8 +204,8 @@ void main() {
         expect(controller.intervals.length, 3);
         expect(controller.totalDuration, 210); // 60 + 120 + 30
         expect(controller.currentIntervalIndex, 0);
-        expect(controller.elapsed, 0);
-        expect(controller.intervalElapsed, 0);
+        expect(controller.sessionElapsed, 0);
+        expect(controller.currentIntervalElapsed, 0);
         expect(controller.sessionCompleted, false);
         expect(controller.sessionPaused, false);
         expect(controller.timerActive, false);
@@ -240,7 +240,7 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 3000));
 
         // Verify that the FTMS commands were called at least once
-        verify(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel'))).called(greaterThanOrEqualTo(3));
+        verify(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel'))).called(greaterThanOrEqualTo(1));
 
         expect(controller.hasControl, true);
 
@@ -395,19 +395,19 @@ void main() {
       });
 
       test('mainTimeLeft getter calculates correctly', () {
-        controller.elapsed = 30;
+        controller.sessionElapsed = 30;
         expect(controller.mainTimeLeft, 180); // 210 - 30
         
-        controller.elapsed = 100;
+        controller.sessionElapsed = 100;
         expect(controller.mainTimeLeft, 110); // 210 - 100
       });
 
       test('intervalTimeLeft getter calculates correctly', () {
-        controller.intervalElapsed = 20;
+        controller.currentIntervalElapsed = 20;
         expect(controller.intervalTimeLeft, 40); // 60 - 20
         
         controller.currentIntervalIndex = 1;
-        controller.intervalElapsed = 50;
+        controller.currentIntervalElapsed = 50;
         expect(controller.intervalTimeLeft, 70); // 120 - 50
       });
     });
@@ -577,7 +577,7 @@ void main() {
 
         // Should not crash or change state
         expect(controller.timerActive, false);
-        expect(controller.elapsed, 0);
+        expect(controller.sessionElapsed, 0);
 
         controller.dispose();
       });
@@ -625,7 +625,7 @@ void main() {
 
         // Initial state
         expect(controller.currentIntervalIndex, 0);
-        expect(controller.elapsed, 0);
+        expect(controller.sessionElapsed, 0);
         expect(controller.sessionCompleted, false);
 
         // Simulate starting the session with FTMS data changes

@@ -29,9 +29,9 @@ class TrainingSessionBody extends StatelessWidget {
       child: Column(
         children: [
           SessionProgressBar(
-            progress: controller.elapsed / controller.totalDuration,
+            progress: controller.sessionElapsed / controller.totalDuration,
             timeLeft: controller.mainTimeLeft,
-            elapsed: controller.elapsed,
+            elapsed: controller.sessionElapsed,
             formatTime: _formatTime,
             intervals: controller.intervals,
             machineType: session.ftmsMachineType,
@@ -46,7 +46,7 @@ class TrainingSessionBody extends StatelessWidget {
                   child: TrainingIntervalList(
                     intervals: controller.intervals,
                     currentInterval: controller.currentIntervalIndex,
-                    intervalElapsed: controller.intervalElapsed,
+                    intervalElapsed: controller.currentIntervalElapsed,
                     intervalTimeLeft: controller.intervalTimeLeft,
                     formatMMSS: _formatMMSS,
                     config: config,
