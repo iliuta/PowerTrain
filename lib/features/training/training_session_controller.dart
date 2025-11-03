@@ -43,7 +43,8 @@ class TrainingSessionController extends ChangeNotifier {
   bool sessionCompleted = false;
   bool sessionPaused = false; // Add pause state
   bool isDeviceConnected = true; // Track device connection state
-  bool wasAutoPaused = false; // Track if session was auto-paused due to disconnection
+  bool wasAutoPaused =
+      false; // Track if session was auto-paused due to disconnection
   int elapsed = 0;
   int intervalElapsed = 0;
   int currentInterval = 0;
@@ -66,7 +67,7 @@ class TrainingSessionController extends ChangeNotifier {
   }) : _enableFitFileGeneration = enableFitFileGeneration {
     _ftmsService = ftmsService ?? FTMSService(ftmsDevice);
     _stravaService = stravaService ?? StravaService();
-    
+
     // Initialize audio player with error handling for tests
     if (audioPlayer != null) {
       _audioPlayer = audioPlayer;
@@ -74,7 +75,8 @@ class TrainingSessionController extends ChangeNotifier {
       try {
         _audioPlayer = AudioPlayer();
       } catch (e) {
-        debugPrint('Failed to initialize AudioPlayer (likely in test environment): $e');
+        debugPrint(
+            'Failed to initialize AudioPlayer (likely in test environment): $e');
         _audioPlayer = null;
       }
     }
@@ -96,7 +98,8 @@ class TrainingSessionController extends ChangeNotifier {
 
     _ftmsStream = ftmsBloc.ftmsDeviceDataControllerStream;
     _ftmsSub = _ftmsStream.listen(_onFtmsData);
-    _connectionStateSub = ftmsDevice.connectionState.listen(_onConnectionStateChanged);
+    _connectionStateSub =
+        ftmsDevice.connectionState.listen(_onConnectionStateChanged);
     _initFTMS();
     _initDataRecording();
   }
@@ -232,23 +235,32 @@ class TrainingSessionController extends ChangeNotifier {
   void _onConnectionStateChanged(BluetoothConnectionState state) {
     final wasConnected = isDeviceConnected;
     isDeviceConnected = state == BluetoothConnectionState.connected;
-    
-    logger.i('🔗 FTMS device connection state changed: $state (was connected: $wasConnected, now connected: $isDeviceConnected)');
-    
+
+    logger.i(
+        '🔗 FTMS device connection state changed: $state (was connected: $wasConnected, now connected: $isDeviceConnected)');
+
     // Handle disconnection - auto-pause the session
-    if (wasConnected && !isDeviceConnected && !sessionCompleted && !sessionPaused) {
-      logger.w('📱 FTMS device disconnected during training - auto-pausing session');
+    if (wasConnected &&
+        !isDeviceConnected &&
+        !sessionCompleted &&
+        !sessionPaused) {
+      logger.w(
+          '📱 FTMS device disconnected during training - auto-pausing session');
       wasAutoPaused = true;
       _autoPauseSession();
     }
-    
+
     // Handle reconnection - auto-resume if it was auto-paused
-    if (!wasConnected && isDeviceConnected && wasAutoPaused && sessionPaused && !sessionCompleted) {
+    if (!wasConnected &&
+        isDeviceConnected &&
+        wasAutoPaused &&
+        sessionPaused &&
+        !sessionCompleted) {
       logger.i('📱 FTMS device reconnected - auto-resuming session');
       wasAutoPaused = false;
       _autoResumeSession();
     }
-    
+
     notifyListeners();
   }
 
@@ -273,13 +285,17 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send resume command to FTMS device after reconnection
     Future.delayed(const Duration(milliseconds: 500), () async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.requestControl);
         hasControl = true;
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.startOrResume);
-        logger.i('📤 Requested control and sent startOrResume command after reconnection');
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.startOrResume);
+        logger.i(
+            '📤 Requested control and sent startOrResume command after reconnection');
       } catch (e) {
-        logger.e('Failed to request control/send resume command after reconnection: $e');
+        logger.e(
+            'Failed to request control/send resume command after reconnection: $e');
       }
     });
 
@@ -342,7 +358,7 @@ class TrainingSessionController extends ChangeNotifier {
       debugPrint('🔔 AudioPlayer not available, skipping sound playback');
       return;
     }
-    
+
     try {
       // Play custom beep sound from assets
       await _audioPlayer!.play(AssetSource('sounds/beep.wav'));
@@ -368,7 +384,7 @@ class TrainingSessionController extends ChangeNotifier {
           // Attempt automatic Strava upload if user is authenticated
           if (fitFilePath != null) {
             await _attemptStravaUpload(fitFilePath);
-            
+
             // Delete the FIT file after successful Strava upload
             await _deleteFitFile(fitFilePath);
           }
@@ -389,7 +405,8 @@ class TrainingSessionController extends ChangeNotifier {
         final file = File(fitFilePath);
         if (await file.exists()) {
           await file.delete();
-          logger.i('🗑️ FIT file deleted after successful Strava upload: $fitFilePath');
+          logger.i(
+              '🗑️ FIT file deleted after successful Strava upload: $fitFilePath');
           debugPrint('FIT file deleted: $fitFilePath');
         }
       } catch (e) {
@@ -457,10 +474,12 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send pause command to FTMS device
     Future.microtask(() async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.requestControl);
         hasControl = true;
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.stopOrPause);
         logger.i('📤 Requested control and sent pause command');
       } catch (e) {
         logger.e('Failed to request control/send pause command: $e');
@@ -481,11 +500,14 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send resume command to FTMS device
     Future.microtask(() async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.requestControl);
         hasControl = true;
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.startOrResume);
-        logger.i('📤 Requested control and sent startOrResume command for manual resume');
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.startOrResume);
+        logger.i(
+            '📤 Requested control and sent startOrResume command for manual resume');
       } catch (e) {
         logger.e('Failed to request control/send resume command: $e');
       }
@@ -497,6 +519,18 @@ class TrainingSessionController extends ChangeNotifier {
 
   /// Stop the training session completely
   void stopSession() {
+    discardSession();
+
+    // Finish recording and generate FIT file (async)
+    _finishRecording().then((_) {
+      // Only notify listeners if not disposed
+      if (!_disposed) {
+        notifyListeners();
+      }
+    });
+  }
+
+  void discardSession() {
     if (sessionCompleted) return;
 
     sessionCompleted = true;
@@ -507,23 +541,17 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send stop + reset commands to FTMS device
     Future.microtask(() async {
       try {
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.requestControl);
         hasControl = true;
         await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
+        await _ftmsService
+            .writeCommand(MachineControlPointOpcodeType.stopOrPause);
         await Future.delayed(const Duration(milliseconds: 200));
         await _ftmsService.writeCommand(MachineControlPointOpcodeType.reset);
         logger.i('📤 Requested control and sent stop/reset commands');
       } catch (e) {
         logger.e('Failed to request control/send stop command: $e');
-      }
-    });
-
-    // Finish recording and generate FIT file (async)
-    _finishRecording().then((_) {
-      // Only notify listeners if not disposed
-      if (!_disposed) {
-        notifyListeners();
       }
     });
   }
@@ -542,11 +570,14 @@ class TrainingSessionController extends ChangeNotifier {
     if (!sessionCompleted) {
       Future.microtask(() async {
         try {
-          await _ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
+          await _ftmsService
+              .writeCommand(MachineControlPointOpcodeType.requestControl);
           await Future.delayed(const Duration(milliseconds: 200));
-          await _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
+          await _ftmsService
+              .writeCommand(MachineControlPointOpcodeType.stopOrPause);
         } catch (e) {
-          debugPrint('Failed to request control/send stop command during dispose: $e');
+          debugPrint(
+              'Failed to request control/send stop command during dispose: $e');
         }
       });
     }

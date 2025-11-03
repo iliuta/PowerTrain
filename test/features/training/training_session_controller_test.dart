@@ -356,6 +356,39 @@ void main() {
         verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause));
         verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset));
       });
+
+      test('discardSession completes session and sends FTMS commands', () async {
+        controller.timerActive = true; // Simulate active timer
+
+        // Clear any interactions from initialization
+        clearInteractions(mockFtmsService);
+
+        controller.discardSession();
+
+        expect(controller.sessionCompleted, true);
+        expect(controller.sessionPaused, false);
+        expect(controller.timerActive, false);
+
+        // Wait for async FTMS command to complete
+        await Future.delayed(Duration(milliseconds: 500));
+
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl, resistanceLevel: null)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(1);
+      });
+
+      test('discardSession does nothing if already completed', () async {
+        controller.sessionCompleted = true;
+
+        controller.discardSession();
+
+        // Wait for any potential async operations
+        await Future.delayed(Duration.zero);
+
+        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl));
+        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause));
+        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset));
+      });
     });
 
     group('Timer and Progress', () {
