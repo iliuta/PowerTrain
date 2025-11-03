@@ -17,6 +17,10 @@ class TrainingSessionAppBar extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => _showStopConfirmationDialog(context),
+      ),
       title: Row(
         children: [
           Expanded(
@@ -82,13 +86,26 @@ class TrainingSessionAppBar extends StatelessWidget
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
+              Navigator.of(context).pop();
+              controller.discardSession();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Discard'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
               controller.stopSession();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Stop'),
+            child: const Text('Save and stop'),
           ),
         ],
       ),
