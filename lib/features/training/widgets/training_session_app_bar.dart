@@ -7,11 +7,15 @@ class TrainingSessionAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   final ExpandedTrainingSessionDefinition session;
   final TrainingSessionController controller;
+  final VoidCallback onBackPressed;
+  final VoidCallback onStopPressed;
 
   const TrainingSessionAppBar({
     super.key,
     required this.session,
     required this.controller,
+    required this.onBackPressed,
+    required this.onStopPressed,
   });
 
   @override
@@ -19,7 +23,7 @@ class TrainingSessionAppBar extends StatelessWidget
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => _showStopConfirmationDialog(context),
+        onPressed: onBackPressed,
       ),
       title: Row(
         children: [
@@ -60,55 +64,13 @@ class TrainingSessionAppBar extends StatelessWidget
                 color: controller.sessionPaused ? Colors.green : Colors.orange,
               ),
               IconButton(
-                onPressed: () => _showStopConfirmationDialog(context),
+                onPressed: onStopPressed,
                 icon: const Icon(Icons.stop),
                 tooltip: 'Stop Session',
                 color: Colors.red,
               ),
             ],
       toolbarHeight: 56,
-    );
-  }
-
-  void _showStopConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Stop Training Session'),
-        content: const Text(
-          'Are you sure you want to stop the training session? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              controller.discardSession();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Discard'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              controller.stopSession();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Save and stop'),
-          ),
-        ],
-      ),
     );
   }
 

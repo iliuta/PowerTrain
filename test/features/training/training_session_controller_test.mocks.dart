@@ -726,21 +726,6 @@ class MockAudioPlayer extends _i1.Mock implements _i7.AudioPlayer {
       ) as String);
 
   @override
-  _i7.PlayerState get desiredState => (super.noSuchMethod(
-        Invocation.getter(#desiredState),
-        returnValue: _i7.PlayerState.stopped,
-      ) as _i7.PlayerState);
-
-  @override
-  _i8.Completer<void> get creatingCompleter => (super.noSuchMethod(
-        Invocation.getter(#creatingCompleter),
-        returnValue: _FakeCompleter_6<void>(
-          this,
-          Invocation.getter(#creatingCompleter),
-        ),
-      ) as _i8.Completer<void>);
-
-  @override
   double get volume => (super.noSuchMethod(
         Invocation.getter(#volume),
         returnValue: 0.0,
@@ -771,10 +756,25 @@ class MockAudioPlayer extends _i1.Mock implements _i7.AudioPlayer {
       ) as _i7.ReleaseMode);
 
   @override
+  _i7.PlayerState get desiredState => (super.noSuchMethod(
+        Invocation.getter(#desiredState),
+        returnValue: _i7.PlayerState.stopped,
+      ) as _i7.PlayerState);
+
+  @override
   _i7.PlayerState get state => (super.noSuchMethod(
         Invocation.getter(#state),
         returnValue: _i7.PlayerState.stopped,
       ) as _i7.PlayerState);
+
+  @override
+  _i8.Completer<void> get creatingCompleter => (super.noSuchMethod(
+        Invocation.getter(#creatingCompleter),
+        returnValue: _FakeCompleter_6<void>(
+          this,
+          Invocation.getter(#creatingCompleter),
+        ),
+      ) as _i8.Completer<void>);
 
   @override
   _i8.Stream<_i7.AudioEvent> get eventStream => (super.noSuchMethod(
@@ -819,19 +819,19 @@ class MockAudioPlayer extends _i1.Mock implements _i7.AudioPlayer {
       ) as _i8.Stream<String>);
 
   @override
-  set audioCache(_i7.AudioCache? _audioCache) => super.noSuchMethod(
+  set audioCache(_i7.AudioCache? value) => super.noSuchMethod(
         Invocation.setter(
           #audioCache,
-          _audioCache,
+          value,
         ),
         returnValueForMissingStub: null,
       );
 
   @override
-  set desiredState(_i7.PlayerState? _desiredState) => super.noSuchMethod(
+  set desiredState(_i7.PlayerState? value) => super.noSuchMethod(
         Invocation.setter(
           #desiredState,
-          _desiredState,
+          value,
         ),
         returnValueForMissingStub: null,
       );
