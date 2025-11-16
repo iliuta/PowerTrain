@@ -100,12 +100,12 @@ class _SettingsPageState extends State<SettingsPage> {
             'You have unsaved changes. Do you want to save them before leaving?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(context).pop(false), // discard
             child: const Text('Discard'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(true);
+              Navigator.of(context).pop(true); // save
               _saveSettings();
             },
             child: const Text('Save'),
@@ -114,28 +114,35 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    return result ?? false;
+    return result ?? false; // cancel
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            if (_hasChanges) {
-              final shouldSave = await _onWillPop();
-              if (shouldSave && context.mounted) {
-                await _saveSettings();
-              }
-            }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          if (await _onWillPop()) {
             if (context.mounted) {
               Navigator.of(context).pop();
             }
-          },
-        ),
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Settings'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              if (await _onWillPop()) {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              }
+            },
+          ),
         actions: [
           if (_hasChanges)
             TextButton(
@@ -151,6 +158,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
       body: _buildBody(),
+      ),
     );
   }
 
@@ -201,7 +209,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.info_outline),
-                title: const Text('PowerTrain 0.1.3'),
+                title: const Text('PowerTrain 0.1.6'),
                 subtitle: const Text('Indoor Rowing with your FTMS compatible fitness equipment.'),
               ),
             ],
