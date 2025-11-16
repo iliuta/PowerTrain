@@ -579,6 +579,13 @@ class MockBluetoothCharacteristic extends _i1.Mock
       ) as _i2.Guid);
 
   @override
+  int get instanceId => (super.noSuchMethod(
+        Invocation.getter(#instanceId),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
   _i2.Guid get uuid => (super.noSuchMethod(
         Invocation.getter(#uuid),
         returnValue: _FakeGuid_1(

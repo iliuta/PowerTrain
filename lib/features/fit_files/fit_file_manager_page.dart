@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/services/fit/fit_file_manager.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
@@ -121,7 +122,6 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -210,6 +210,23 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       setState(() {
         _uploadingFiles.remove(fitFile.filePath);
       });
+    }
+  }
+
+  Future<void> _shareFitFile(FitFileInfo fitFile) async {
+    try {
+      final file = XFile(fitFile.filePath);
+      await Share.shareXFiles([file], text: 'FIT workout file: ${fitFile.fileName}');
+    } catch (e) {
+      logger.e('Error sharing FIT file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sharing file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -393,6 +410,9 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                               case 'upload':
                                 _uploadToStrava(fitFile);
                                 break;
+                              case 'download':
+                                _shareFitFile(fitFile);
+                                break;
                               case 'delete':
                                 _selectedFiles.clear();
                                 _selectedFiles.add(fitFile.filePath);
@@ -406,6 +426,14 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                               child: ListTile(
                                 leading: Icon(Icons.cloud_upload),
                                 title: Text('Upload to Strava'),
+                                dense: true,
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'download',
+                              child: ListTile(
+                                leading: Icon(Icons.download),
+                                title: Text('Share'),
                                 dense: true,
                               ),
                             ),
