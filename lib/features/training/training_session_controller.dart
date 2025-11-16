@@ -126,11 +126,12 @@ class TrainingSessionController extends ChangeNotifier {
   void _initFTMS() {
     // Request control after a short delay, then start session and set initial resistance if needed
     Future.delayed(const Duration(seconds: 2), () async {
+      if (_disposed) return;
       try {
         await _ftmsService
             .writeCommand(MachineControlPointOpcodeType.requestControl);
         hasControl = true;
-        notifyListeners();
+        if (!_disposed) notifyListeners();
         await Future.delayed(const Duration(milliseconds: 200));
         await _ftmsService
             .writeCommand(MachineControlPointOpcodeType.startOrResume);
@@ -261,7 +262,7 @@ class TrainingSessionController extends ChangeNotifier {
       _autoResumeSession();
     }
 
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void _autoPauseSession() {
@@ -273,17 +274,18 @@ class TrainingSessionController extends ChangeNotifier {
     _timer?.cancel();
 
     // Don't send FTMS commands when device is disconnected
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void _autoResumeSession() {
     if (sessionCompleted || !sessionPaused) return;
 
-    logger.i('▶️ Auto-resuming training session after device reconnection');
+    logger.i('▶️ Auto-resuming training session due to device reconnection');
     sessionPaused = false;
 
     // Request control first, then send resume command to FTMS device after reconnection
     Future.delayed(const Duration(milliseconds: 500), () async {
+      if (_disposed) return;
       try {
         await _ftmsService
             .writeCommand(MachineControlPointOpcodeType.requestControl);
@@ -300,7 +302,7 @@ class TrainingSessionController extends ChangeNotifier {
     });
 
     // Timer will restart automatically when FTMS data changes
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void _startTimer() {
@@ -323,7 +325,7 @@ class TrainingSessionController extends ChangeNotifier {
       // Finish recording and generate FIT file (async)
       _finishRecording().then((_) {
         // Only notify listeners after recording is completely finished
-        notifyListeners();
+        if (!_disposed) notifyListeners();
       });
     } else {
       // Update current interval first
@@ -424,7 +426,7 @@ class TrainingSessionController extends ChangeNotifier {
       final isAuthenticated = await _stravaService.isAuthenticated();
       if (!isAuthenticated) {
         logger.i('Strava upload skipped: User not authenticated');
-        notifyListeners();
+        if (!_disposed) notifyListeners();
         return;
       }
 
@@ -458,7 +460,7 @@ class TrainingSessionController extends ChangeNotifier {
       logger.e('Error during Strava upload: $e');
     }
 
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Pause the current training session
@@ -473,6 +475,7 @@ class TrainingSessionController extends ChangeNotifier {
 
     // Request control first, then send pause command to FTMS device
     Future.microtask(() async {
+      if (_disposed) return;
       try {
         await _ftmsService
             .writeCommand(MachineControlPointOpcodeType.requestControl);
@@ -486,7 +489,7 @@ class TrainingSessionController extends ChangeNotifier {
       }
     });
 
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Resume the paused training session
@@ -499,6 +502,7 @@ class TrainingSessionController extends ChangeNotifier {
 
     // Request control first, then send resume command to FTMS device
     Future.microtask(() async {
+      if (_disposed) return;
       try {
         await _ftmsService
             .writeCommand(MachineControlPointOpcodeType.requestControl);
@@ -514,7 +518,7 @@ class TrainingSessionController extends ChangeNotifier {
     });
 
     // Restart timer - it will start automatically when FTMS data changes
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Stop the training session completely
@@ -540,6 +544,7 @@ class TrainingSessionController extends ChangeNotifier {
 
     // Request control first, then send stop + reset commands to FTMS device
     Future.microtask(() async {
+      if (_disposed) return;
       try {
         await _ftmsService
             .writeCommand(MachineControlPointOpcodeType.requestControl);

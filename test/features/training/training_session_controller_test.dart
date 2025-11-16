@@ -712,6 +712,7 @@ void main() {
         when(mockDataRecorder.recordDataPoint(
           ftmsParams: anyNamed('ftmsParams'),
         )).thenReturn(null);
+        when(mockDataRecorder.generateFitFile()).thenAnswer((_) async => null);
       });
 
       test('generates FIT file when enableFitFileGeneration is true', () async {
