@@ -31,10 +31,7 @@ dependencies:
 
   flutter:
     sdk: flutter
-  flutter_ftms: 
-    git:
-      url: https://github.com/iliuta/flutter_ftms
-      ref: main
+  flutter_ftms: ^1.2.0
   cupertino_icons: ^1.0.8
   flutter_blue_plus: ^2.0.2
   path: any
