@@ -372,5 +372,64 @@ void main() {
       expect(copied.intervals[0], isNot(same(session.intervals[0])));
       expect(copied.intervals[1], isNot(same(session.intervals[1])));
     });
+
+    test('createTemplate creates bike template with correct structure', () {
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.indoorBike, 600);
+
+      expect(session.title, equals('New Cycling Training Session'));
+      expect(session.ftmsMachineType, equals(DeviceType.indoorBike));
+      expect(session.isCustom, isTrue);
+      expect(session.intervals, hasLength(1));
+
+      final workoutInterval = session.intervals.first as UnitTrainingInterval;
+      expect(workoutInterval.title, equals('Workout'));
+      expect(workoutInterval.duration, equals(600));
+      expect(workoutInterval.targets, isEmpty);
+      expect(workoutInterval.resistanceLevel, isNull);
+    });
+
+    test('createTemplate creates rower template with correct structure', () {
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.rower, 600);
+
+      expect(session.title, equals('New Rowing Training Session'));
+      expect(session.ftmsMachineType, equals(DeviceType.rower));
+      expect(session.isCustom, isTrue);
+      expect(session.intervals, hasLength(3));
+
+      // Warm up group
+      final warmUpGroup = session.intervals[0] as GroupTrainingInterval;
+      expect(warmUpGroup.repeat, equals(1));
+      expect(warmUpGroup.intervals, hasLength(5));
+      for (int i = 0; i < 5; i++) {
+        final interval = warmUpGroup.intervals[i];
+        expect(interval.title, equals('Warm Up ${i + 1}'));
+        expect(interval.duration, equals(60));
+        expect(interval.targets!['Instantaneous Pace'], equals('${84 + i * 3}%'));
+        expect(interval.targets!['Stroke Rate'], equals(20));
+        expect(interval.resistanceLevel, equals(20 + i * 10));
+      }
+
+      // Workout interval
+      final workoutInterval = session.intervals[1] as UnitTrainingInterval;
+      expect(workoutInterval.title, equals('Workout'));
+      expect(workoutInterval.duration, equals(600));
+      expect(workoutInterval.targets!['Instantaneous Pace'], equals('96%'));
+      expect(workoutInterval.targets!['Stroke Rate'], equals(22));
+      expect(workoutInterval.resistanceLevel, equals(60));
+
+      // Cool down group
+      final coolDownGroup = session.intervals[2] as GroupTrainingInterval;
+      expect(coolDownGroup.repeat, equals(1));
+      expect(coolDownGroup.intervals, hasLength(5));
+      final expectedCoolDownPowers = ['96%', '93%', '90%', '87%', '84%'];
+      for (int i = 0; i < 5; i++) {
+        final interval = coolDownGroup.intervals[i];
+        expect(interval.title, equals('Cool down ${i + 1}'));
+        expect(interval.duration, equals(60));
+        expect(interval.targets!['Instantaneous Pace'], equals(expectedCoolDownPowers[i]));
+        expect(interval.targets!['Stroke Rate'], equals(20));
+        expect(interval.resistanceLevel, equals(60 - i * 10));
+      }
+    });
   });
 }
