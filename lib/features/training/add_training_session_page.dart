@@ -19,11 +19,19 @@ import '../../features/settings/model/user_settings.dart';
 class AddTrainingSessionPage extends StatefulWidget {
   final DeviceType machineType;
   final TrainingSessionDefinition? existingSession;
+  
+  // Optional parameters for testing - allow dependency injection
+  final LiveDataDisplayConfig? config;
+  final UserSettings? userSettings;
+  final TrainingSessionStorageService? storageService;
 
   const AddTrainingSessionPage({
     super.key,
     required this.machineType,
     this.existingSession,
+    this.config,
+    this.userSettings,
+    this.storageService,
   });
 
   @override
@@ -50,8 +58,9 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
   Future<void> _loadConfiguration() async {
     try {
-      final config = await LiveDataDisplayConfig.loadForFtmsMachineType(widget.machineType);
-      final userSettings = await UserSettings.loadDefault();
+      // Use injected dependencies if provided (for testing), otherwise load from static methods
+      final config = widget.config ?? await LiveDataDisplayConfig.loadForFtmsMachineType(widget.machineType);
+      final userSettings = widget.userSettings ?? await UserSettings.loadDefault();
 
       setState(() {
         _config = config;
@@ -62,6 +71,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
       // Initialize form with existing session data if in edit mode
       if (_isEditMode) {
         _initializeFromExistingSession();
+      } else {
+        _initializeWithTemplate();
       }
     } catch (e) {
       setState(() {
@@ -76,8 +87,16 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   }
 
   void _initializeFromExistingSession() {
-    final session = widget.existingSession!;
-    
+    _initializeSession(widget.existingSession!);
+  }
+
+  void _initializeWithTemplate() {
+    // Create templated session
+    final templateSession = TrainingSessionDefinition.createTemplate(widget.machineType, 600);
+    _initializeSession(templateSession);
+  }
+
+  void _initializeSession(TrainingSessionDefinition session) {
     // Set the title
     _titleController.text = session.title;
     
@@ -857,7 +876,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     );
 
     try {
-      final storageService = TrainingSessionStorageService();
+      final storageService = widget.storageService ?? TrainingSessionStorageService();
       
       // If in edit mode, delete the original session first
       if (_isEditMode) {

@@ -84,10 +84,62 @@ class TrainingSessionDefinition {
     );
   }
 
-  /// Returns the intervals as UnitTrainingInterval list.
-  /// This is safe to call only on expanded sessions.
-  List<UnitTrainingInterval> get unitIntervals {
-    return intervals.cast<UnitTrainingInterval>();
+  /// Creates a templated training session based on machine type
+  static TrainingSessionDefinition createTemplate(DeviceType machineType, int workoutDuration) {
+    final String machineName = machineType == DeviceType.rower ? 'Rowing' : 'Cycling';
+    final String title = 'New $machineName Training Session';
+
+    final intervals = machineType == DeviceType.indoorBike
+        ? _createBikeTemplate(workoutDuration)
+        : _createRowerTemplate(workoutDuration);
+
+    return TrainingSessionDefinition(
+      title: title,
+      ftmsMachineType: machineType,
+      intervals: intervals,
+      isCustom: true,
+    );
+  }
+
+  static List<TrainingInterval> _createBikeTemplate(int workoutDuration) {
+    final workoutInterval = UnitTrainingInterval(
+      title: 'Workout',
+      duration: workoutDuration,
+      targets: {},
+    );
+    return [workoutInterval];
+  }
+
+  static List<TrainingInterval> _createRowerTemplate(int workoutDuration) {
+    final warmUpIntervals = List.generate(5, (i) => UnitTrainingInterval(
+      title: 'Warm Up ${i + 1}',
+      duration: 60,
+      targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
+      resistanceLevel: 20 + i * 10,
+    ));
+
+    final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
+
+    final workoutInterval = UnitTrainingInterval(
+      title: 'Workout',
+      duration: workoutDuration,
+      targets: {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
+      resistanceLevel: 60,
+    );
+
+    final coolDownIntervals = warmUpIntervals.reversed.toList().asMap().entries.map((entry) {
+      final index = entry.key;
+      final interval = entry.value;
+      return UnitTrainingInterval(
+        title: 'Cool down ${index + 1}',
+        duration: interval.duration,
+        targets: interval.targets,
+        resistanceLevel: interval.resistanceLevel,
+      );
+    }).toList();
+    final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
+
+    return [warmUpGroup, workoutInterval, coolDownGroup];
   }
 }
 
