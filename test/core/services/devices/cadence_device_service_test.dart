@@ -134,6 +134,7 @@ class MockBluetoothDevice extends BluetoothDevice {
     Duration timeout = const Duration(seconds: 35),
     int? mtu = 512,
     bool autoConnect = false,
+    license = License.free
   }) async {
     // Simulate successful connection
     return;
@@ -158,6 +159,7 @@ class FailingMockBluetoothDevice extends BluetoothDevice {
     Duration timeout = const Duration(seconds: 35),
     int? mtu = 512,
     bool autoConnect = false,
+    license = License.free
   }) async {
     throw Exception('Connection failed');
   }

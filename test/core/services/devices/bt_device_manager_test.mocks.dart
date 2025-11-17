@@ -30,6 +30,7 @@ import 'package:mockito/src/dummies.dart' as _i7;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakeDeviceIdentifier_0 extends _i1.SmartFake
     implements _i2.DeviceIdentifier {
@@ -468,6 +469,7 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
 
   @override
   _i4.Future<void> connect({
+    required _i2.License? license,
     Duration? timeout = const Duration(seconds: 35),
     int? mtu = 512,
     bool? autoConnect = false,
@@ -477,6 +479,7 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
           #connect,
           [],
           {
+            #license: license,
             #timeout: timeout,
             #mtu: mtu,
             #autoConnect: autoConnect,

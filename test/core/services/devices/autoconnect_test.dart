@@ -32,7 +32,7 @@ void main() {
       // Mock connect method to accept autoConnect and mtu parameters
       when(mockDevice.connect(
         autoConnect: anyNamed('autoConnect'),
-        mtu: anyNamed('mtu'),
+        mtu: anyNamed('mtu'), license: License.free
       )).thenAnswer((_) async {});
     });
 
@@ -43,7 +43,7 @@ void main() {
     group('Heart Rate Service', () {
       test('should use autoConnect when connecting to HRM device', () async {
         // Set up successful connection
-        when(mockDevice.connect(autoConnect: anyNamed('autoConnect')))
+        when(mockDevice.connect(autoConnect: anyNamed('autoConnect'), license: null))
             .thenAnswer((_) async {});
         
         // Mock heart rate service discovery
@@ -57,14 +57,14 @@ void main() {
         await heartRateService.connectToHrmDevice(mockDevice);
         
         // Verify that connect was called with autoConnect: true
-        verify(mockDevice.connect(autoConnect: true, mtu: null)).called(1);
+        verify(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).called(1);
       });
     });
 
     group('Cadence Service', () {
       test('should use autoConnect when connecting to cadence device', () async {
         // Set up successful connection
-        when(mockDevice.connect(autoConnect: anyNamed('autoConnect')))
+        when(mockDevice.connect(autoConnect: anyNamed('autoConnect'), license: License.free))
             .thenAnswer((_) async {});
         
         // Mock cadence service discovery
@@ -78,14 +78,14 @@ void main() {
         await cadenceService.connectToCadenceDevice(mockDevice);
         
         // Verify that connect was called with autoConnect: true
-        verify(mockDevice.connect(autoConnect: true, mtu: null)).called(1);
+        verify(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).called(1);
       });
     });
 
     group('FTMS Service', () {
       test('should use autoConnect when connecting to FTMS device', () async {
         // Set up successful connection
-        when(mockDevice.connect(autoConnect: anyNamed('autoConnect')))
+        when(mockDevice.connect(autoConnect: anyNamed('autoConnect'), license: License.free))
             .thenAnswer((_) async {});
 
         final ftmsService = Ftms();
@@ -93,7 +93,7 @@ void main() {
         final result = await ftmsService.performConnection(mockDevice);
         
         // Verify that connect was called with autoConnect: true
-        verify(mockDevice.connect(autoConnect: true, mtu: null)).called(1);
+        verify(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).called(1);
         expect(result, isTrue);
       });
     });
@@ -101,7 +101,7 @@ void main() {
     group('AutoConnect Behavior', () {
       test('should handle connection failures gracefully', () async {
         // Mock connection failure
-        when(mockDevice.connect(autoConnect: anyNamed('autoConnect')))
+        when(mockDevice.connect(autoConnect: anyNamed('autoConnect'), license: License.free))
             .thenThrow(Exception('Connection failed'));
 
         final heartRateService = HeartRateService();
@@ -111,12 +111,12 @@ void main() {
         expect(result, isFalse);
         
         // Should still have attempted to connect with autoConnect
-        verify(mockDevice.connect(autoConnect: true, mtu: null)).called(1);
+        verify(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).called(1);
       });
 
       test('should maintain autoConnect across disconnections', () async {
         // Set up successful connection initially
-        when(mockDevice.connect(autoConnect: anyNamed('autoConnect')))
+        when(mockDevice.connect(autoConnect: anyNamed('autoConnect'), license: License.free))
             .thenAnswer((_) async {});
         
         final mockService = MockBluetoothService();
@@ -137,15 +137,15 @@ void main() {
         await Future.delayed(Duration(milliseconds: 10));
         
         // Initial connect should have used autoConnect: true
-        verify(mockDevice.connect(autoConnect: true, mtu: null)).called(1);
+        verify(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).called(1);
         
         // No manual reconnection calls should be needed - autoConnect handles it
-        verifyNever(mockDevice.connect(autoConnect: false));
+        verifyNever(mockDevice.connect(autoConnect: false, license: License.free));
       });
       
       test('should re-establish data streams after reconnection', () async {
         // Set up successful connection
-        when(mockDevice.connect(autoConnect: anyNamed('autoConnect')))
+        when(mockDevice.connect(autoConnect: anyNamed('autoConnect'), license: License.free))
             .thenAnswer((_) async {});
         
         final mockService = MockBluetoothService();
@@ -165,7 +165,7 @@ void main() {
         verify(mockDevice.discoverServices()).called(1);
         
         // The important thing is that autoConnect was used in the initial connection
-        verify(mockDevice.connect(autoConnect: true, mtu: null)).called(1);
+        verify(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).called(1);
       });
     });
   });

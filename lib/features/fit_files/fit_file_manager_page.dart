@@ -215,8 +215,13 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
 
   Future<void> _shareFitFile(FitFileInfo fitFile) async {
     try {
-      final file = XFile(fitFile.filePath);
-      await Share.shareXFiles([file], text: 'FIT workout file: ${fitFile.fileName}');
+      final shareParams = ShareParams(
+        files: [
+          XFile(fitFile.filePath)
+        ],
+        text: 'FIT workout file: ${fitFile.fileName}'
+      );
+      await SharePlus.instance.share(shareParams);
     } catch (e) {
       logger.e('Error sharing FIT file: $e');
       if (mounted) {

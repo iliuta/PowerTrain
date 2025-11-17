@@ -48,7 +48,7 @@ void main() {
       when(mockDevice.connectionState).thenAnswer((_) => connectionStateController.stream);
 
       // Configure device.connect to return successfully (with autoConnect parameters)
-      when(mockDevice.connect(autoConnect: true, mtu: null)).thenAnswer((_) async {});
+      when(mockDevice.connect(autoConnect: true, mtu: null, license: License.free)).thenAnswer((_) async {});
       
       // Mock device.isConnected to return true so we don't wait for connection state
       when(mockDevice.isConnected).thenReturn(true);

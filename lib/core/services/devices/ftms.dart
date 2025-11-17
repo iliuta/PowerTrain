@@ -81,7 +81,7 @@ class Ftms extends BTDevice {
       // to enable automatic reconnection. This ensures the device will automatically
       // reconnect when it becomes available after any disconnection
       // Note: mtu must be null when using autoConnect
-      await device.connect(autoConnect: true, mtu: null);
+      await device.connect(autoConnect: true, mtu: null, license: License.free);
       
       // Wait for the device to be actually connected before proceeding
       if (!device.isConnected) {
