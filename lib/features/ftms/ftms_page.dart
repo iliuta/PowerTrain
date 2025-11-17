@@ -5,8 +5,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../core/services/ftms_service.dart';
 import '../settings/model/user_settings.dart';
 import 'ftms_machine_features_tab.dart';
-import 'ftms_data_tab.dart';
 import 'ftms_device_data_features_tab.dart';
+import 'ftms_session_selector_tab.dart';
 
 class FTMSPage extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -57,9 +57,9 @@ class _FTMSPageState extends State<FTMSPage> {
       ),
       body: Column(
         children: [
-          // Main content: Data tab always visible
+          // Main content: Session selector tab always visible
           Expanded(
-            child: FTMSDataTab(ftmsDevice: widget.ftmsDevice),
+            child: FTMSessionSelectorTab(ftmsDevice: widget.ftmsDevice),
           ),
           // Bottom navigation for the two remaining tabs - only show if developer mode is enabled
           if (_isLoadingSettings)

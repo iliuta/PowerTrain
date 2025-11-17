@@ -92,7 +92,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
   void _initializeWithTemplate() {
     // Create templated session
-    final templateSession = TrainingSessionDefinition.createTemplate(widget.machineType, 600);
+    final templateSession = TrainingSessionDefinition.createTemplate(widget.machineType, 1200);
     _initializeSession(templateSession);
   }
 

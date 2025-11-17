@@ -111,6 +111,10 @@ class TrainingSessionDefinition {
   }
 
   static List<TrainingInterval> _createRowerTemplate(int workoutDuration) {
+    final warmupDuration = 5 * 60;
+    final cooldownDuration = 5 * 60;
+    final workoutDurationAdjusted = workoutDuration - warmupDuration - cooldownDuration;
+
     final warmUpIntervals = List.generate(5, (i) => UnitTrainingInterval(
       title: 'Warm Up ${i + 1}',
       duration: 60,
@@ -122,7 +126,7 @@ class TrainingSessionDefinition {
 
     final workoutInterval = UnitTrainingInterval(
       title: 'Workout',
-      duration: workoutDuration,
+      duration: workoutDurationAdjusted,
       targets: {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
       resistanceLevel: 60,
     );
