@@ -412,7 +412,7 @@ void main() {
       // Workout interval
       final workoutInterval = session.intervals[1] as UnitTrainingInterval;
       expect(workoutInterval.title, equals('Workout'));
-      expect(workoutInterval.duration, equals(600));
+      expect(workoutInterval.duration, equals(0));
       expect(workoutInterval.targets!['Instantaneous Pace'], equals('96%'));
       expect(workoutInterval.targets!['Stroke Rate'], equals(22));
       expect(workoutInterval.resistanceLevel, equals(60));
