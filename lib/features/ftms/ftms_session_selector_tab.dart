@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/models/device_types.dart';
 import '../../core/bloc/ftms_bloc.dart';
-import '../training/training_session_loader.dart';
+import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
 import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
@@ -85,7 +85,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     });
 
     try {
-      final sessions = await loadTrainingSessions(DeviceType.fromFtms(_deviceDataType!));
+      final storageService = TrainingSessionStorageService();
+      final sessions = await storageService.loadTrainingSessions(DeviceType.fromFtms(_deviceDataType!));
       setState(() {
         _trainingSessions = sessions;
         _isLoadingTrainingSessions = false;

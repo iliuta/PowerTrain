@@ -8,9 +8,9 @@ import 'dart:async' as _i6;
 import 'package:ftms/core/config/live_data_display_config.dart' as _i2;
 import 'package:ftms/core/config/live_data_field_config.dart' as _i4;
 import 'package:ftms/core/models/device_types.dart' as _i3;
-import 'package:ftms/core/services/training_session_storage_service.dart'
-    as _i5;
 import 'package:ftms/features/training/model/training_session.dart' as _i7;
+import 'package:ftms/features/training/services/training_session_storage_service.dart'
+    as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i8;
 
@@ -83,17 +83,6 @@ class MockTrainingSessionStorageService extends _i1.Mock
       ) as _i6.Future<String>);
 
   @override
-  _i6.Future<List<_i7.TrainingSessionDefinition>> loadCustomSessions() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #loadCustomSessions,
-          [],
-        ),
-        returnValue: _i6.Future<List<_i7.TrainingSessionDefinition>>.value(
-            <_i7.TrainingSessionDefinition>[]),
-      ) as _i6.Future<List<_i7.TrainingSessionDefinition>>);
-
-  @override
   _i6.Future<bool> deleteSession(
     String? title,
     String? machineType,
@@ -126,4 +115,16 @@ class MockTrainingSessionStorageService extends _i1.Mock
         ),
         returnValue: _i6.Future<bool>.value(false),
       ) as _i6.Future<bool>);
+
+  @override
+  _i6.Future<List<_i7.TrainingSessionDefinition>> loadTrainingSessions(
+          _i3.DeviceType? machineType) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #loadTrainingSessions,
+          [machineType],
+        ),
+        returnValue: _i6.Future<List<_i7.TrainingSessionDefinition>>.value(
+            <_i7.TrainingSessionDefinition>[]),
+      ) as _i6.Future<List<_i7.TrainingSessionDefinition>>);
 }

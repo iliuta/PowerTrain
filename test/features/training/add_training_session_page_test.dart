@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/models/device_types.dart';
-import 'package:ftms/core/services/training_session_storage_service.dart';
+import 'package:ftms/features/training/services/training_session_storage_service.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/add_training_session_page.dart';
 import 'package:ftms/features/training/model/training_session.dart';
