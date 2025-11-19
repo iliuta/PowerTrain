@@ -91,8 +91,7 @@ flutter run -d macos
 
 ## Running Tests
 ```zsh
-flutter pub run build_runner build --delete-conflicting-out
-puts
+flutter pub run build_runner build --delete-conflicting-outputs
 flutter test
 ```
 

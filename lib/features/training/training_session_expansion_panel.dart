@@ -6,7 +6,7 @@ import 'model/training_session.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/services/devices/bt_device.dart';
 import '../../core/services/devices/bt_device_manager.dart';
-import '../../core/services/training_session_storage_service.dart';
+import '../../features/training/services/training_session_storage_service.dart';
 import 'widgets/training_session_chart.dart';
 
 class TrainingSessionExpansionPanelList extends StatefulWidget {

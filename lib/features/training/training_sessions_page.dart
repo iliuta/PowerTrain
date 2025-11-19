@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
-import 'package:ftms/core/services/training_session_storage_service.dart';
+import 'package:ftms/features/training/services/training_session_storage_service.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
-import 'training_session_loader.dart';
 import 'training_session_expansion_panel.dart';
 import 'training_session_progress_screen.dart';
 import 'add_training_session_page.dart';
@@ -88,7 +87,8 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
     });
 
     try {
-      final sessions = await loadTrainingSessions(_selectedMachineType);
+      final storageService = TrainingSessionStorageService();
+      final sessions = await storageService.loadTrainingSessions(_selectedMachineType);
       setState(() {
         _sessions = sessions;
         _isLoading = false;

@@ -6,7 +6,7 @@ import 'package:flutter_ftms/flutter_ftms.dart';
 
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/bloc/ftms_bloc.dart';
-import '../training/training_session_loader.dart';
+import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
 import '../training/training_session_progress_screen.dart';
 import '../../core/utils/ftms_debug_utils.dart';
@@ -189,7 +189,8 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                           'Start Training pressed. deviceData.deviceDataType: '
                           '${deviceData.deviceDataType}');
                       // Load training sessions (default user settings are now loaded inside the loader)
-                      final sessions = await loadTrainingSessions(
+                      final storageService = TrainingSessionStorageService();
+                      final sessions = await storageService.loadTrainingSessions(
                           DeviceType.fromFtms(deviceData.deviceDataType));
                       if (sessions.isEmpty) {
                         if (!context.mounted) return;

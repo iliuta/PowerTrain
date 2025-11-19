@@ -3,14 +3,14 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i6;
+import 'dart:async' as _i7;
 
 import 'package:ftms/core/config/live_data_display_config.dart' as _i2;
 import 'package:ftms/core/config/live_data_field_config.dart' as _i4;
 import 'package:ftms/core/models/device_types.dart' as _i3;
-import 'package:ftms/core/services/training_session_storage_service.dart'
+import 'package:ftms/features/training/model/training_session.dart' as _i6;
+import 'package:ftms/features/training/services/training_session_storage_service.dart'
     as _i5;
-import 'package:ftms/features/training/model/training_session.dart' as _i7;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i8;
 
@@ -67,34 +67,31 @@ class MockTrainingSessionStorageService extends _i1.Mock
   }
 
   @override
-  _i6.Future<String> saveSession(_i7.TrainingSessionDefinition? session) =>
+  Map<_i3.DeviceType, List<_i6.TrainingSessionDefinition>>
+      get githubSessionsCache => (super.noSuchMethod(
+            Invocation.getter(#githubSessionsCache),
+            returnValue: <_i3.DeviceType,
+                List<_i6.TrainingSessionDefinition>>{},
+          ) as Map<_i3.DeviceType, List<_i6.TrainingSessionDefinition>>);
+
+  @override
+  _i7.Future<String> saveSession(_i6.TrainingSessionDefinition? session) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSession,
           [session],
         ),
-        returnValue: _i6.Future<String>.value(_i8.dummyValue<String>(
+        returnValue: _i7.Future<String>.value(_i8.dummyValue<String>(
           this,
           Invocation.method(
             #saveSession,
             [session],
           ),
         )),
-      ) as _i6.Future<String>);
+      ) as _i7.Future<String>);
 
   @override
-  _i6.Future<List<_i7.TrainingSessionDefinition>> loadCustomSessions() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #loadCustomSessions,
-          [],
-        ),
-        returnValue: _i6.Future<List<_i7.TrainingSessionDefinition>>.value(
-            <_i7.TrainingSessionDefinition>[]),
-      ) as _i6.Future<List<_i7.TrainingSessionDefinition>>);
-
-  @override
-  _i6.Future<bool> deleteSession(
+  _i7.Future<bool> deleteSession(
     String? title,
     String? machineType,
   ) =>
@@ -106,24 +103,18 @@ class MockTrainingSessionStorageService extends _i1.Mock
             machineType,
           ],
         ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i7.Future<bool>.value(false),
+      ) as _i7.Future<bool>);
 
   @override
-  _i6.Future<int> getCustomSessionCount() => (super.noSuchMethod(
+  _i7.Future<List<_i6.TrainingSessionDefinition>> loadTrainingSessions(
+          _i3.DeviceType? machineType) =>
+      (super.noSuchMethod(
         Invocation.method(
-          #getCustomSessionCount,
-          [],
+          #loadTrainingSessions,
+          [machineType],
         ),
-        returnValue: _i6.Future<int>.value(0),
-      ) as _i6.Future<int>);
-
-  @override
-  _i6.Future<bool> isStorageAccessible() => (super.noSuchMethod(
-        Invocation.method(
-          #isStorageAccessible,
-          [],
-        ),
-        returnValue: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+        returnValue: _i7.Future<List<_i6.TrainingSessionDefinition>>.value(
+            <_i6.TrainingSessionDefinition>[]),
+      ) as _i7.Future<List<_i6.TrainingSessionDefinition>>);
 }
