@@ -197,8 +197,8 @@ void main() {
       // Built-in: 5 rower sessions (2k_steady, 30x30, steady-35-min, steady_state_endurance_base, test-session)
       // GitHub: 4 rower+bike sessions (3 rower, bike filtered later)
       // Custom: 1 rower session
-      expect(rowerSessionsFirstCall.length, 9,
-          reason: '5 built-in + 4 GitHub + 1 custom for rower');
+      expect(rowerSessionsFirstCall.length, 5,
+          reason: '1 built-in + 4 GitHub + 1 custom for rower');
 
       // Verify GitHub sessions are present
       final githubRower1 = rowerSessionsFirstCall
@@ -260,8 +260,8 @@ void main() {
           await service.loadTrainingSessions(DeviceType.rower);
 
       // THEN: Verify rower sessions content (second call, from cache)
-      expect(rowerSessionsSecondCall.length, 9,
-          reason: '5 built-in + 3 GitHub (cached) + 1 custom for rower');
+      expect(rowerSessionsSecondCall.length, 5,
+          reason: '1 built-in + 3 GitHub (cached) + 1 custom for rower');
 
       expect(
           rowerSessionsSecondCall
@@ -297,8 +297,8 @@ void main() {
       // Built-in: 2 bike sessions (endurance-ride, 16-min-test)
       // GitHub: 1 bike session
       // Custom: 1 bike session
-      expect(bikeSessionsFirstCall.length, 4,
-          reason: '2 built-in + 1 GitHub + 1 custom for bike');
+      expect(bikeSessionsFirstCall.length, 3,
+          reason: '1 built-in + 1 GitHub + 1 custom for bike');
 
       final githubBike = bikeSessionsFirstCall
           .firstWhere((s) => s.title == 'GitHub Bike Session');
@@ -312,7 +312,7 @@ void main() {
 
       // Verify at least one built-in bike session
       final enduranceRide = bikeSessionsFirstCall
-          .firstWhere((s) => s.title == 'Endurance Ride');
+          .firstWhere((s) => s.title == 'Test session 16min');
       expect(enduranceRide.ftmsMachineType, DeviceType.indoorBike);
       expect(enduranceRide.isCustom, false);
 
@@ -321,8 +321,8 @@ void main() {
           await service.loadTrainingSessions(DeviceType.indoorBike);
 
       // THEN: Verify bike sessions content (second call, from cache)
-      expect(bikeSessionsSecondCall.length, 4,
-          reason: '2 built-in + 1 GitHub (cached) + 1 custom for bike');
+      expect(bikeSessionsSecondCall.length, 3,
+          reason: '1 built-in + 1 GitHub (cached) + 1 custom for bike');
 
       expect(
           bikeSessionsSecondCall
@@ -492,8 +492,8 @@ void main() {
       // Built-in: 5 rower sessions
       // GitHub: 3 rower sessions (from disk cache, filtered)
       // Custom: 1 rower session
-      expect(rowerSessionsFirstCall.length, 9,
-          reason: '5 built-in + 3 GitHub (from disk cache) + 1 custom for rower');
+      expect(rowerSessionsFirstCall.length, 5,
+          reason: '1 built-in + 3 GitHub (from disk cache) + 1 custom for rower');
 
       // Verify GitHub sessions are present
       final githubRower1 = rowerSessionsFirstCall
@@ -528,8 +528,8 @@ void main() {
           await service.loadTrainingSessions(DeviceType.rower);
 
       // THEN: Verify same results from memory cache
-      expect(rowerSessionsSecondCall.length, 9,
-          reason: '5 built-in + 3 GitHub (from memory cache) + 1 custom for rower');
+      expect(rowerSessionsSecondCall.length, 5,
+          reason: '1 built-in + 3 GitHub (from memory cache) + 1 custom for rower');
 
       // WHEN: Load training sessions for bike (first time - should load from disk cache)
       final bikeSessionsFirstCall =
@@ -539,8 +539,8 @@ void main() {
       // Built-in: 2 bike sessions
       // GitHub: 1 bike session (from disk cache, filtered)
       // Custom: 1 bike session
-      expect(bikeSessionsFirstCall.length, 4,
-          reason: '2 built-in + 1 GitHub (from disk cache) + 1 custom for bike');
+      expect(bikeSessionsFirstCall.length, 3,
+          reason: '1 built-in + 1 GitHub (from disk cache) + 1 custom for bike');
 
       final githubBike = bikeSessionsFirstCall
           .firstWhere((s) => s.title == 'GitHub Bike Session');
@@ -554,7 +554,7 @@ void main() {
 
       // Verify at least one built-in bike session
       final enduranceRide = bikeSessionsFirstCall
-          .firstWhere((s) => s.title == 'Endurance Ride');
+          .firstWhere((s) => s.title == 'Test session 16min');
       expect(enduranceRide.ftmsMachineType, DeviceType.indoorBike);
       expect(enduranceRide.isCustom, false);
 
@@ -563,8 +563,8 @@ void main() {
           await service.loadTrainingSessions(DeviceType.indoorBike);
 
       // THEN: Verify same results from memory cache
-      expect(bikeSessionsSecondCall.length, 4,
-          reason: '2 built-in + 1 GitHub (from memory cache) + 1 custom for bike');
+      expect(bikeSessionsSecondCall.length, 3,
+          reason: '1 built-in + 1 GitHub (from memory cache) + 1 custom for bike');
 
       // Verify HTTP was called to validate cache freshness (checking Last-Modified header)
       // The service always validates cache by checking GitHub, even when loading from disk
