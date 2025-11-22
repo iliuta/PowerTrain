@@ -195,10 +195,10 @@ void main() {
 
       // THEN: Verify rower sessions content (first call)
       // Built-in: 5 rower sessions (2k_steady, 30x30, steady-35-min, steady_state_endurance_base, test-session)
-      // GitHub: 4 rower+bike sessions (3 rower + 1 bike, bike filtered later)
+      // GitHub: 4 rower+bike sessions (3 rower, bike filtered later)
       // Custom: 1 rower session
-      expect(rowerSessionsFirstCall.length, 10,
-          reason: '5 built-in + 4 GitHub (incl bike) + 1 custom for rower');
+      expect(rowerSessionsFirstCall.length, 9,
+          reason: '5 built-in + 4 GitHub + 1 custom for rower');
 
       // Verify GitHub sessions are present
       final githubRower1 = rowerSessionsFirstCall

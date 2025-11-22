@@ -191,12 +191,7 @@ class TrainingSessionStorageService {
   /// Fetch GitHub repository Last-Modified header
   Future<String?> _fetchGitHubLastModified() async {
     try {
-      const String owner = 'iliuta';
-      const String repo = 'powertrain-training-sessions';
-      const String path = 'training-sessions';
-      final apiUrl = 'https://api.github.com/repos/$owner/$repo/contents/$path';
-
-      final response = await _client.get(Uri.parse(apiUrl));
+      final response = await _client.get(_getGithubUrl());
       if (response.statusCode != 200) {
         logger.w('[_fetchGitHubLastModified] GitHub API returned ${response.statusCode}');
         return null;
@@ -209,14 +204,14 @@ class TrainingSessionStorageService {
     }
   }
 
+  Uri _getGithubUrl() {
+    final apiUrl = 'https://api.github.com/repos/iliuta/powertrain-training-sessions/contents/training-sessions';
+    return Uri.parse(apiUrl);
+  }
+
   /// Download and parse session files from GitHub
   Future<List<TrainingSessionDefinition>> _downloadSessionsFromGithub() async {
-    const String owner = 'iliuta';
-    const String repo = 'powertrain-training-sessions';
-    const String path = 'training-sessions';
-    final apiUrl = 'https://api.github.com/repos/$owner/$repo/contents/$path';
-
-    final response = await _client.get(Uri.parse(apiUrl));
+    final response = await _client.get(_getGithubUrl());
     if (response.statusCode != 200) {
       throw Exception('GitHub API returned ${response.statusCode}');
     }
@@ -438,7 +433,7 @@ class TrainingSessionStorageService {
         _githubSessionsCache[mt] = sessions.where((s) => s.ftmsMachineType == mt).toList();
       }
 
-      return sessions;
+      return _githubSessionsCache[machineType] ?? [];
     } catch (e) {
       logger.e('[loadBuiltInSessionsFromGithub] Error loading GitHub sessions: $e - falling back to cache');
       // Fall back to cache on any error
