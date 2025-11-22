@@ -12,7 +12,7 @@ void main() {
   // Mock AssetBundle for config loading
   setUpAll(() async {
     // Mock AssetManifest.json
-    const manifest = '{"lib/config/rowing_machine.json":[],"lib/config/indoor_bike.json":[],"lib/config/default_user_settings.json":[],"lib/training-sessions/test-session.json":[]}';
+    const manifest = '{"lib/config/rowing_machine.json":[],"lib/config/indoor_bike.json":[],"lib/config/default_user_settings.json":[],"lib/training-sessions/test-session-1min30-rower.json":[]}';
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets', (message) async {
       final String key = const StringCodec().decodeMessage(message) as String;
       if (key == 'AssetManifest.json') {
@@ -47,7 +47,7 @@ void main() {
   "soundEnabled": true
 }''');
       }
-      if (key == 'lib/training-sessions/test-session.json') {
+      if (key == 'lib/training-sessions/test-session-1min30-rower.json') {
         return const StringCodec().encodeMessage('''{
   "title": "Test Session",
   "ftmsMachineType": "rower",

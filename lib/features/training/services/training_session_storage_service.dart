@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:ftms/core/utils/logger.dart';
@@ -77,11 +77,11 @@ class TrainingSessionStorageService {
   Future<Directory> _getGitHubCacheDirectory() async {
     final documentsDir = await _directoryProvider.getApplicationDocumentsDirectory();
     final cacheDir = Directory('${documentsDir.path}/$_githubCacheDir');
-    
+
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
-    
+
     return cacheDir;
   }
 
@@ -106,12 +106,12 @@ class TrainingSessionStorageService {
 
       final metadataContent = await metadataFile.readAsString(encoding: utf8);
       final metadata = jsonDecode(metadataContent) as Map<String, dynamic>;
-      
+
       // Load each cached machine type
       for (final entry in metadata.entries) {
         final machineTypeStr = entry.key;
         if (machineTypeStr == 'lastUpdated' || machineTypeStr == 'lastModified') continue;
-        
+
         final deviceType = _parseDeviceType(machineTypeStr);
         if (deviceType == null) continue;
 
@@ -136,30 +136,17 @@ class TrainingSessionStorageService {
   }
 
   /// Save GitHub sessions cache to persistent storage with HTTP header metadata
-  Future<void> _saveGitHubCacheToDisk({String? lastModifiedHeader}) async {
+  Future<void> _saveGitHubCacheToDisk(String? lastModifiedHeader, List<TrainingSessionDefinition> sessions) async {
     try {
-      if (_githubSessionsCache.isEmpty) {
-        return;
-      }
-
       final cacheDir = await _getGitHubCacheDirectory();
       final metadata = <String, dynamic>{};
 
-      // Save each machine type's sessions
-      for (final entry in _githubSessionsCache.entries) {
-        final deviceType = entry.key;
-        final sessions = entry.value;
-        final machineTypeStr = deviceType.toString();
+      // Save sessions
+      final cacheFile = File('${cacheDir.path}/github-cache.json');
+      final sessionsJson = sessions.map((s) => s.toJson()).toList();
+      await cacheFile.writeAsString(jsonEncode(sessionsJson), encoding: utf8);
 
-        // Save sessions
-        final cacheFile = File('${cacheDir.path}/$machineTypeStr.json');
-        final sessionsJson = sessions.map((s) => s.toJson()).toList();
-        await cacheFile.writeAsString(jsonEncode(sessionsJson), encoding: utf8);
-
-        // Store metadata (session count)
-        metadata[machineTypeStr] = sessions.length;
-        logger.i('[saveGitHubCacheToDisk] Saved ${sessions.length} sessions for $machineTypeStr');
-      }
+      logger.i('[saveGitHubCacheToDisk] Saved ${sessions.length} sessions');
 
       // Save metadata with timestamps
       final metadataFile = await _getCacheMetadataFile();
@@ -204,12 +191,7 @@ class TrainingSessionStorageService {
   /// Fetch GitHub repository Last-Modified header
   Future<String?> _fetchGitHubLastModified() async {
     try {
-      const String owner = 'iliuta';
-      const String repo = 'powertrain-training-sessions';
-      const String path = 'training-sessions';
-      final apiUrl = 'https://api.github.com/repos/$owner/$repo/contents/$path';
-
-      final response = await _client.get(Uri.parse(apiUrl));
+      final response = await _client.get(_getGithubUrl());
       if (response.statusCode != 200) {
         logger.w('[_fetchGitHubLastModified] GitHub API returned ${response.statusCode}');
         return null;
@@ -222,14 +204,14 @@ class TrainingSessionStorageService {
     }
   }
 
-  /// Download and parse session files from GitHub
-  Future<List<TrainingSessionDefinition>> _downloadSessionsFromGithub(DeviceType machineType) async {
-    const String owner = 'iliuta';
-    const String repo = 'powertrain-training-sessions';
-    const String path = 'training-sessions';
-    final apiUrl = 'https://api.github.com/repos/$owner/$repo/contents/$path';
+  Uri _getGithubUrl() {
+    final apiUrl = 'https://api.github.com/repos/iliuta/powertrain-training-sessions/contents/training-sessions';
+    return Uri.parse(apiUrl);
+  }
 
-    final response = await _client.get(Uri.parse(apiUrl));
+  /// Download and parse session files from GitHub
+  Future<List<TrainingSessionDefinition>> _downloadSessionsFromGithub() async {
+    final response = await _client.get(_getGithubUrl());
     if (response.statusCode != 200) {
       throw Exception('GitHub API returned ${response.statusCode}');
     }
@@ -252,10 +234,8 @@ class TrainingSessionStorageService {
           final jsonData = json.decode(sessionResponse.body);
           final session = TrainingSessionDefinition.fromJson(jsonData, isCustom: false);
 
-          if (session.ftmsMachineType == machineType) {
-            logger.i('[_downloadSessionsFromGithub] Added GitHub session: ${session.title}');
-            sessions.add(session);
-          }
+          logger.i('[_downloadSessionsFromGithub] Added GitHub session: ${session.title}');
+          sessions.add(session);
         } else {
           logger.w('[_downloadSessionsFromGithub] Failed to load ${file['name']}: ${sessionResponse.statusCode}');
         }
@@ -272,21 +252,21 @@ class TrainingSessionStorageService {
   Future<String> saveSession(TrainingSessionDefinition session) async {
     try {
       final directory = await _getCustomSessionsDirectory();
-      
+
       // Generate a safe filename from the session title
       final safeTitle = _generateSafeFilename(session.title);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final filename = '${safeTitle}_$timestamp.json';
       final filePath = '${directory.path}/$filename';
-      
+
       // Convert session to JSON
       final sessionJson = session.toJson();
       final jsonString = jsonEncode(sessionJson);
-      
+
       // Write to file
       final file = File(filePath);
       await file.writeAsString(jsonString, encoding: utf8);
-      
+
       logger.i('Training session saved successfully: $filePath');
       return filePath;
     } catch (e) {
@@ -300,15 +280,15 @@ class TrainingSessionStorageService {
     try {
       final directory = await _getCustomSessionsDirectory();
       final sessions = <TrainingSessionDefinition>[];
-      
+
       if (!await directory.exists()) {
         return sessions;
       }
-      
+
       final files = directory.listSync()
           .where((entity) => entity is File && entity.path.endsWith('.json'))
           .cast<File>();
-      
+
       for (final file in files) {
         try {
           final content = await file.readAsString(encoding: utf8);
@@ -322,7 +302,7 @@ class TrainingSessionStorageService {
           // Continue loading other sessions even if one fails
         }
       }
-      
+
       logger.i('Loaded ${sessions.length} custom training sessions for $machineType');
       return sessions;
     } catch (e) {
@@ -335,20 +315,20 @@ class TrainingSessionStorageService {
   Future<bool> deleteSession(String title, String machineType) async {
     try {
       final directory = await _getCustomSessionsDirectory();
-      
+
       if (!await directory.exists()) {
         return false;
       }
-      
+
       final files = directory.listSync()
           .where((entity) => entity is File && entity.path.endsWith('.json'))
           .cast<File>();
-      
+
       for (final file in files) {
         try {
           final content = await file.readAsString(encoding: utf8);
           final jsonData = jsonDecode(content) as Map<String, dynamic>;
-          
+
           if (jsonData['title'] == title && jsonData['ftmsMachineType'] == machineType) {
             await file.delete();
             logger.i('Deleted training session: ${file.path}');
@@ -358,7 +338,7 @@ class TrainingSessionStorageService {
           logger.w('Failed to check session in ${file.path}: $e');
         }
       }
-      
+
       logger.w('No matching session found for deletion: $title ($machineType)');
       return false;
     } catch (e) {
@@ -374,7 +354,7 @@ class TrainingSessionStorageService {
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '_')
         .toLowerCase();
-    
+
     // Limit length to avoid filesystem issues
     return safeTitle.length > 50 ? safeTitle.substring(0, 50) : safeTitle;
   }
@@ -385,9 +365,10 @@ class TrainingSessionStorageService {
     final List<TrainingSessionDefinition> sessions = [];
 
     // Load built-in sessions from assets
-    final manifestContent = await _assetBundleProvider.loadString('AssetManifest.json');
-    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
-    final sessionFiles = manifestMap.keys
+    final manifestContent = await AssetManifest.loadFromAssetBundle(rootBundle);
+    final manifests = manifestContent.listAssets();
+
+    final sessionFiles = manifests
         .where((String key) => key.startsWith('lib/training-sessions/') && key.endsWith('.json'))
         .toList();
     logger.i('[loadBuiltInSessions] Found built-in files:');
@@ -435,50 +416,48 @@ class TrainingSessionStorageService {
       logger.i('[loadBuiltInSessionsFromGithub] GitHub Last-Modified: $githubLastModified');
 
       // If cache is up-to-date, use it
-      if (cachedLastModified != null && 
-          githubLastModified != null && 
+      if (cachedLastModified != null &&
+          githubLastModified != null &&
           cachedLastModified == githubLastModified) {
         logger.i('[loadBuiltInSessionsFromGithub] Cache is up-to-date, using cached sessions');
-        return await _loadGitHubSessionsFromCache(machineType);
+        return await _loadGitHubSessionsFromDiskCache(machineType);
       }
 
       // Cache is stale or missing, download from GitHub
       logger.i('[loadBuiltInSessionsFromGithub] Cache is stale or missing, downloading from GitHub');
-      final sessions = await _downloadSessionsFromGithub(machineType);
+      final sessions = await _downloadSessionsFromGithub();
+      await _saveGitHubCacheToDisk(githubLastModified, sessions);
 
-      // Cache the results
-      _githubSessionsCache[machineType] = sessions;
-      logger.i('[loadBuiltInSessionsFromGithub] Cached ${sessions.length} sessions for $machineType');
-      
-      // Persist cache to disk with Last-Modified header
-      await _saveGitHubCacheToDisk(lastModifiedHeader: githubLastModified);
+      // for each machine type, save to in-memory cache
+      for (final mt in DeviceType.values) {
+        _githubSessionsCache[mt] = sessions.where((s) => s.ftmsMachineType == mt).toList();
+      }
 
-      return sessions;
+      return _githubSessionsCache[machineType] ?? [];
     } catch (e) {
       logger.e('[loadBuiltInSessionsFromGithub] Error loading GitHub sessions: $e - falling back to cache');
       // Fall back to cache on any error
-      return await _loadGitHubSessionsFromCache(machineType);
+      return await _loadGitHubSessionsFromDiskCache(machineType);
     }
   }
 
   /// Load GitHub sessions from disk cache for a specific machine type
-  Future<List<TrainingSessionDefinition>> _loadGitHubSessionsFromCache(DeviceType machineType) async {
+  Future<List<TrainingSessionDefinition>> _loadGitHubSessionsFromDiskCache(DeviceType machineType) async {
     try {
       final cacheDir = await _getGitHubCacheDirectory();
-      final machineTypeStr = machineType.toString();
-      final cacheFile = File('${cacheDir.path}/$machineTypeStr.json');
-      
+      final cacheFile = File('${cacheDir.path}/github-cache.json');
+
       if (!await cacheFile.exists()) {
-        logger.i('[loadGitHubSessionsFromCache] No cache found for $machineType');
+        logger.i('[loadGitHubSessionsFromCache] No cache found');
         return [];
       }
-      
+
       final content = await cacheFile.readAsString(encoding: utf8);
       final sessionsData = jsonDecode(content) as List<dynamic>;
       final sessions = sessionsData
           .map((item) => TrainingSessionDefinition.fromJson(item as Map<String, dynamic>, isCustom: false))
+          .where((session) => session.ftmsMachineType == machineType)
           .toList();
-      
       _githubSessionsCache[machineType] = sessions;
       logger.i('[loadGitHubSessionsFromCache] Loaded ${sessions.length} cached sessions for $machineType');
       return sessions;
@@ -526,11 +505,11 @@ class TrainingSessionStorageService {
   Future<Directory> _getCustomSessionsDirectory() async {
     final documentsDir = await _directoryProvider.getApplicationDocumentsDirectory();
     final customSessionsDir = Directory('${documentsDir.path}/$_customSessionsDir');
-    
+
     if (!await customSessionsDir.exists()) {
       await customSessionsDir.create(recursive: true);
     }
-    
+
     return customSessionsDir;
   }
 }
