@@ -41,7 +41,7 @@
       "label": "Resistance",
       "display": "number",
       "formatter": "intFormatter",
-      "icon": "tune"
+      "icon": "resistance"
     },
     {
       "name": "Heart Rate",

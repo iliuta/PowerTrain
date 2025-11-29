@@ -10,8 +10,8 @@ class FTMSService {
 
   FTMSService(this.ftmsDevice, {WriteMachineControlPointCharacteristic? writeCharacteristic})
       : writeCharacteristic = writeCharacteristic ?? FTMS.writeMachineControlPointCharacteristic;
-
-  Future<void> writeCommand(MachineControlPointOpcodeType opcodeType, {int? resistanceLevel}) async {
+  
+  Future<void> writeCommand(MachineControlPointOpcodeType opcodeType, {int? resistanceLevel, int? power}) async {
     MachineControlPoint? controlPoint;
     switch (opcodeType) {
       case MachineControlPointOpcodeType.requestControl:
@@ -27,10 +27,10 @@ class FTMSService {
         controlPoint = MachineControlPoint.setTargetInclination(inclination: 23);
         break;
       case MachineControlPointOpcodeType.setTargetResistanceLevel:
-        controlPoint = MachineControlPoint.setTargetResistanceLevel(resistanceLevel: resistanceLevel ?? 150);
+        controlPoint = MachineControlPoint.setTargetResistanceLevel(resistanceLevel: resistanceLevel ?? 2);
         break;
       case MachineControlPointOpcodeType.setTargetPower:
-        controlPoint = MachineControlPoint.setTargetPower(power: 34);
+        controlPoint = MachineControlPoint.setTargetPower(power: power ?? 150);
         break;
       case MachineControlPointOpcodeType.setTargetHeartRate:
         controlPoint = MachineControlPoint.setTargetHeartRate(heartRate: 45);
@@ -45,4 +45,6 @@ class FTMSService {
 
     await writeCharacteristic(ftmsDevice, controlPoint);
   }
+  
+
 }

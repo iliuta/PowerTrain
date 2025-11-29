@@ -475,12 +475,16 @@ class MockFTMSService extends _i1.Mock implements _i12.FTMSService {
   _i8.Future<void> writeCommand(
     _i3.MachineControlPointOpcodeType? opcodeType, {
     int? resistanceLevel,
+    int? power,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #writeCommand,
           [opcodeType],
-          {#resistanceLevel: resistanceLevel},
+          {
+            #resistanceLevel: resistanceLevel,
+            #power: power,
+          },
         ),
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),

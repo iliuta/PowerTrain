@@ -9,29 +9,7 @@ class FTMSMachineFeaturesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        MachineFeatureWidget(ftmsDevice: ftmsDevice),
-        const Divider(height: 2),
-        SizedBox(
-          height: 60,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: MachineControlPointOpcodeType.values
-                .map(
-                  (MachineControlPointOpcodeType opcodeType) => Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: OutlinedButton(
-                      onPressed: () => writeCommand(opcodeType),
-                      child: Text(opcodeType.name),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
+    return MachineFeatureWidget(ftmsDevice: ftmsDevice);
   }
 }
 
