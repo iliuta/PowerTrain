@@ -529,36 +529,38 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             field: field,
             onUpdate: onUpdate,
           )),
-          // Resistance Level
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const SizedBox(width: 80, child: Text('Resistance:')),
-              Expanded(
-                child: TextFormField(
-                  initialValue: interval.resistanceLevel?.toString() ?? '',
-                  decoration: const InputDecoration(
-                    hintText: 'Resistance level',
-                    suffixText: 'level',
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          // Resistance Level - only for non-indoor-bike machines
+          if (widget.machineType != DeviceType.indoorBike) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const SizedBox(width: 80, child: Text('Resistance:')),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: interval.resistanceLevel?.toString() ?? '',
+                    decoration: const InputDecoration(
+                      hintText: 'Resistance level',
+                      suffixText: 'level',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      final intValue = int.tryParse(value);
+                      onUpdate(UnitTrainingInterval(
+                        title: interval.title,
+                        duration: interval.duration,
+                        targets: interval.targets,
+                        resistanceLevel: intValue,
+                        repeat: interval.repeat,
+                      ));
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final intValue = int.tryParse(value);
-                    onUpdate(UnitTrainingInterval(
-                      title: interval.title,
-                      duration: interval.duration,
-                      targets: interval.targets,
-                      resistanceLevel: intValue,
-                      repeat: interval.repeat,
-                    ));
-                  },
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );

@@ -288,6 +288,7 @@ class TrainingSessionController extends ChangeNotifier {
       Future.microtask(() async {
         if (_disposed) return;
         await stopOrPauseWithControl();
+        await resetWithControl();
       });
 
       // Finish recording and generate FIT file (async)
