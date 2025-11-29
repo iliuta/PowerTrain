@@ -85,6 +85,66 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
     }
   }
   
+  Future<void> _executeZwiftPower(int watts) async {
+    final ftmsService = FTMSService(widget.ftmsDevice);
+    setState(() => _lastError = null);
+    
+    try {
+      // Use slope-based ERG simulation (Zwift doesn't support PowerTarget with trainers)
+      await ftmsService.setZwiftPowerViaSlope(watts);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Zwift ERG (slope-based) set to ${watts}W'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _lastError = e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Zwift command failed: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+  
+  Future<void> _executeZwiftResistance(int percent) async {
+    final ftmsService = FTMSService(widget.ftmsDevice);
+    setState(() => _lastError = null);
+    
+    try {
+      await ftmsService.setZwiftResistance(percent);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Zwift resistance set to ${percent}%'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _lastError = e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Zwift command failed: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+  
   Widget _buildFeatureControl(String featureName, bool isSupported, {
     MachineControlPointOpcodeType? relatedCommand,
     bool needsInput = false,
@@ -208,6 +268,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
         
         final features = snapshot.data!.getFeatureFlags();
         final deviceName = widget.ftmsDevice.platformName;
+        final isZwiftHub = deviceName.toLowerCase().contains('zwift');
         
         return SingleChildScrollView(
           child: Column(
@@ -232,6 +293,136 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                   ],
                 ),
               ),
+              
+              // Zwift Hub proprietary controls
+              if (isZwiftHub)
+                Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purple[50],
+                    border: Border.all(color: Colors.purple, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.science, color: Colors.purple),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Zwift Proprietary Controls',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Using reverse-engineered Zwift protocol (bypasses FTMS)',
+                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      // ERG Power Control (via slope simulation)
+                      Row(
+                        children: [
+                          const Expanded(
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('ERG Power', style: TextStyle(fontWeight: FontWeight.w500)),
+                                Text('(slope-based)', style: TextStyle(fontSize: 10, color: Colors.black45)),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 80,
+                            child: TextField(
+                              controller: _getController('zwift_power', '150'),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              decoration: const InputDecoration(
+                                labelText: 'Watts',
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final watts = int.tryParse(_getController('zwift_power', '150').text);
+                              if (watts == null || watts < 0 || watts > 2000) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid power. Range: 0-2000W')),
+                                );
+                                return;
+                              }
+                              await _executeZwiftPower(watts);
+                            },
+                            icon: const Icon(Icons.bolt, size: 16),
+                            label: const Text('Set'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      // Resistance Control
+                      Row(
+                        children: [
+                          const Expanded(
+                            flex: 2,
+                            child: Text('Resistance', style: TextStyle(fontWeight: FontWeight.w500)),
+                          ),
+                          SizedBox(
+                            width: 80,
+                            child: TextField(
+                              controller: _getController('zwift_resistance', '50'),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              decoration: const InputDecoration(
+                                labelText: '%',
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final percent = int.tryParse(_getController('zwift_resistance', '50').text);
+                              if (percent == null || percent < 0 || percent > 100) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid resistance. Range: 0-100%')),
+                                );
+                                return;
+                              }
+                              await _executeZwiftResistance(percent);
+                            },
+                            icon: const Icon(Icons.fitness_center, size: 16),
+                            label: const Text('Set'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               
               // Error display
               if (_lastError != null)
