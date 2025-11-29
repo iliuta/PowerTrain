@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../training/training_sessions_page.dart';
 import '../settings/settings_page.dart';
 import '../fit_files/fit_file_manager_page.dart';
-import '../trainer_monitor/trainer_control_demo.dart';
-import '../../core/services/ftms_service.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 
 /// A burger menu widget with navigation options and device status
@@ -33,16 +31,6 @@ class BurgerMenu extends StatelessWidget {
             dense: true,
           ),
         ),
-        // Zwift Trainer Control - only show if connected
-        if (connectedDevice != null)
-          const PopupMenuItem<String>(
-            value: 'zwift_control',
-            child: ListTile(
-              leading: Icon(Icons.speed, color: Colors.blue),
-              title: Text('Zwift Trainer Control'),
-              dense: true,
-            ),
-          ),
         const PopupMenuItem<String>(
           value: 'fit_files',
           child: ListTile(
@@ -73,17 +61,6 @@ class BurgerMenu extends StatelessWidget {
             ),
           ),
         );
-        break;
-      case 'zwift_control':
-        if (connectedDevice != null) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => TrainerControlDemo(
-                ftmsService: FTMSService(connectedDevice!),
-              ),
-            ),
-          );
-        }
         break;
       case 'fit_files':
         Navigator.of(context).push(

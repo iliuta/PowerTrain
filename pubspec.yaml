@@ -56,8 +56,6 @@ dependencies:
   audioplayers: ^6.5.1
   device_info_plus: ^12.2.0
   meta: ^1.16.0
-  protobuf: ^3.1.0
-
 
 dev_dependencies:
   flutter_test:

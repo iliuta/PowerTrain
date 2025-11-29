@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -39,7 +40,6 @@ class TrainingSessionController extends ChangeNotifier {
   // Audio player for warning sounds
   AudioPlayer? _audioPlayer;
 
-  bool hasControl = false;
   bool sessionCompleted = false;
   bool sessionPaused = false; // Add pause state
   bool isDeviceConnected = true; // Track device connection state
@@ -127,24 +127,15 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control after a short delay, then start session and set initial resistance if needed
     Future.delayed(const Duration(seconds: 2), () async {
       if (_disposed) return;
-      try {
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
-        if (!_disposed) notifyListeners();
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.startOrResume);
-        final firstResistance =
-            _intervals.isNotEmpty ? _intervals[0].resistanceLevel : null;
-        if (firstResistance != null) {
-          await Future.delayed(const Duration(milliseconds: 200));
-          await _ftmsService.writeCommand(
-              MachineControlPointOpcodeType.setTargetResistanceLevel,
-              resistanceLevel: firstResistance);
-        }
-      } catch (e) {
-        debugPrint('Failed to request control/start: $e');
+      await startOrResumeWithControl();
+      final firstResistance =
+          _intervals.isNotEmpty ? _intervals[0].resistanceLevel : null;
+      if (firstResistance != null) {
+        await setResistanceWithControl(firstResistance);
+      }
+      final firstPower = _intervals[0].targets?['Instantaneous Power'];
+      if (firstPower != null) {
+        await setPowerWithControl(firstPower);
       }
     });
   }
@@ -170,20 +161,6 @@ class TrainingSessionController extends ChangeNotifier {
       _dataRecorder!.startRecording();
     } catch (e) {
       debugPrint('Failed to initialize data recording: $e');
-    }
-  }
-
-  Future<void> setResistanceWithControl(int resistance) async {
-    try {
-      if (!hasControl) {
-        debugPrint('Not in control, skipping resistance set');
-        return;
-      }
-      await _ftmsService.writeCommand(
-          MachineControlPointOpcodeType.setTargetResistanceLevel,
-          resistanceLevel: resistance);
-    } catch (e) {
-      debugPrint('Failed to set resistance: $e');
     }
   }
 
@@ -286,19 +263,7 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send resume command to FTMS device after reconnection
     Future.delayed(const Duration(milliseconds: 500), () async {
       if (_disposed) return;
-      try {
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.startOrResume);
-        logger.i(
-            '📤 Requested control and sent startOrResume command after reconnection');
-      } catch (e) {
-        logger.e(
-            'Failed to request control/send resume command after reconnection: $e');
-      }
+      await startOrResumeWithControl();
     });
 
     // Timer will restart automatically when FTMS data changes
@@ -320,7 +285,10 @@ class TrainingSessionController extends ChangeNotifier {
       _timer?.cancel();
       timerActive = false;
       sessionCompleted = true;
-      _ftmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause);
+      Future.microtask(() async {
+        if (_disposed) return;
+        await stopOrPauseWithControl();
+      });
 
       // Finish recording and generate FIT file (async)
       _finishRecording().then((_) {
@@ -349,6 +317,11 @@ class TrainingSessionController extends ChangeNotifier {
         final resistance = _intervals[currentInterval].resistanceLevel;
         if (resistance != null) {
           setResistanceWithControl(resistance);
+        }
+        final power =
+            _intervals[currentInterval].targets?['Instantaneous Power'];
+        if (power != null) {
+          setPowerWithControl(power);
         }
       }
       notifyListeners();
@@ -476,17 +449,7 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send pause command to FTMS device
     Future.microtask(() async {
       if (_disposed) return;
-      try {
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.stopOrPause);
-        logger.i('📤 Requested control and sent pause command');
-      } catch (e) {
-        logger.e('Failed to request control/send pause command: $e');
-      }
+      await stopOrPauseWithControl();
     });
 
     if (!_disposed) notifyListeners();
@@ -503,18 +466,7 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send resume command to FTMS device
     Future.microtask(() async {
       if (_disposed) return;
-      try {
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.startOrResume);
-        logger.i(
-            '📤 Requested control and sent startOrResume command for manual resume');
-      } catch (e) {
-        logger.e('Failed to request control/send resume command: $e');
-      }
+      await startOrResumeWithControl();
     });
 
     // Restart timer - it will start automatically when FTMS data changes
@@ -545,19 +497,8 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control first, then send stop + reset commands to FTMS device
     Future.microtask(() async {
       if (_disposed) return;
-      try {
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.requestControl);
-        hasControl = true;
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService
-            .writeCommand(MachineControlPointOpcodeType.stopOrPause);
-        await Future.delayed(const Duration(milliseconds: 200));
-        await _ftmsService.writeCommand(MachineControlPointOpcodeType.reset);
-        logger.i('📤 Requested control and sent stop/reset commands');
-      } catch (e) {
-        logger.e('Failed to request control/send stop command: $e');
-      }
+      await stopOrPauseWithControl();
+      await resetWithControl();
     });
   }
 
@@ -574,16 +515,7 @@ class TrainingSessionController extends ChangeNotifier {
     // Request control and send stop command to FTMS device if session wasn't completed normally
     if (!sessionCompleted) {
       Future.microtask(() async {
-        try {
-          await _ftmsService
-              .writeCommand(MachineControlPointOpcodeType.requestControl);
-          await Future.delayed(const Duration(milliseconds: 200));
-          await _ftmsService
-              .writeCommand(MachineControlPointOpcodeType.stopOrPause);
-        } catch (e) {
-          debugPrint(
-              'Failed to request control/send stop command during dispose: $e');
-        }
+        await stopOrPauseWithControl();
       });
     }
 
@@ -593,5 +525,75 @@ class TrainingSessionController extends ChangeNotifier {
     }
 
     super.dispose();
+  }
+
+  Future<void> setPowerWithControl(dynamic power) async {
+    try {
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _ftmsService.writeCommand(
+          MachineControlPointOpcodeType.setTargetPower,
+          power: power);
+    } catch (e) {
+      debugPrint('Failed to set power: $e');
+    }
+  }
+
+  Future<void> stopOrPauseWithControl() async {
+    try {
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.stopOrPause);
+    } catch (e) {
+      debugPrint('Failed to set resistance: $e');
+    }
+  }
+
+  Future<void> setResistanceWithControl(int resistance) async {
+    try {
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _ftmsService.writeCommand(
+          MachineControlPointOpcodeType.setTargetResistanceLevel,
+          resistanceLevel: resistance);
+    } catch (e) {
+      debugPrint('Failed to set resistance: $e');
+    }
+  }
+
+  Future<void> startOrResumeWithControl() async {
+    try {
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.startOrResume);
+      logger.i(
+          '📤 Requested control and sent startOrResume command after reconnection');
+    } catch (e) {
+      logger.e(
+          'Failed to request control/send resume command after reconnection: $e');
+    }
+  }
+
+  Future<void> resetWithControl() async {
+    try {
+      await _ftmsService
+          .writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (session.ftmsMachineType == DeviceType.indoorBike) {
+        await _ftmsService.writeCommand(
+            MachineControlPointOpcodeType.setTargetPower,
+            power: 0);
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      await _ftmsService.writeCommand(MachineControlPointOpcodeType.reset);
+    } catch (e) {
+      debugPrint('Failed to reset: $e');
+    }
   }
 }

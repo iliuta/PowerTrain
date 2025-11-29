@@ -242,8 +242,6 @@ void main() {
         // Verify that the FTMS commands were called at least once
         verify(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel'))).called(greaterThanOrEqualTo(3));
 
-        expect(controller.hasControl, true);
-
         controller.dispose();
       });
     });
@@ -315,7 +313,7 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl, resistanceLevel: null)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl, resistanceLevel: null)).called(2);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(1);
       });
@@ -372,7 +370,7 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl, resistanceLevel: null)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl, resistanceLevel: null)).called(2);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(1);
       });
