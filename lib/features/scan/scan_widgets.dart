@@ -7,6 +7,7 @@ import '../ftms/ftms_page.dart';
 import '../../core/services/devices/bt_device_manager.dart';
 import '../../core/services/devices/bt_device_navigation_registry.dart';
 import '../../core/services/devices/bt_device.dart';
+import '../../core/services/devices/last_connected_devices_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 /// Button for scanning Bluetooth devices
@@ -43,6 +44,9 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
   // Sort available devices by device type priority
   final sortedAvailableDevices =
       supportedBTDeviceManager.sortBTDevicesByPriority(availableDevices);
+
+  // Auto-reconnect to previously connected devices
+  _handleAutoReconnection(sortedAvailableDevices, context);
 
   // Create a combined list: connected devices first, then available devices
   final List<Widget> deviceWidgets = [];
@@ -309,4 +313,27 @@ void initializeDeviceNavigation() {
       ),
     );
   });
+}
+
+/// Handle auto-reconnection and display UI feedback
+void _handleAutoReconnection(List<ScanResult> scanResults, BuildContext context) async {
+  final lastConnectedService = LastConnectedDevicesService();
+  
+  // Attempt auto-reconnection via service
+  final results = await lastConnectedService.attemptAutoReconnections(scanResults);
+  
+  // Display UI feedback for successful reconnections
+  if (context.mounted) {
+    for (final result in results) {
+      if (result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-reconnected to ${result.deviceType.name}: ${result.deviceName}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
 }

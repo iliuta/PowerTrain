@@ -4,6 +4,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/devices/bt_device_manager.dart';
 import 'package:ftms/core/utils/logger.dart';
 import '../../models/device_types.dart';
+import '../../models/bt_device_service_type.dart';
+import 'last_connected_devices_service.dart';
 
 /// Abstract service interface for different types of Bluetooth devices
 abstract class BTDevice {
@@ -106,6 +108,19 @@ abstract class BTDevice {
     // Add to global registry via manager
     if (_deviceManager != null) {
       _deviceManager?.addConnectedDevice(device.remoteId.str, this);
+    }
+    
+    // Save device information for auto-reconnection
+    try {
+      final lastConnectedService = LastConnectedDevicesService();
+      await lastConnectedService.saveLastConnectedDevice(
+        deviceType: BTDeviceServiceType.fromString(deviceTypeName),
+        deviceId: device.remoteId.str,
+        deviceName: device.platformName.isEmpty ? '(unknown device)' : device.platformName,
+      );
+    } catch (e) {
+      // Ignore errors for unsupported device types (e.g., test devices)
+      logger.w('⚠️ Could not save last connected device: $e');
     }
   }
 
