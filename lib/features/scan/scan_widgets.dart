@@ -7,6 +7,7 @@ import '../ftms/ftms_page.dart';
 import '../../core/services/devices/bt_device_manager.dart';
 import '../../core/services/devices/bt_device_navigation_registry.dart';
 import '../../core/services/devices/bt_device.dart';
+import '../../core/services/devices/last_connected_devices_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 /// Button for scanning Bluetooth devices
@@ -44,94 +45,103 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
   final sortedAvailableDevices =
       supportedBTDeviceManager.sortBTDevicesByPriority(availableDevices);
 
-  // Create a combined list: connected devices first, then available devices
+  // Auto-reconnect to previously connected devices
+  _handleAutoReconnection(sortedAvailableDevices, context);
+
+  // Separate connected devices into FTMS and sensors
+  final connectedFtmsDevices = connectedDevices
+      .where((d) => d.deviceTypeName == 'FTMS')
+      .toList();
+  final connectedSensorDevices = connectedDevices
+      .where((d) => d.deviceTypeName != 'FTMS')
+      .toList();
+
+  // Separate available devices into FTMS and sensors
+  final availableFtmsDevices = <ScanResult>[];
+  final availableSensorDevices = <ScanResult>[];
+  
+  for (final scanResult in sortedAvailableDevices) {
+    final deviceService =
+        supportedBTDeviceManager.getBTDevice(scanResult.device, data);
+    if (deviceService != null) {
+      if (deviceService.deviceTypeName == 'FTMS') {
+        availableFtmsDevices.add(scanResult);
+      } else {
+        availableSensorDevices.add(scanResult);
+      }
+    }
+  }
+
+  // Build the widget list with sections
   final List<Widget> deviceWidgets = [];
 
-  // Add connected devices first
-  for (final connectedDevice in connectedDevices) {
+  // FTMS Machines Section
+  if (connectedFtmsDevices.isNotEmpty || availableFtmsDevices.isNotEmpty) {
     deviceWidgets.add(
-      Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        elevation: 2,
-        child: ListTile(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  connectedDevice.getDeviceIcon(context) ?? Container(),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      connectedDevice.name,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                  // Connected indicator
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Connected',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              // Move buttons below the device name for better responsiveness
-              const SizedBox(height: 8),
-              getButtonForConnectedDevice(connectedDevice, context),
-            ],
-          ),
-          leading: const SizedBox(
-            width: 40,
-            child: Center(
-              child: Icon(Icons.bluetooth_connected, color: Colors.green),
-            ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Text(
+          'Fitness machines',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
           ),
         ),
       ),
     );
+
+    // Add connected FTMS devices
+    for (final connectedDevice in connectedFtmsDevices) {
+      deviceWidgets.add(_buildConnectedDeviceCard(connectedDevice, context));
+    }
+
+    // Add available FTMS devices
+    for (final scanResult in availableFtmsDevices) {
+      final deviceService =
+          supportedBTDeviceManager.getBTDevice(scanResult.device, data);
+      deviceWidgets.add(_buildAvailableDeviceCard(scanResult, deviceService, context, data));
+    }
   }
 
-  // Add available devices
-  for (final scanResult in sortedAvailableDevices) {
-    final deviceService =
-        supportedBTDeviceManager.getBTDevice(scanResult.device, data);
+  // Sensors Section
+  if (connectedSensorDevices.isNotEmpty || availableSensorDevices.isNotEmpty) {
     deviceWidgets.add(
-      Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        elevation: 2,
-        child: ListTile(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (deviceService != null) ...[
-                    deviceService.getDeviceIcon(context) ?? Container(),
-                    const SizedBox(width: 4),
-                  ],
-                  Expanded(
-                    child: Text(
-                      scanResult.device.platformName.isEmpty
-                          ? "(unknown device)"
-                          : scanResult.device.platformName,
-                    ),
-                  ),
-                ],
-              ),
-              // Move buttons below the device name for better responsiveness
-              const SizedBox(height: 8),
-              getButtonForBluetoothDevice(scanResult.device, context, data),
-            ],
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Text(
+          'Sensors',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ),
+    );
+
+    // Add connected sensor devices
+    for (final connectedDevice in connectedSensorDevices) {
+      deviceWidgets.add(_buildConnectedDeviceCard(connectedDevice, context));
+    }
+
+    // Add available sensor devices
+    for (final scanResult in availableSensorDevices) {
+      final deviceService =
+          supportedBTDeviceManager.getBTDevice(scanResult.device, data);
+      deviceWidgets.add(_buildAvailableDeviceCard(scanResult, deviceService, context, data));
+    }
+  }
+
+  // Show a message if no devices found
+  if (deviceWidgets.isEmpty) {
+    deviceWidgets.add(
+      const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: Text(
+            'No devices found. Try scanning for devices.',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ),
       ),
@@ -139,6 +149,92 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
   }
 
   return ListView(children: deviceWidgets);
+}
+
+/// Build a card widget for a connected device
+Widget _buildConnectedDeviceCard(BTDevice connectedDevice, BuildContext context) {
+  return Card(
+    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    elevation: 2,
+    child: ListTile(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              connectedDevice.getDeviceIcon(context) ?? Container(),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  connectedDevice.name,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ),
+              // Connected indicator
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'Connected',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Move buttons below the device name for better responsiveness
+          const SizedBox(height: 8),
+          getButtonForConnectedDevice(connectedDevice, context),
+        ],
+      ),
+      leading: const SizedBox(
+        width: 40,
+        child: Center(
+          child: Icon(Icons.bluetooth_connected, color: Colors.green),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Build a card widget for an available device
+Widget _buildAvailableDeviceCard(ScanResult scanResult, BTDevice? deviceService, 
+    BuildContext context, List<ScanResult> data) {
+  return Card(
+    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    elevation: 2,
+    child: ListTile(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (deviceService != null) ...[
+                deviceService.getDeviceIcon(context) ?? Container(),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: Text(
+                  scanResult.device.platformName.isEmpty
+                      ? "(unknown device)"
+                      : scanResult.device.platformName,
+                ),
+              ),
+            ],
+          ),
+          // Move buttons below the device name for better responsiveness
+          const SizedBox(height: 8),
+          getButtonForBluetoothDevice(scanResult.device, context, data),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Button for connecting/disconnecting to a Bluetooth device
@@ -309,4 +405,27 @@ void initializeDeviceNavigation() {
       ),
     );
   });
+}
+
+/// Handle auto-reconnection and display UI feedback
+void _handleAutoReconnection(List<ScanResult> scanResults, BuildContext context) async {
+  final lastConnectedService = LastConnectedDevicesService();
+  
+  // Attempt auto-reconnection via service
+  final results = await lastConnectedService.attemptAutoReconnections(scanResults);
+  
+  // Display UI feedback for successful reconnections
+  if (context.mounted) {
+    for (final result in results) {
+      if (result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-reconnected to ${result.deviceType.name}: ${result.deviceName}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
 }

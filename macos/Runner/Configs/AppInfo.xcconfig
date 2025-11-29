@@ -8,7 +8,7 @@
 PRODUCT_NAME = ftms
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.iliuta.ftms
+PRODUCT_BUNDLE_IDENTIFIER = com.iliuta.ftms.dev
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 com.iliuta. All rights reserved.
