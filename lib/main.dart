@@ -14,7 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Set log level for production
-  FlutterBluePlus.setLogLevel(LogLevel.info);
+  FlutterBluePlus.setLogLevel(LogLevel.warning);
   
   // Initialize device navigation callbacks to avoid circular dependencies
   initializeDeviceNavigation();

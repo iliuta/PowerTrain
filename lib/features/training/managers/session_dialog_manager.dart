@@ -7,7 +7,7 @@ class SessionDialogManager {
 
   void handleCompletionDialog(
       BuildContext context, TrainingSessionController controller) {
-    if (controller.sessionCompleted && !_congratulationsDialogShown) {
+    if (controller.state.hasEnded && !_congratulationsDialogShown) {
       _congratulationsDialogShown = true;
       _showCompletionDialog(context, controller);
     }

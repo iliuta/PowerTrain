@@ -7,6 +7,7 @@ import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/features/training/model/session_state.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../core/bloc/ftms_bloc.dart';
@@ -22,9 +23,6 @@ class TrainingSessionController extends ChangeNotifier {
   final ExpandedTrainingSessionDefinition session;
   final BluetoothDevice ftmsDevice;
   late final FTMSService _ftmsService;
-  late final List<ExpandedUnitTrainingInterval> _intervals;
-  late final List<int> _intervalStartTimes;
-  late final int _totalDuration;
   late final Stream<DeviceData?> _ftmsStream;
   late final StreamSubscription<DeviceData?> _ftmsSub;
   late final StreamSubscription<BluetoothConnectionState> _connectionStateSub;
@@ -40,16 +38,13 @@ class TrainingSessionController extends ChangeNotifier {
   // Audio player for warning sounds
   AudioPlayer? _audioPlayer;
 
-  bool sessionCompleted = false;
-  bool sessionPaused = false; // Add pause state
-  bool isDeviceConnected = true; // Track device connection state
-  bool wasAutoPaused =
-      false; // Track if session was auto-paused due to disconnection
-  int elapsed = 0;
-  int intervalElapsed = 0;
-  int currentInterval = 0;
-  bool timerActive = false;
+  // Session state machine
+  late TrainingSessionState _state;
+
+  // For detecting data changes
   List<dynamic>? _lastFtmsParams;
+
+  // Strava upload tracking
   String? lastGeneratedFitFile;
   bool stravaUploadAttempted = false;
   bool stravaUploadSuccessful = false;
@@ -68,6 +63,32 @@ class TrainingSessionController extends ChangeNotifier {
     _ftmsService = ftmsService ?? FTMSService(ftmsDevice);
     _stravaService = stravaService ?? StravaService();
 
+    // Initialize session state
+    _state = TrainingSessionState.initial(session);
+
+    // Initialize audio player with error handling for tests
+    _initAudioPlayer(audioPlayer);
+    _dataRecorder = dataRecorder;
+
+    // Ensure wakelock stays enabled during training sessions
+    _enableWakeLock();
+
+    _ftmsStream = ftmsBloc.ftmsDeviceDataControllerStream;
+    _ftmsSub = _ftmsStream.listen(_onFtmsData);
+    _connectionStateSub =
+        ftmsDevice.connectionState.listen(_onConnectionStateChanged);
+    _initFTMS();
+    _initDataRecording();
+  }
+
+  void _enableWakeLock() {
+    // Ensure wakelock stays enabled during training sessions
+    WakelockPlus.enable().catchError((e) {
+      debugPrint('Failed to enable wakelock during training: $e');
+    });
+  }
+
+  void _initAudioPlayer(AudioPlayer? audioPlayer) {
     // Initialize audio player with error handling for tests
     if (audioPlayer != null) {
       _audioPlayer = audioPlayer;
@@ -80,62 +101,32 @@ class TrainingSessionController extends ChangeNotifier {
         _audioPlayer = null;
       }
     }
-    _dataRecorder =
-        dataRecorder; // Can be null, will be created in _initDataRecording if needed
-    _intervals = session.intervals;
-    _intervalStartTimes = [];
-    int acc = 0;
-    for (final interval in _intervals) {
-      _intervalStartTimes.add(acc);
-      acc += interval.duration;
-    }
-    _totalDuration = acc;
-
-    // Ensure wakelock stays enabled during training sessions
-    WakelockPlus.enable().catchError((e) {
-      debugPrint('Failed to enable wakelock during training: $e');
-    });
-
-    _ftmsStream = ftmsBloc.ftmsDeviceDataControllerStream;
-    _ftmsSub = _ftmsStream.listen(_onFtmsData);
-    _connectionStateSub =
-        ftmsDevice.connectionState.listen(_onConnectionStateChanged);
-    _initFTMS();
-    _initDataRecording();
   }
 
-  int get totalDuration => _totalDuration;
+  // ============ Public getters (delegating to state) ============
 
-  List<ExpandedUnitTrainingInterval> get intervals => _intervals;
+  /// The current session state - consumers should access state properties directly
+  /// e.g., controller.state.isPaused, controller.state.elapsedSeconds, etc.
+  TrainingSessionState get state => _state;
 
-  List<int> get intervalStartTimes => _intervalStartTimes;
-
-  ExpandedUnitTrainingInterval get current => _intervals[currentInterval];
-
-  List<ExpandedUnitTrainingInterval> get remainingIntervals =>
-      _intervals.sublist(currentInterval);
-
-  int get mainTimeLeft => _totalDuration - elapsed;
-
-  int get intervalTimeLeft => current.duration - intervalElapsed;
-
-  bool get deviceConnected => isDeviceConnected;
-
-  bool get wasSessionAutoPaused => wasAutoPaused;
+  // ============ Initialization ============
 
   void _initFTMS() {
     // Request control after a short delay, then start session and set initial resistance if needed
     Future.delayed(const Duration(seconds: 2), () async {
       if (_disposed) return;
       await startOrResumeWithControl();
-      final firstResistance =
-          _intervals.isNotEmpty ? _intervals[0].resistanceLevel : null;
-      if (firstResistance != null) {
-        await setResistanceWithControl(firstResistance);
-      }
-      final firstPower = _intervals[0].targets?['Instantaneous Power'];
-      if (firstPower != null) {
-        await setPowerWithControl(firstPower);
+      final firstInterval =
+          _state.intervals.isNotEmpty ? _state.intervals[0] : null;
+      if (firstInterval != null) {
+        final firstResistance = firstInterval.resistanceLevel;
+        if (firstResistance != null) {
+          await setResistanceWithControl(firstResistance);
+        }
+        final firstPower = firstInterval.targets?['Instantaneous Power'];
+        if (firstPower != null) {
+          await setPowerWithControl(firstPower);
+        }
       }
     });
   }
@@ -164,26 +155,25 @@ class TrainingSessionController extends ChangeNotifier {
     }
   }
 
+  // ============ Event handlers ============
+
   void _onFtmsData(DeviceData? data) {
     if (data == null) return;
 
-    if (timerActive || sessionPaused) {
-      // Record training data if recording is active and configured
-      if (_dataRecorder != null && _isRecordingConfigured && timerActive) {
-        try {
-          final paramValueMap = _dataProcessor.processDeviceData(data);
-          // Pass FtmsParameter map directly to training data recorder
-          _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
-        } catch (e) {
-          debugPrint('Failed to record data point: $e');
-        }
-      }
+    // Record data if session is running
+    if (_state.isRunning) {
+      _recordDataPoint(data);
       return;
     }
 
+    // If paused, still record but don't check for changes
+    if (_state.isPaused) {
+      return;
+    }
+
+    // Check if data changed to trigger session start
     final params = data.getDeviceDataParameterValues();
-    // Only start timer if at least one value has changed since last update
-    if (_lastFtmsParams != null) {
+    if (_lastFtmsParams != null && _state.status == SessionStatus.created) {
       bool changed = false;
       for (int i = 0; i < params.length; i++) {
         final prev = _lastFtmsParams![i];
@@ -194,140 +184,150 @@ class TrainingSessionController extends ChangeNotifier {
         }
       }
       if (changed) {
-        _startTimer();
-        // Record the data point that triggered the timer start
-        if (_dataRecorder != null && _isRecordingConfigured && timerActive) {
-          try {
-            final paramValueMap = _dataProcessor.processDeviceData(data);
-            _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
-          } catch (e) {
-            debugPrint('Failed to record data point: $e');
-          }
-        }
+        _processEvent(SessionEvent.dataChanged);
+        _recordDataPoint(data);
       }
     }
     // Store current values for next comparison
     _lastFtmsParams = params.map((p) => p.value).toList();
   }
 
-  void _onConnectionStateChanged(BluetoothConnectionState state) {
-    final wasConnected = isDeviceConnected;
-    isDeviceConnected = state == BluetoothConnectionState.connected;
+  void _recordDataPoint(DeviceData data) {
+    if (_dataRecorder == null || !_isRecordingConfigured || !_state.isRunning) {
+      return;
+    }
+    try {
+      final paramValueMap = _dataProcessor.processDeviceData(data);
+      _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
+    } catch (e) {
+      debugPrint('Failed to record data point: $e');
+    }
+  }
+
+  void _onConnectionStateChanged(BluetoothConnectionState connectionState) {
+    final wasConnected = _state.isDeviceConnected;
+    final isNowConnected =
+        connectionState == BluetoothConnectionState.connected;
 
     logger.i(
-        '🔗 FTMS device connection state changed: $state (was connected: $wasConnected, now connected: $isDeviceConnected)');
+        '🔗 FTMS device connection state changed: $connectionState (was connected: $wasConnected, now connected: $isNowConnected)');
 
-    // Handle disconnection - auto-pause the session
-    if (wasConnected &&
-        !isDeviceConnected &&
-        !sessionCompleted &&
-        !sessionPaused) {
-      logger.w(
-          '📱 FTMS device disconnected during training - auto-pausing session');
-      wasAutoPaused = true;
-      _autoPauseSession();
+    if (wasConnected && !isNowConnected) {
+      // Device disconnected
+      logger.w('📱 FTMS device disconnected during training');
+      _processEvent(SessionEvent.deviceDisconnected);
+    } else if (!wasConnected && isNowConnected) {
+      // Device reconnected
+      logger.i('📱 FTMS device reconnected');
+      _processEvent(SessionEvent.deviceReconnected);
     }
-
-    // Handle reconnection - auto-resume if it was auto-paused
-    if (!wasConnected &&
-        isDeviceConnected &&
-        wasAutoPaused &&
-        sessionPaused &&
-        !sessionCompleted) {
-      logger.i('📱 FTMS device reconnected - auto-resuming session');
-      wasAutoPaused = false;
-      _autoResumeSession();
-    }
-
-    if (!_disposed) notifyListeners();
   }
 
-  void _autoPauseSession() {
-    if (sessionCompleted || sessionPaused) return;
-
-    logger.i('⏸️ Auto-pausing training session due to device disconnection');
-    sessionPaused = true;
-    timerActive = false;
-    _timer?.cancel();
-
-    // Don't send FTMS commands when device is disconnected
-    if (!_disposed) notifyListeners();
-  }
-
-  void _autoResumeSession() {
-    if (sessionCompleted || !sessionPaused) return;
-
-    logger.i('▶️ Auto-resuming training session due to device reconnection');
-    sessionPaused = false;
-
-    // Request control first, then send resume command to FTMS device after reconnection
-    Future.delayed(const Duration(milliseconds: 500), () async {
-      if (_disposed) return;
-      await startOrResumeWithControl();
-    });
-
-    // Timer will restart automatically when FTMS data changes
-    if (!_disposed) notifyListeners();
-  }
+  // ============ Timer management ============
 
   void _startTimer() {
-    if (timerActive || sessionPaused) return;
-    timerActive = true;
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
+    _timer ??= Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
   }
 
   void _onTick() {
-    if (sessionCompleted || sessionPaused) return;
-    elapsed++;
+    if (!_state.isRunning) return;
+    _processEvent(SessionEvent.timerTick);
     debugPrint(
-        '🕐 Timer tick: elapsed=$elapsed, sessionCompleted=$sessionCompleted, sessionPaused=$sessionPaused, timerActive=$timerActive');
-    if (elapsed >= _totalDuration) {
-      _timer?.cancel();
-      timerActive = false;
-      sessionCompleted = true;
-      Future.microtask(() async {
-        if (_disposed) return;
-        await stopOrPauseWithControl();
-        await resetWithControl();
-      });
+        '🕐 Timer tick: elapsed=${_state.elapsedSeconds}, status=${_state.status}');
+  }
 
-      // Finish recording and generate FIT file (async)
-      _finishRecording().then((_) {
-        // Only notify listeners after recording is completely finished
-        if (!_disposed) notifyListeners();
-      });
-    } else {
-      // Update current interval first
-      int previousInterval = currentInterval;
-      while (currentInterval < _intervals.length - 1 &&
-          elapsed >= _intervalStartTimes[currentInterval + 1]) {
-        currentInterval++;
-      }
+  // ============ State transition and effect handling ============
 
-      // Calculate current interval timing using the correct current interval
-      intervalElapsed = elapsed - _intervalStartTimes[currentInterval];
+  void _processEvent(SessionEvent event) {
+    final result = _state.processEventWithEffects(event);
+    if (result.state != _state) {
+      _state = result.state;
+    }
+    _executeEffects(result.effects);
+  }
 
-      // Play warning sound when interval is about to finish (5 seconds or less remaining)
-      final remainingTime = current.duration - intervalElapsed;
-      if (remainingTime <= 4 || remainingTime == current.duration) {
-        _playWarningSound();
-      }
-
-      // If interval changed and resistanceLevel is set, send command
-      if (currentInterval != previousInterval) {
-        final resistance = _intervals[currentInterval].resistanceLevel;
-        if (resistance != null) {
-          setResistanceWithControl(resistance);
-        }
-        final power =
-            _intervals[currentInterval].targets?['Instantaneous Power'];
-        if (power != null) {
-          setPowerWithControl(power);
-        }
-      }
-      notifyListeners();
+  void _executeEffects(List<SessionEffect> effects) {
+    for (final effect in effects) {
+      _executeEffect(effect);
     }
   }
+
+  void _executeEffect(SessionEffect effect) {
+    switch (effect) {
+      case StartTimer():
+        _startTimer();
+      case StopTimer():
+        _stopTimer();
+      case PlayWarningSound():
+        _playWarningSound();
+      case IntervalChanged(newInterval: final interval):
+        _handleIntervalChanged(interval);
+      case SessionCompleted():
+        _handleSessionCompleted();
+      case SendFtmsPause():
+        _sendFtmsPause();
+      case SendFtmsResume():
+        _sendFtmsResume();
+      case SendFtmsStopAndReset():
+        _sendFtmsStopAndReset();
+      case NotifyListeners():
+        if (!_disposed) notifyListeners();
+    }
+  }
+
+  // ============ Effect handlers (unitary operations) ============
+
+  void _handleIntervalChanged(ExpandedUnitTrainingInterval interval) {
+    final resistance = interval.resistanceLevel;
+    if (resistance != null) {
+      setResistanceWithControl(resistance);
+    }
+    final power = interval.targets?['Instantaneous Power'];
+    if (power != null) {
+      setPowerWithControl(power);
+    }
+  }
+
+  void _handleSessionCompleted() {
+    Future.microtask(() async {
+      if (_disposed) return;
+      await stopOrPauseWithControl();
+      await resetWithControl();
+    });
+
+    _finishRecording().then((_) {
+      if (!_disposed) notifyListeners();
+    });
+  }
+
+  void _sendFtmsPause() {
+    Future.microtask(() async {
+      if (_disposed) return;
+      await stopOrPauseWithControl();
+    });
+  }
+
+  void _sendFtmsResume() {
+    Future.microtask(() async {
+      if (_disposed) return;
+      await startOrResumeWithControl();
+    });
+  }
+
+  void _sendFtmsStopAndReset() {
+    Future.microtask(() async {
+      if (_disposed) return;
+      await stopOrPauseWithControl();
+      await resetWithControl();
+    });
+  }
+
+  // ============ Audio ============
 
   Future<void> _playWarningSound() async {
     if (_audioPlayer == null) {
@@ -336,7 +336,6 @@ class TrainingSessionController extends ChangeNotifier {
     }
 
     try {
-      // Play custom beep sound from assets
       await _audioPlayer!.play(AssetSource('sounds/beep.wav'));
       debugPrint('🔔 Played custom beep sound');
     } catch (e) {
@@ -344,12 +343,13 @@ class TrainingSessionController extends ChangeNotifier {
     }
   }
 
+  // ============ Recording and Strava ============
+
   Future<void> _finishRecording() async {
     if (_dataRecorder != null) {
       try {
         _dataRecorder!.stopRecording();
 
-        // Only generate FIT file if enabled (disabled for tests to avoid path_provider dependency)
         if (_enableFitFileGeneration) {
           final fitFilePath = await _dataRecorder!.generateFitFile();
           lastGeneratedFitFile = fitFilePath;
@@ -357,11 +357,8 @@ class TrainingSessionController extends ChangeNotifier {
               '***************** Training session completed successfully. FIT file saved to: $fitFilePath');
           debugPrint('FIT file generated: $fitFilePath');
 
-          // Attempt automatic Strava upload if user is authenticated
           if (fitFilePath != null) {
             await _attemptStravaUpload(fitFilePath);
-
-            // Delete the FIT file after successful Strava upload
             await _deleteFitFile(fitFilePath);
           }
         } else {
@@ -396,7 +393,6 @@ class TrainingSessionController extends ChangeNotifier {
     stravaUploadAttempted = true;
 
     try {
-      // Check if user is authenticated with Strava
       final isAuthenticated = await _stravaService.isAuthenticated();
       if (!isAuthenticated) {
         logger.i('Strava upload skipped: User not authenticated');
@@ -406,14 +402,10 @@ class TrainingSessionController extends ChangeNotifier {
 
       logger.i('Attempting automatic Strava upload...');
 
-      // Create activity name based on session
       final activityName = '${session.title} - FTMS Training';
-
-      // Determine the appropriate activity type based on the device type
       final deviceType = session.ftmsMachineType;
       final activityType = StravaActivityTypes.fromFtmsMachineType(deviceType);
 
-      // Upload to Strava with the correct activity type
       final uploadResult = await _stravaService.uploadActivity(
         fitFilePath,
         activityName,
@@ -437,71 +429,38 @@ class TrainingSessionController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
+  // ============ Public session control methods ============
+
   /// Pause the current training session
   void pauseSession() {
-    if (sessionCompleted || sessionPaused) return;
-
+    if (!_state.canProcessEvent(SessionEvent.userPaused)) return;
     logger.i('⏸️ Manually pausing training session');
-    sessionPaused = true;
-    timerActive = false;
-    wasAutoPaused = false; // Clear auto-pause flag when manually paused
-    _timer?.cancel();
-
-    // Request control first, then send pause command to FTMS device
-    Future.microtask(() async {
-      if (_disposed) return;
-      await stopOrPauseWithControl();
-    });
-
-    if (!_disposed) notifyListeners();
+    _processEvent(SessionEvent.userPaused);
   }
 
   /// Resume the paused training session
   void resumeSession() {
-    if (sessionCompleted || !sessionPaused) return;
-
+    if (!_state.canProcessEvent(SessionEvent.userResumed)) return;
     logger.i('▶️ Manually resuming training session');
-    sessionPaused = false;
-    wasAutoPaused = false; // Clear auto-pause flag when manually resumed
-
-    // Request control first, then send resume command to FTMS device
-    Future.microtask(() async {
-      if (_disposed) return;
-      await startOrResumeWithControl();
-    });
-
-    // Restart timer - it will start automatically when FTMS data changes
-    if (!_disposed) notifyListeners();
+    _processEvent(SessionEvent.userResumed);
   }
 
-  /// Stop the training session completely
+  /// Stop the training session completely and save data
   void stopSession() {
-    discardSession();
-
-    // Finish recording and generate FIT file (async)
+    if (_state.hasEnded) return;
+    _processEvent(SessionEvent.userStopped);
     _finishRecording().then((_) {
-      // Only notify listeners if not disposed
-      if (!_disposed) {
-        notifyListeners();
-      }
+      if (!_disposed) notifyListeners();
     });
   }
 
+  /// Discard the session without saving
   void discardSession() {
-    if (sessionCompleted) return;
-
-    sessionCompleted = true;
-    sessionPaused = false;
-    timerActive = false;
-    _timer?.cancel();
-
-    // Request control first, then send stop + reset commands to FTMS device
-    Future.microtask(() async {
-      if (_disposed) return;
-      await stopOrPauseWithControl();
-      await resetWithControl();
-    });
+    if (_state.hasEnded) return;
+    _processEvent(SessionEvent.userStopped);
   }
+
+  // ============ Lifecycle ============
 
   bool _disposed = false;
 
@@ -510,23 +469,23 @@ class TrainingSessionController extends ChangeNotifier {
     _disposed = true;
     _ftmsSub.cancel();
     _connectionStateSub.cancel();
-    _timer?.cancel();
+    _stopTimer();
     _audioPlayer?.dispose();
 
-    // Request control and send stop command to FTMS device if session wasn't completed normally
-    if (!sessionCompleted) {
+    if (!_state.hasEnded) {
       Future.microtask(() async {
         await stopOrPauseWithControl();
       });
     }
 
-    // Clean up data recorder if session wasn't completed normally
-    if (_dataRecorder != null && !sessionCompleted) {
+    if (_dataRecorder != null && !_state.hasEnded) {
       _finishRecording();
     }
 
     super.dispose();
   }
+
+  // ============ FTMS commands ============
 
   Future<void> setPowerWithControl(dynamic power) async {
     try {
@@ -549,7 +508,7 @@ class TrainingSessionController extends ChangeNotifier {
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.stopOrPause);
     } catch (e) {
-      debugPrint('Failed to set resistance: $e');
+      debugPrint('Failed to stop/pause: $e');
     }
   }
 
@@ -573,11 +532,9 @@ class TrainingSessionController extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 100));
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.startOrResume);
-      logger.i(
-          '📤 Requested control and sent startOrResume command after reconnection');
+      logger.i('📤 Requested control and sent startOrResume command');
     } catch (e) {
-      logger.e(
-          'Failed to request control/send resume command after reconnection: $e');
+      logger.e('Failed to request control/send resume command: $e');
     }
   }
 

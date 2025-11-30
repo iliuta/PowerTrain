@@ -7,11 +7,11 @@ class SessionSnackBarManager {
 
   void handlePauseSnackBar(
       BuildContext context, TrainingSessionController controller) {
-    if (controller.sessionPaused &&
+    if (controller.state.isPaused &&
         !_pauseSnackBarShown &&
-        !controller.sessionCompleted) {
+        !controller.state.hasEnded) {
       _showPauseSnackBar(context, controller);
-    } else if (!controller.sessionPaused && _pauseSnackBarShown) {
+    } else if (!controller.state.isPaused && _pauseSnackBarShown) {
       _hidePauseSnackBar(context);
     }
   }
