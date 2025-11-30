@@ -1,67 +1,19 @@
 import 'expanded_training_session_definition.dart';
 import 'expanded_unit_training_interval.dart';
 
-/// Side effects that should be executed by the controller after a state transition
-sealed class SessionEffect {
-  const SessionEffect();
-}
-
-/// Start the timer
-class StartTimer extends SessionEffect {
-  const StartTimer();
-}
-
-/// Stop the timer
-class StopTimer extends SessionEffect {
-  const StopTimer();
-}
-
-/// Play warning sound (countdown beep)
-class PlayWarningSound extends SessionEffect {
-  const PlayWarningSound();
-}
-
-/// Interval changed - update FTMS targets
-class IntervalChanged extends SessionEffect {
-  final ExpandedUnitTrainingInterval newInterval;
-  const IntervalChanged(this.newInterval);
-}
-
-/// Session completed - finalize recording and upload
-class SessionCompleted extends SessionEffect {
-  const SessionCompleted();
-}
-
-/// Send FTMS pause command
-class SendFtmsPause extends SessionEffect {
-  const SendFtmsPause();
-}
-
-/// Send FTMS resume command
-class SendFtmsResume extends SessionEffect {
-  const SendFtmsResume();
-}
-
-/// Send FTMS stop and reset commands
-class SendFtmsStopAndReset extends SessionEffect {
-  const SendFtmsStopAndReset();
-}
-
-/// Notify listeners of state change
-class NotifyListeners extends SessionEffect {
-  const NotifyListeners();
-}
-
-/// Result of processing an event - contains new state and any side effects
-class StateTransitionResult {
-  final TrainingSessionState state;
-  final List<SessionEffect> effects;
-
-  const StateTransitionResult(this.state, [this.effects = const []]);
-
-  /// No transition occurred
-  factory StateTransitionResult.unchanged(TrainingSessionState state) =>
-      StateTransitionResult(state, const []);
+/// Interface that effect handlers must implement.
+/// When a new effect type is needed, add a method here,
+/// forcing all implementers to handle it.
+abstract interface class SessionEffectHandler {
+  void onStartTimer();
+  void onStopTimer();
+  void onPlayWarningSound();
+  void onIntervalChanged(ExpandedUnitTrainingInterval newInterval);
+  void onSessionCompleted();
+  void onSendFtmsPause();
+  void onSendFtmsResume();
+  void onSendFtmsStopAndReset();
+  void onNotifyListeners();
 }
 
 /// Represents the possible states of a training session
@@ -83,33 +35,6 @@ enum SessionStatus {
 
   /// Session has been stopped/discarded by the user before completion
   stopped,
-}
-
-/// Represents the possible inputs/events that can trigger state transitions
-enum SessionEvent {
-  /// FTMS data changed (triggers start from created state)
-  dataChanged,
-
-  /// User manually paused the session
-  userPaused,
-
-  /// User manually resumed the session
-  userResumed,
-
-  /// FTMS device disconnected
-  deviceDisconnected,
-
-  /// FTMS device reconnected
-  deviceReconnected,
-
-  /// Timer tick (1 second elapsed)
-  timerTick,
-
-  /// Total duration reached
-  durationReached,
-
-  /// User stopped/discarded the session
-  userStopped,
 }
 
 /// Immutable class that holds all timing information for a training session
@@ -228,35 +153,43 @@ class SessionTiming {
       'intervalElapsed: $intervalElapsedSeconds, sessionTimeLeft: $sessionTimeLeft)';
 }
 
-/// Represents the complete state of a training session with state machine logic
+/// Mutable class that holds the state of a training session.
+/// State transitions call the handler directly to execute side effects.
 class TrainingSessionState {
   /// Current status of the session
-  final SessionStatus status;
+  SessionStatus status;
 
   /// Timing information for the session
-  final SessionTiming timing;
+  SessionTiming timing;
 
   /// Whether the device is currently connected
-  final bool isDeviceConnected;
+  bool isDeviceConnected;
 
   /// The session definition
   final ExpandedTrainingSessionDefinition session;
 
-  const TrainingSessionState({
+  /// The handler that executes side effects
+  final SessionEffectHandler? _handler;
+
+  TrainingSessionState({
     required this.status,
     required this.timing,
     required this.isDeviceConnected,
     required this.session,
-  });
+    SessionEffectHandler? handler,
+  }) : _handler = handler;
 
   /// Creates initial state for a new session
   factory TrainingSessionState.initial(
-      ExpandedTrainingSessionDefinition session) {
+    ExpandedTrainingSessionDefinition session, {
+    SessionEffectHandler? handler,
+  }) {
     return TrainingSessionState(
       status: SessionStatus.created,
       timing: SessionTiming.fromSession(session),
       isDeviceConnected: true,
       session: session,
+      handler: handler,
     );
   }
 
@@ -305,220 +238,101 @@ class TrainingSessionState {
 
   // ============ State transition methods ============
 
-  /// Processes an event and returns the new state (or same state if transition not allowed)
-  /// Use [processEventWithEffects] to also get the side effects to execute.
-  TrainingSessionState processEvent(SessionEvent event) {
-    return processEventWithEffects(event).state;
+  /// Handles FTMS data changed event (triggers start from created state)
+  void onDataChanged() {
+    if (status != SessionStatus.created) return;
+
+    status = SessionStatus.running;
+    _handler?.onStartTimer();
+    _handler?.onIntervalChanged(timing.currentInterval);
+    _handler?.onNotifyListeners();
   }
 
-  /// Processes an event and returns both the new state and any side effects to execute.
-  /// This is the preferred method for the controller to use.
-  StateTransitionResult processEventWithEffects(SessionEvent event) {
-    switch (event) {
-      case SessionEvent.dataChanged:
-        return _onDataChanged();
-      case SessionEvent.userPaused:
-        return _onUserPaused();
-      case SessionEvent.userResumed:
-        return _onUserResumed();
-      case SessionEvent.deviceDisconnected:
-        return _onDeviceDisconnected();
-      case SessionEvent.deviceReconnected:
-        return _onDeviceReconnected();
-      case SessionEvent.timerTick:
-        return _onTimerTick();
-      case SessionEvent.durationReached:
-        return _onDurationReached();
-      case SessionEvent.userStopped:
-        return _onUserStopped();
-    }
+  /// Handles user pause event
+  void onUserPaused() {
+    if (status != SessionStatus.running) return;
+
+    status = SessionStatus.pausedByUser;
+    _handler?.onStopTimer();
+    _handler?.onSendFtmsPause();
+    _handler?.onNotifyListeners();
   }
 
-  /// Checks if a transition is valid for the given event
-  bool canProcessEvent(SessionEvent event) {
-    switch (event) {
-      case SessionEvent.dataChanged:
-        return status == SessionStatus.created;
-      case SessionEvent.userPaused:
-        return status == SessionStatus.running;
-      case SessionEvent.userResumed:
-        return isPaused;
-      case SessionEvent.deviceDisconnected:
-        return status == SessionStatus.running ||
-            status == SessionStatus.created;
-      case SessionEvent.deviceReconnected:
-        return status == SessionStatus.pausedByDisconnection;
-      case SessionEvent.timerTick:
-        return status == SessionStatus.running;
-      case SessionEvent.durationReached:
-        return status == SessionStatus.running;
-      case SessionEvent.userStopped:
-        return !hasEnded;
-    }
+  /// Handles user resume event
+  void onUserResumed() {
+    if (!isPaused) return;
+
+    status = SessionStatus.running;
+    _handler?.onStartTimer();
+    _handler?.onSendFtmsResume();
+    _handler?.onNotifyListeners();
   }
 
-  // ============ Private transition implementations ============
-
-  StateTransitionResult _onDataChanged() {
-    if (status != SessionStatus.created) {
-      return StateTransitionResult.unchanged(this);
-    }
-    final newState = _copyWith(status: SessionStatus.running);
-    return StateTransitionResult(newState, [
-      const StartTimer(),
-      IntervalChanged(timing.currentInterval),
-      const NotifyListeners(),
-    ]);
-  }
-
-  StateTransitionResult _onUserPaused() {
-    if (status != SessionStatus.running) {
-      return StateTransitionResult.unchanged(this);
-    }
-    final newState = _copyWith(status: SessionStatus.pausedByUser);
-    return StateTransitionResult(newState, [
-      const StopTimer(),
-      const SendFtmsPause(),
-      const NotifyListeners(),
-    ]);
-  }
-
-  StateTransitionResult _onUserResumed() {
-    if (!isPaused) {
-      return StateTransitionResult.unchanged(this);
-    }
-    final newState = _copyWith(status: SessionStatus.running);
-    return StateTransitionResult(newState, [
-      const StartTimer(),
-      const SendFtmsResume(),
-      const NotifyListeners(),
-    ]);
-  }
-
-  StateTransitionResult _onDeviceDisconnected() {
-    if (hasEnded) {
-      return StateTransitionResult.unchanged(this);
-    }
-
-    final effects = <SessionEffect>[];
-    SessionStatus newStatus = status;
+  /// Handles device disconnection event
+  void onDeviceDisconnected() {
+    if (hasEnded) return;
 
     if (status == SessionStatus.running) {
-      newStatus = SessionStatus.pausedByDisconnection;
-      effects.add(const StopTimer());
+      status = SessionStatus.pausedByDisconnection;
+      _handler?.onStopTimer();
     }
-    effects.add(const NotifyListeners());
-
-    return StateTransitionResult(
-      _copyWith(status: newStatus, isDeviceConnected: false),
-      effects,
-    );
+    isDeviceConnected = false;
+    _handler?.onNotifyListeners();
   }
 
-  StateTransitionResult _onDeviceReconnected() {
+  /// Handles device reconnection event
+  void onDeviceReconnected() {
     if (status == SessionStatus.pausedByDisconnection) {
-      final newState = _copyWith(
-        status: SessionStatus.running,
-        isDeviceConnected: true,
-      );
-      return StateTransitionResult(newState, [
-        const StartTimer(),
-        IntervalChanged(timing.currentInterval),
-        const NotifyListeners(),
-      ]);
+      status = SessionStatus.running;
+      isDeviceConnected = true;
+      _handler?.onStartTimer();
+      _handler?.onIntervalChanged(timing.currentInterval);
+      _handler?.onNotifyListeners();
+      return;
     }
 
-    return StateTransitionResult(
-      _copyWith(isDeviceConnected: true),
-      [const NotifyListeners()],
-    );
+    isDeviceConnected = true;
+    _handler?.onNotifyListeners();
   }
 
-  StateTransitionResult _onTimerTick() {
-    if (status != SessionStatus.running) {
-      return StateTransitionResult.unchanged(this);
-    }
+  /// Handles timer tick event (1 second elapsed)
+  void onTimerTick() {
+    if (status != SessionStatus.running) return;
 
     final previousTiming = timing;
-    final newTiming = timing.tick();
-    final effects = <SessionEffect>[];
+    timing = timing.tick();
 
     // Check for interval change
-    if (newTiming.didIntervalChange(previousTiming)) {
-      effects.add(IntervalChanged(newTiming.currentInterval));
+    if (timing.didIntervalChange(previousTiming)) {
+      _handler?.onIntervalChanged(timing.currentInterval);
     }
 
     // Check for warning sound
-    if (newTiming.shouldPlayWarningSound) {
-      effects.add(const PlayWarningSound());
+    if (timing.shouldPlayWarningSound) {
+      _handler?.onPlayWarningSound();
     }
 
     // Check for completion
-    if (newTiming.isDurationReached) {
-      effects.add(const StopTimer());
-      effects.add(const SessionCompleted());
-      effects.add(const NotifyListeners());
-      return StateTransitionResult(
-        _copyWith(status: SessionStatus.completed, timing: newTiming),
-        effects,
-      );
+    if (timing.isDurationReached) {
+      status = SessionStatus.completed;
+      _handler?.onStopTimer();
+      _handler?.onSessionCompleted();
+      _handler?.onNotifyListeners();
+      return;
     }
 
-    effects.add(const NotifyListeners());
-    return StateTransitionResult(_copyWith(timing: newTiming), effects);
+    _handler?.onNotifyListeners();
   }
 
-  StateTransitionResult _onDurationReached() {
-    if (status != SessionStatus.running) {
-      return StateTransitionResult.unchanged(this);
-    }
-    final newState = _copyWith(status: SessionStatus.completed);
-    return StateTransitionResult(newState, [
-      const StopTimer(),
-      const SessionCompleted(),
-      const NotifyListeners(),
-    ]);
+  /// Handles user stop event
+  void onUserStopped() {
+    if (hasEnded) return;
+
+    status = SessionStatus.stopped;
+    _handler?.onStopTimer();
+    _handler?.onSendFtmsStopAndReset();
+    _handler?.onNotifyListeners();
   }
-
-  StateTransitionResult _onUserStopped() {
-    if (hasEnded) {
-      return StateTransitionResult.unchanged(this);
-    }
-    final newState = _copyWith(status: SessionStatus.stopped);
-    return StateTransitionResult(newState, [
-      const StopTimer(),
-      const SendFtmsStopAndReset(),
-      const NotifyListeners(),
-    ]);
-  }
-
-  // ============ Helper methods ============
-
-  TrainingSessionState _copyWith({
-    SessionStatus? status,
-    SessionTiming? timing,
-    bool? isDeviceConnected,
-  }) {
-    return TrainingSessionState(
-      status: status ?? this.status,
-      timing: timing ?? this.timing,
-      isDeviceConnected: isDeviceConnected ?? this.isDeviceConnected,
-      session: session,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TrainingSessionState &&
-          runtimeType == other.runtimeType &&
-          status == other.status &&
-          timing == other.timing &&
-          isDeviceConnected == other.isDeviceConnected;
-
-  @override
-  int get hashCode =>
-      status.hashCode ^ timing.hashCode ^ isDeviceConnected.hashCode;
 
   @override
   String toString() =>

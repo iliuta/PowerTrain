@@ -997,7 +997,8 @@ void main() {
 
         expect(controller.state.status, SessionStatus.completed);
 
-        // Wait for async FIT file generation
+        // User saves recording via dialog
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 300));
 
         // Verify FIT file was generated
@@ -1106,8 +1107,10 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session to trigger FIT file generation
+        // Complete the session
         controller.stopSession();
+        // User chooses to save recording via dialog
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 100));
 
         // Verify FIT file generation was called
@@ -1129,9 +1132,11 @@ void main() {
 
         // Complete the session
         controller.stopSession();
+        // User chooses to save recording via dialog
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 100));
 
-        // Verify FIT file generation was NOT called
+        // Verify FIT file generation was NOT called (because enableFitFileGeneration is false)
         verifyNever(mockDataRecorder.generateFitFile());
         expect(controller.lastGeneratedFitFile, isNull);
 
@@ -1152,11 +1157,12 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session - should not throw
-        expect(() => controller.stopSession(), returnsNormally);
+        // Complete the session and save - saveRecording should not throw
+        controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 100));
 
-        // Verify FIT file generation was attempted
+        // Verify FIT file generation was attempted (but failed)
         verify(mockDataRecorder.generateFitFile()).called(1);
         expect(controller.lastGeneratedFitFile, isNull);
 
@@ -1247,8 +1253,9 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session to trigger FIT file generation and upload
+        // Complete the session and save
         controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Verify Strava upload was attempted
@@ -1287,8 +1294,9 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session
+        // Complete the session and save
         controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Verify authentication check but no upload
@@ -1330,8 +1338,9 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session
+        // Complete the session and save
         controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Verify upload was attempted but failed
@@ -1376,8 +1385,9 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session - should not throw
-        expect(() => controller.stopSession(), returnsNormally);
+        // Complete the session and save - should not throw
+        controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Verify upload was attempted
@@ -1426,8 +1436,9 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session
+        // Complete the session and save
         controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Verify correct activity type was used
@@ -1457,11 +1468,12 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Complete the session
+        // Complete the session and save
         controller.stopSession();
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 200));
 
-        // Verify no Strava operations were attempted
+        // Verify no Strava operations were attempted (because FIT file failed)
         verifyNever(mockStravaService.isAuthenticated());
         verifyNever(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType')));
 
@@ -1550,6 +1562,8 @@ void main() {
 
         // Complete the session
         controller.stopSession();
+        // User chooses to save via dialog
+        await controller.saveRecording();
         await Future.delayed(const Duration(milliseconds: 300));
 
         // Verify complete flow

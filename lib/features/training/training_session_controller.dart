@@ -19,7 +19,8 @@ import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
 
-class TrainingSessionController extends ChangeNotifier {
+class TrainingSessionController extends ChangeNotifier
+    implements SessionEffectHandler {
   final ExpandedTrainingSessionDefinition session;
   final BluetoothDevice ftmsDevice;
   late final FTMSService _ftmsService;
@@ -63,8 +64,8 @@ class TrainingSessionController extends ChangeNotifier {
     _ftmsService = ftmsService ?? FTMSService(ftmsDevice);
     _stravaService = stravaService ?? StravaService();
 
-    // Initialize session state
-    _state = TrainingSessionState.initial(session);
+    // Initialize session state with this controller as the effect handler
+    _state = TrainingSessionState.initial(session, handler: this);
 
     // Initialize audio player with error handling for tests
     _initAudioPlayer(audioPlayer);
@@ -184,7 +185,7 @@ class TrainingSessionController extends ChangeNotifier {
         }
       }
       if (changed) {
-        _processEvent(SessionEvent.dataChanged);
+        _state.onDataChanged();
         _recordDataPoint(data);
       }
     }
@@ -215,116 +216,91 @@ class TrainingSessionController extends ChangeNotifier {
     if (wasConnected && !isNowConnected) {
       // Device disconnected
       logger.w('📱 FTMS device disconnected during training');
-      _processEvent(SessionEvent.deviceDisconnected);
+      _state.onDeviceDisconnected();
     } else if (!wasConnected && isNowConnected) {
       // Device reconnected
       logger.i('📱 FTMS device reconnected');
-      _processEvent(SessionEvent.deviceReconnected);
+      _state.onDeviceReconnected();
     }
   }
 
-  // ============ Timer management ============
-
-  void _startTimer() {
-    _timer ??= Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
-  }
-
-  void _stopTimer() {
-    _timer?.cancel();
-    _timer = null;
-  }
+  // ============ Timer tick handler ============
 
   void _onTick() {
     if (!_state.isRunning) return;
-    _processEvent(SessionEvent.timerTick);
+    _state.onTimerTick();
     debugPrint(
         '🕐 Timer tick: elapsed=${_state.elapsedSeconds}, status=${_state.status}');
   }
 
-  // ============ State transition and effect handling ============
+  // ============ SessionEffectHandler implementation ============
 
-  void _processEvent(SessionEvent event) {
-    final result = _state.processEventWithEffects(event);
-    if (result.state != _state) {
-      _state = result.state;
-    }
-    _executeEffects(result.effects);
+  @override
+  void onStartTimer() {
+    _timer ??= Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
   }
 
-  void _executeEffects(List<SessionEffect> effects) {
-    for (final effect in effects) {
-      _executeEffect(effect);
-    }
+  @override
+  void onStopTimer() {
+    _timer?.cancel();
+    _timer = null;
   }
 
-  void _executeEffect(SessionEffect effect) {
-    switch (effect) {
-      case StartTimer():
-        _startTimer();
-      case StopTimer():
-        _stopTimer();
-      case PlayWarningSound():
-        _playWarningSound();
-      case IntervalChanged(newInterval: final interval):
-        _handleIntervalChanged(interval);
-      case SessionCompleted():
-        _handleSessionCompleted();
-      case SendFtmsPause():
-        _sendFtmsPause();
-      case SendFtmsResume():
-        _sendFtmsResume();
-      case SendFtmsStopAndReset():
-        _sendFtmsStopAndReset();
-      case NotifyListeners():
-        if (!_disposed) notifyListeners();
-    }
+  @override
+  void onPlayWarningSound() {
+    _playWarningSound();
   }
 
-  // ============ Effect handlers (unitary operations) ============
-
-  void _handleIntervalChanged(ExpandedUnitTrainingInterval interval) {
-    final resistance = interval.resistanceLevel;
+  @override
+  void onIntervalChanged(ExpandedUnitTrainingInterval newInterval) {
+    final resistance = newInterval.resistanceLevel;
     if (resistance != null) {
       setResistanceWithControl(resistance);
     }
-    final power = interval.targets?['Instantaneous Power'];
+    final power = newInterval.targets?['Instantaneous Power'];
     if (power != null) {
       setPowerWithControl(power);
     }
   }
 
-  void _handleSessionCompleted() {
+  @override
+  void onSessionCompleted() {
     Future.microtask(() async {
       if (_disposed) return;
       await stopOrPauseWithControl();
       await resetWithControl();
     });
-
-    _finishRecording().then((_) {
-      if (!_disposed) notifyListeners();
-    });
+    // Recording will be handled by the completion dialog
   }
 
-  void _sendFtmsPause() {
+  @override
+  void onSendFtmsPause() {
     Future.microtask(() async {
       if (_disposed) return;
       await stopOrPauseWithControl();
     });
   }
 
-  void _sendFtmsResume() {
+  @override
+  void onSendFtmsResume() {
     Future.microtask(() async {
       if (_disposed) return;
       await startOrResumeWithControl();
     });
   }
 
-  void _sendFtmsStopAndReset() {
+  @override
+  void onSendFtmsStopAndReset() {
     Future.microtask(() async {
       if (_disposed) return;
       await stopOrPauseWithControl();
       await resetWithControl();
     });
+  }
+
+  @override
+  void onNotifyListeners() {
+    if (!_disposed) notifyListeners();
   }
 
   // ============ Audio ============
@@ -345,7 +321,8 @@ class TrainingSessionController extends ChangeNotifier {
 
   // ============ Recording and Strava ============
 
-  Future<void> _finishRecording() async {
+  /// Save the workout recording and upload to Strava if connected
+  Future<void> saveRecording() async {
     if (_dataRecorder != null) {
       try {
         _dataRecorder!.stopRecording();
@@ -433,31 +410,29 @@ class TrainingSessionController extends ChangeNotifier {
 
   /// Pause the current training session
   void pauseSession() {
-    if (!_state.canProcessEvent(SessionEvent.userPaused)) return;
+    if (_state.status != SessionStatus.running) return;
     logger.i('⏸️ Manually pausing training session');
-    _processEvent(SessionEvent.userPaused);
+    _state.onUserPaused();
   }
 
   /// Resume the paused training session
   void resumeSession() {
-    if (!_state.canProcessEvent(SessionEvent.userResumed)) return;
+    if (!_state.isPaused) return;
     logger.i('▶️ Manually resuming training session');
-    _processEvent(SessionEvent.userResumed);
+    _state.onUserResumed();
   }
 
-  /// Stop the training session completely and save data
+  /// Stop the training session completely
   void stopSession() {
     if (_state.hasEnded) return;
-    _processEvent(SessionEvent.userStopped);
-    _finishRecording().then((_) {
-      if (!_disposed) notifyListeners();
-    });
+    _state.onUserStopped();
+    // Recording will be handled by the completion dialog
   }
 
   /// Discard the session without saving
   void discardSession() {
     if (_state.hasEnded) return;
-    _processEvent(SessionEvent.userStopped);
+    _state.onUserStopped();
   }
 
   // ============ Lifecycle ============
@@ -469,7 +444,7 @@ class TrainingSessionController extends ChangeNotifier {
     _disposed = true;
     _ftmsSub.cancel();
     _connectionStateSub.cancel();
-    _stopTimer();
+    onStopTimer();
     _audioPlayer?.dispose();
 
     if (!_state.hasEnded) {
@@ -479,7 +454,7 @@ class TrainingSessionController extends ChangeNotifier {
     }
 
     if (_dataRecorder != null && !_state.hasEnded) {
-      _finishRecording();
+      saveRecording();
     }
 
     super.dispose();

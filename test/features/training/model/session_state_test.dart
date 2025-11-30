@@ -4,6 +4,57 @@ import 'package:ftms/features/training/model/expanded_training_session_definitio
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/session_state.dart';
 
+/// Mock handler that records which methods were called
+class MockSessionEffectHandler implements SessionEffectHandler {
+  final List<String> calls = [];
+  final List<ExpandedUnitTrainingInterval> intervalChanges = [];
+
+  void reset() {
+    calls.clear();
+    intervalChanges.clear();
+  }
+
+  @override
+  void onStartTimer() => calls.add('startTimer');
+
+  @override
+  void onStopTimer() => calls.add('stopTimer');
+
+  @override
+  void onPlayWarningSound() => calls.add('playWarningSound');
+
+  @override
+  void onIntervalChanged(ExpandedUnitTrainingInterval newInterval) {
+    calls.add('intervalChanged');
+    intervalChanges.add(newInterval);
+  }
+
+  @override
+  void onSessionCompleted() => calls.add('sessionCompleted');
+
+  @override
+  void onSendFtmsPause() => calls.add('sendFtmsPause');
+
+  @override
+  void onSendFtmsResume() => calls.add('sendFtmsResume');
+
+  @override
+  void onSendFtmsStopAndReset() => calls.add('sendFtmsStopAndReset');
+
+  @override
+  void onNotifyListeners() => calls.add('notifyListeners');
+
+  bool get startTimerCalled => calls.contains('startTimer');
+  bool get stopTimerCalled => calls.contains('stopTimer');
+  bool get playWarningSoundCalled => calls.contains('playWarningSound');
+  bool get intervalChangedCalled => calls.contains('intervalChanged');
+  bool get sessionCompletedCalled => calls.contains('sessionCompleted');
+  bool get sendFtmsPauseCalled => calls.contains('sendFtmsPause');
+  bool get sendFtmsResumeCalled => calls.contains('sendFtmsResume');
+  bool get sendFtmsStopAndResetCalled => calls.contains('sendFtmsStopAndReset');
+  bool get notifyListenersCalled => calls.contains('notifyListeners');
+}
+
 void main() {
   group('SessionTiming', () {
     late ExpandedTrainingSessionDefinition testSession;
@@ -296,205 +347,161 @@ void main() {
     group('state transitions: dataChanged', () {
       test('transitions from created to running', () {
         final state = TrainingSessionState.initial(testSession);
-        final newState = state.processEvent(SessionEvent.dataChanged);
+        state.onDataChanged();
 
-        expect(newState.status, SessionStatus.running);
-        expect(newState.isRunning, true);
-        expect(newState.hasStarted, true);
+        expect(state.status, SessionStatus.running);
+        expect(state.isRunning, true);
+        expect(state.hasStarted, true);
       });
 
       test('does not transition if already running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-
-        final newState = state.processEvent(SessionEvent.dataChanged);
-
-        expect(newState, same(state));
-      });
-
-      test('canProcessEvent returns true from created state', () {
         final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        final statusBefore = state.status;
 
-        expect(state.canProcessEvent(SessionEvent.dataChanged), true);
-      });
+        state.onDataChanged();
 
-      test('canProcessEvent returns false from running state', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-
-        expect(state.canProcessEvent(SessionEvent.dataChanged), false);
+        expect(state.status, statusBefore);
       });
     });
 
     group('state transitions: userPaused', () {
       test('transitions from running to pausedByUser', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
 
-        final newState = state.processEvent(SessionEvent.userPaused);
+        state.onUserPaused();
 
-        expect(newState.status, SessionStatus.pausedByUser);
-        expect(newState.isPaused, true);
-        expect(newState.wasAutoPaused, false);
+        expect(state.status, SessionStatus.pausedByUser);
+        expect(state.isPaused, true);
+        expect(state.wasAutoPaused, false);
       });
 
       test('does not transition if not running', () {
         final state = TrainingSessionState.initial(testSession);
+        final statusBefore = state.status;
 
-        final newState = state.processEvent(SessionEvent.userPaused);
+        state.onUserPaused();
 
-        expect(newState, same(state));
-      });
-
-      test('canProcessEvent returns true from running state', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-
-        expect(state.canProcessEvent(SessionEvent.userPaused), true);
-      });
-
-      test('canProcessEvent returns false from created state', () {
-        final state = TrainingSessionState.initial(testSession);
-
-        expect(state.canProcessEvent(SessionEvent.userPaused), false);
+        expect(state.status, statusBefore);
       });
     });
 
     group('state transitions: userResumed', () {
       test('transitions from pausedByUser to running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onUserPaused();
 
-        final newState = state.processEvent(SessionEvent.userResumed);
+        state.onUserResumed();
 
-        expect(newState.status, SessionStatus.running);
-        expect(newState.isRunning, true);
-        expect(newState.isPaused, false);
+        expect(state.status, SessionStatus.running);
+        expect(state.isRunning, true);
+        expect(state.isPaused, false);
       });
 
       test('transitions from pausedByDisconnection to running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        final newState = state.processEvent(SessionEvent.userResumed);
+        state.onUserResumed();
 
-        expect(newState.status, SessionStatus.running);
+        expect(state.status, SessionStatus.running);
       });
 
       test('does not transition if not paused', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        final statusBefore = state.status;
 
-        final newState = state.processEvent(SessionEvent.userResumed);
+        state.onUserResumed();
 
-        expect(newState, same(state));
-      });
-
-      test('canProcessEvent returns true from paused state', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
-
-        expect(state.canProcessEvent(SessionEvent.userResumed), true);
+        expect(state.status, statusBefore);
       });
     });
 
     group('state transitions: deviceDisconnected', () {
       test('transitions from running to pausedByDisconnection', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
 
-        final newState = state.processEvent(SessionEvent.deviceDisconnected);
+        state.onDeviceDisconnected();
 
-        expect(newState.status, SessionStatus.pausedByDisconnection);
-        expect(newState.isPaused, true);
-        expect(newState.wasAutoPaused, true);
-        expect(newState.isDeviceConnected, false);
+        expect(state.status, SessionStatus.pausedByDisconnection);
+        expect(state.isPaused, true);
+        expect(state.wasAutoPaused, true);
+        expect(state.isDeviceConnected, false);
       });
 
       test('updates connection state from created without changing status', () {
         final state = TrainingSessionState.initial(testSession);
 
-        final newState = state.processEvent(SessionEvent.deviceDisconnected);
+        state.onDeviceDisconnected();
 
-        expect(newState.status, SessionStatus.created);
-        expect(newState.isDeviceConnected, false);
+        expect(state.status, SessionStatus.created);
+        expect(state.isDeviceConnected, false);
       });
 
       test('does not change status if already ended', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userStopped);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onUserStopped();
 
-        final newState = state.processEvent(SessionEvent.deviceDisconnected);
+        state.onDeviceDisconnected();
 
-        expect(newState.status, SessionStatus.stopped);
+        expect(state.status, SessionStatus.stopped);
       });
     });
 
     group('state transitions: deviceReconnected', () {
       test('transitions from pausedByDisconnection to running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        final newState = state.processEvent(SessionEvent.deviceReconnected);
+        state.onDeviceReconnected();
 
-        expect(newState.status, SessionStatus.running);
-        expect(newState.isDeviceConnected, true);
-        expect(newState.wasAutoPaused, false);
+        expect(state.status, SessionStatus.running);
+        expect(state.isDeviceConnected, true);
+        expect(state.wasAutoPaused, false);
       });
 
       test('updates connection state from other states without resuming', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onUserPaused();
 
-        // Simulate disconnection that doesn't change status (already paused by user)
-        final disconnectedState = TrainingSessionState(
-          status: SessionStatus.pausedByUser,
-          timing: state.timing,
-          isDeviceConnected: false,
-          session: testSession,
-        );
+        // Manually set disconnected
+        state.isDeviceConnected = false;
 
-        final newState =
-            disconnectedState.processEvent(SessionEvent.deviceReconnected);
+        state.onDeviceReconnected();
 
         // Should only update connection state, not status
-        expect(newState.status, SessionStatus.pausedByUser);
-        expect(newState.isDeviceConnected, true);
-      });
-
-      test('canProcessEvent returns true from pausedByDisconnection', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
-
-        expect(state.canProcessEvent(SessionEvent.deviceReconnected), true);
+        expect(state.status, SessionStatus.pausedByUser);
+        expect(state.isDeviceConnected, true);
       });
     });
 
     group('state transitions: timerTick', () {
       test('increments elapsed time when running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
 
-        final newState = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
 
-        expect(newState.elapsedSeconds, 1);
+        expect(state.elapsedSeconds, 1);
       });
 
       test('does not tick when paused', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onUserPaused();
+        final elapsedBefore = state.elapsedSeconds;
 
-        final newState = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
 
-        expect(newState, same(state));
+        expect(state.elapsedSeconds, elapsedBefore);
       });
 
       test('completes session when duration reached', () {
@@ -509,72 +516,58 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(shortSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(shortSession);
+        state.onDataChanged();
 
         // Tick 3 times to complete
         for (int i = 0; i < 3; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         expect(state.status, SessionStatus.completed);
         expect(state.isCompleted, true);
         expect(state.hasEnded, true);
       });
-
-      test('canProcessEvent returns true when running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-
-        expect(state.canProcessEvent(SessionEvent.timerTick), true);
-      });
-
-      test('canProcessEvent returns false when paused', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
-
-        expect(state.canProcessEvent(SessionEvent.timerTick), false);
-      });
     });
 
     group('state transitions: userStopped', () {
       test('transitions from running to stopped', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
 
-        final newState = state.processEvent(SessionEvent.userStopped);
+        state.onUserStopped();
 
-        expect(newState.status, SessionStatus.stopped);
-        expect(newState.isStopped, true);
-        expect(newState.hasEnded, true);
+        expect(state.status, SessionStatus.stopped);
+        expect(state.isStopped, true);
+        expect(state.hasEnded, true);
       });
 
       test('transitions from created to stopped', () {
         final state = TrainingSessionState.initial(testSession);
 
-        final newState = state.processEvent(SessionEvent.userStopped);
+        state.onUserStopped();
 
-        expect(newState.status, SessionStatus.stopped);
+        expect(state.status, SessionStatus.stopped);
       });
 
       test('transitions from paused to stopped', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
+        state.onUserPaused();
 
-        final newState = state.processEvent(SessionEvent.userStopped);
+        state.onUserStopped();
 
-        expect(newState.status, SessionStatus.stopped);
+        expect(state.status, SessionStatus.stopped);
       });
 
       test('does not transition if already stopped', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.userStopped);
+        final state = TrainingSessionState.initial(testSession);
+        state.onUserStopped();
+        final statusBefore = state.status;
 
-        final newState = state.processEvent(SessionEvent.userStopped);
+        state.onUserStopped();
 
-        expect(newState, same(state));
+        expect(state.status, statusBefore);
       });
 
       test('does not transition if already completed', () {
@@ -586,37 +579,31 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(shortSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.timerTick);
+        final state = TrainingSessionState.initial(shortSession);
+        state.onDataChanged();
+        state.onTimerTick();
 
         expect(state.status, SessionStatus.completed);
 
-        final newState = state.processEvent(SessionEvent.userStopped);
-        expect(newState, same(state));
-      });
-
-      test('canProcessEvent returns false when already ended', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.userStopped);
-
-        expect(state.canProcessEvent(SessionEvent.userStopped), false);
+        state.onUserStopped();
+        expect(state.status, SessionStatus.completed);
       });
     });
 
     group('convenience getters', () {
       test('shouldTimerBeActive returns true only when running', () {
-        final created = TrainingSessionState.initial(testSession);
-        expect(created.shouldTimerBeActive, false);
+        final state = TrainingSessionState.initial(testSession);
+        expect(state.shouldTimerBeActive, false);
 
-        final running = created.processEvent(SessionEvent.dataChanged);
-        expect(running.shouldTimerBeActive, true);
+        state.onDataChanged();
+        expect(state.shouldTimerBeActive, true);
 
-        final paused = running.processEvent(SessionEvent.userPaused);
-        expect(paused.shouldTimerBeActive, false);
+        state.onUserPaused();
+        expect(state.shouldTimerBeActive, false);
 
-        final stopped = created.processEvent(SessionEvent.userStopped);
-        expect(stopped.shouldTimerBeActive, false);
+        final stoppedState = TrainingSessionState.initial(testSession);
+        stoppedState.onUserStopped();
+        expect(stoppedState.shouldTimerBeActive, false);
       });
 
       test('timing convenience getters delegate correctly', () {
@@ -635,66 +622,66 @@ void main() {
 
     group('complex scenarios', () {
       test('full session lifecycle with pause and resume', () {
-        var state = TrainingSessionState.initial(testSession);
+        final state = TrainingSessionState.initial(testSession);
 
         // Session created
         expect(state.status, SessionStatus.created);
 
         // Data changes, session starts
-        state = state.processEvent(SessionEvent.dataChanged);
+        state.onDataChanged();
         expect(state.status, SessionStatus.running);
 
         // Timer ticks a few times
         for (int i = 0; i < 30; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
         expect(state.elapsedSeconds, 30);
 
         // User pauses
-        state = state.processEvent(SessionEvent.userPaused);
+        state.onUserPaused();
         expect(state.status, SessionStatus.pausedByUser);
 
         // Timer ticks should not advance while paused
-        state = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
         expect(state.elapsedSeconds, 30);
 
         // User resumes
-        state = state.processEvent(SessionEvent.userResumed);
+        state.onUserResumed();
         expect(state.status, SessionStatus.running);
 
         // Timer continues
-        state = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
         expect(state.elapsedSeconds, 31);
       });
 
       test('disconnection during session', () {
-        var state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession);
+        state.onDataChanged();
 
         // Session is running
         for (int i = 0; i < 20; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // Device disconnects
-        state = state.processEvent(SessionEvent.deviceDisconnected);
+        state.onDeviceDisconnected();
         expect(state.status, SessionStatus.pausedByDisconnection);
         expect(state.wasAutoPaused, true);
         expect(state.isDeviceConnected, false);
 
         // Timer should not advance
         final beforeTick = state.elapsedSeconds;
-        state = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
         expect(state.elapsedSeconds, beforeTick);
 
         // Device reconnects
-        state = state.processEvent(SessionEvent.deviceReconnected);
+        state.onDeviceReconnected();
         expect(state.status, SessionStatus.running);
         expect(state.wasAutoPaused, false);
         expect(state.isDeviceConnected, true);
 
         // Timer should advance again
-        state = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
         expect(state.elapsedSeconds, beforeTick + 1);
       });
 
@@ -710,8 +697,8 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(multiIntervalSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(multiIntervalSession);
+        state.onDataChanged();
 
         // In first interval
         expect(state.currentIntervalIndex, 0);
@@ -719,7 +706,7 @@ void main() {
 
         // Tick through first interval
         for (int i = 0; i < 5; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // Now in second interval
@@ -729,7 +716,7 @@ void main() {
 
         // Tick through second interval
         for (int i = 0; i < 5; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // Now in third interval
@@ -738,22 +725,12 @@ void main() {
 
         // Tick through third interval
         for (int i = 0; i < 5; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // Session completed
         expect(state.status, SessionStatus.completed);
       });
-    });
-
-    test('equality works correctly', () {
-      final state1 = TrainingSessionState.initial(testSession);
-      final state2 = TrainingSessionState.initial(testSession);
-
-      expect(state1, equals(state2));
-
-      final state3 = state1.processEvent(SessionEvent.dataChanged);
-      expect(state1, isNot(equals(state3)));
     });
   });
 
@@ -768,21 +745,9 @@ void main() {
     });
   });
 
-  group('SessionEvent', () {
-    test('has all expected values', () {
-      expect(SessionEvent.values, contains(SessionEvent.dataChanged));
-      expect(SessionEvent.values, contains(SessionEvent.userPaused));
-      expect(SessionEvent.values, contains(SessionEvent.userResumed));
-      expect(SessionEvent.values, contains(SessionEvent.deviceDisconnected));
-      expect(SessionEvent.values, contains(SessionEvent.deviceReconnected));
-      expect(SessionEvent.values, contains(SessionEvent.timerTick));
-      expect(SessionEvent.values, contains(SessionEvent.durationReached));
-      expect(SessionEvent.values, contains(SessionEvent.userStopped));
-    });
-  });
-
-  group('SessionEffect system', () {
+  group('SessionEffectHandler calls', () {
     late ExpandedTrainingSessionDefinition testSession;
+    late MockSessionEffectHandler mockHandler;
 
     setUp(() {
       testSession = ExpandedTrainingSessionDefinition(
@@ -801,140 +766,147 @@ void main() {
           ),
         ],
       );
+      mockHandler = MockSessionEffectHandler();
     });
 
-    group('dataChanged effects', () {
-      test('emits StartTimer, IntervalChanged, and NotifyListeners', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result = state.processEventWithEffects(SessionEvent.dataChanged);
+    group('dataChanged handler calls', () {
+      test('calls startTimer, intervalChanged, and notifyListeners', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects, contains(isA<StartTimer>()));
-        expect(result.effects, contains(isA<IntervalChanged>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        expect(mockHandler.startTimerCalled, true);
+        expect(mockHandler.intervalChangedCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('IntervalChanged contains the first interval', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result = state.processEventWithEffects(SessionEvent.dataChanged);
+      test('intervalChanged receives the first interval', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        final intervalEffect =
-            result.effects.whereType<IntervalChanged>().first;
-        expect(intervalEffect.newInterval.title, 'Warmup');
+        expect(mockHandler.intervalChanges.first.title, 'Warmup');
       });
 
-      test('emits no effects when already running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result = state.processEventWithEffects(SessionEvent.dataChanged);
+      test('calls no handler methods when already running', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects, isEmpty);
-      });
-    });
+        mockHandler.reset();
+        state.onDataChanged();
 
-    group('userPaused effects', () {
-      test('emits StopTimer, SendFtmsPause, and NotifyListeners', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result = state.processEventWithEffects(SessionEvent.userPaused);
-
-        expect(result.effects, contains(isA<StopTimer>()));
-        expect(result.effects, contains(isA<SendFtmsPause>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
-      });
-
-      test('emits no effects when not running', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result = state.processEventWithEffects(SessionEvent.userPaused);
-
-        expect(result.effects, isEmpty);
+        expect(mockHandler.calls, isEmpty);
       });
     });
 
-    group('userResumed effects', () {
-      test('emits StartTimer, SendFtmsResume, and NotifyListeners', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
-        final result = state.processEventWithEffects(SessionEvent.userResumed);
+    group('userPaused handler calls', () {
+      test('calls stopTimer, sendFtmsPause, and notifyListeners', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects, contains(isA<StartTimer>()));
-        expect(result.effects, contains(isA<SendFtmsResume>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        mockHandler.reset();
+        state.onUserPaused();
+
+        expect(mockHandler.stopTimerCalled, true);
+        expect(mockHandler.sendFtmsPauseCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('emits no effects when not paused', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result = state.processEventWithEffects(SessionEvent.userResumed);
+      test('calls no handler methods when not running', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onUserPaused();
 
-        expect(result.effects, isEmpty);
+        expect(mockHandler.calls, isEmpty);
       });
     });
 
-    group('deviceDisconnected effects', () {
-      test('emits StopTimer and NotifyListeners when running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+    group('userResumed handler calls', () {
+      test('calls startTimer, sendFtmsResume, and notifyListeners', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onUserPaused();
 
-        expect(result.effects, contains(isA<StopTimer>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        mockHandler.reset();
+        state.onUserResumed();
+
+        expect(mockHandler.startTimerCalled, true);
+        expect(mockHandler.sendFtmsResumeCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('emits only NotifyListeners when in created state', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+      test('calls no handler methods when not paused', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects.whereType<StopTimer>(), isEmpty);
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        mockHandler.reset();
+        state.onUserResumed();
+
+        expect(mockHandler.calls, isEmpty);
+      });
+    });
+
+    group('deviceDisconnected handler calls', () {
+      test('calls stopTimer and notifyListeners when running', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+
+        mockHandler.reset();
+        state.onDeviceDisconnected();
+
+        expect(mockHandler.stopTimerCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
+      });
+
+      test('calls only notifyListeners when in created state', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDeviceDisconnected();
+
+        expect(mockHandler.stopTimerCalled, false);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
       test('transitions to pausedByDisconnection when running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        expect(result.state.status, SessionStatus.pausedByDisconnection);
-        expect(result.state.isDeviceConnected, false);
+        expect(state.status, SessionStatus.pausedByDisconnection);
+        expect(state.isDeviceConnected, false);
       });
 
       test('keeps created status when disconnected before start', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDeviceDisconnected();
 
-        expect(result.state.status, SessionStatus.created);
-        expect(result.state.isDeviceConnected, false);
+        expect(state.status, SessionStatus.created);
+        expect(state.isDeviceConnected, false);
       });
 
       test('keeps pausedByUser status when disconnected during user pause', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onUserPaused();
 
-        expect(result.state.status, SessionStatus.pausedByUser);
-        expect(result.state.isDeviceConnected, false);
-        expect(result.effects, contains(isA<NotifyListeners>()));
-        expect(result.effects.whereType<StopTimer>(), isEmpty);
+        mockHandler.reset();
+        state.onDeviceDisconnected();
+
+        expect(state.status, SessionStatus.pausedByUser);
+        expect(state.isDeviceConnected, false);
+        expect(mockHandler.notifyListenersCalled, true);
+        expect(mockHandler.stopTimerCalled, false);
       });
 
-      test('emits no effects when session has ended', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userStopped);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+      test('calls no handler methods when session has ended', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onUserStopped();
 
-        expect(result.effects, isEmpty);
-        expect(result.state.status, SessionStatus.stopped);
+        mockHandler.reset();
+        state.onDeviceDisconnected();
+
+        expect(mockHandler.calls, isEmpty);
+        expect(state.status, SessionStatus.stopped);
       });
 
-      test('emits no effects when session is completed', () {
+      test('calls no handler methods when session is completed', () {
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
@@ -943,188 +915,183 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(shortSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.timerTick);
+        final state = TrainingSessionState.initial(shortSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onTimerTick();
 
         expect(state.status, SessionStatus.completed);
 
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+        mockHandler.reset();
+        state.onDeviceDisconnected();
 
-        expect(result.effects, isEmpty);
+        expect(mockHandler.calls, isEmpty);
       });
 
-      test('does not emit SendFtmsPause (disconnect is not user pause)', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceDisconnected);
+      test('does not call sendFtmsPause (disconnect is not user pause)', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects.whereType<SendFtmsPause>(), isEmpty);
+        mockHandler.reset();
+        state.onDeviceDisconnected();
+
+        expect(mockHandler.sendFtmsPauseCalled, false);
       });
     });
 
-    group('deviceReconnected effects', () {
-      test(
-          'emits StartTimer, IntervalChanged, and NotifyListeners when auto-paused',
-          () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+    group('deviceReconnected handler calls', () {
+      test('calls startTimer, intervalChanged, and notifyListeners when auto-paused', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        expect(result.effects, contains(isA<StartTimer>()));
-        expect(result.effects, contains(isA<IntervalChanged>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        mockHandler.reset();
+        state.onDeviceReconnected();
+
+        expect(mockHandler.startTimerCalled, true);
+        expect(mockHandler.intervalChangedCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('emits only NotifyListeners when not auto-paused', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+      test('calls only notifyListeners when not auto-paused', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDeviceReconnected();
 
-        expect(result.effects.whereType<StartTimer>(), isEmpty);
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        expect(mockHandler.startTimerCalled, false);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
       test('transitions from pausedByDisconnection to running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
+        state.onDeviceReconnected();
 
-        expect(result.state.status, SessionStatus.running);
-        expect(result.state.isDeviceConnected, true);
+        expect(state.status, SessionStatus.running);
+        expect(state.isDeviceConnected, true);
       });
 
-      test('IntervalChanged contains current interval after reconnection', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+      test('intervalChanged receives current interval after reconnection', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        final intervalEffect =
-            result.effects.whereType<IntervalChanged>().first;
-        expect(intervalEffect.newInterval.title, 'Warmup');
+        mockHandler.reset();
+        state.onDeviceReconnected();
+
+        expect(mockHandler.intervalChanges.first.title, 'Warmup');
       });
 
-      test('does not emit SendFtmsResume (reconnect uses IntervalChanged)', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+      test('does not call sendFtmsResume (reconnect uses intervalChanged)', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        expect(result.effects.whereType<SendFtmsResume>(), isEmpty);
+        mockHandler.reset();
+        state.onDeviceReconnected();
+
+        expect(mockHandler.sendFtmsResumeCalled, false);
       });
 
       test('updates isDeviceConnected when reconnecting from created state', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDeviceDisconnected();
 
         expect(state.isDeviceConnected, false);
 
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+        mockHandler.reset();
+        state.onDeviceReconnected();
 
-        expect(result.state.status, SessionStatus.created);
-        expect(result.state.isDeviceConnected, true);
-        expect(result.effects.whereType<StartTimer>(), isEmpty);
+        expect(state.status, SessionStatus.created);
+        expect(state.isDeviceConnected, true);
+        expect(mockHandler.startTimerCalled, false);
       });
 
       test('updates isDeviceConnected when reconnecting from pausedByUser', () {
-        // Manually construct state with pausedByUser and disconnected
-        final pausedState = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused)
-            .processEvent(SessionEvent.deviceDisconnected);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onUserPaused();
+        state.onDeviceDisconnected();
 
-        expect(pausedState.status, SessionStatus.pausedByUser);
-        expect(pausedState.isDeviceConnected, false);
+        expect(state.status, SessionStatus.pausedByUser);
+        expect(state.isDeviceConnected, false);
 
-        final result =
-            pausedState.processEventWithEffects(SessionEvent.deviceReconnected);
+        mockHandler.reset();
+        state.onDeviceReconnected();
 
-        expect(result.state.status, SessionStatus.pausedByUser);
-        expect(result.state.isDeviceConnected, true);
-        expect(result.effects.whereType<StartTimer>(), isEmpty);
+        expect(state.status, SessionStatus.pausedByUser);
+        expect(state.isDeviceConnected, true);
+        expect(mockHandler.startTimerCalled, false);
       });
 
       test('reconnects mid-session and resumes with correct interval', () {
-        var state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick into the second interval
         for (int i = 0; i < 65; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
         expect(state.currentIntervalIndex, 1);
         expect(state.currentInterval.title, 'Work');
 
         // Disconnect
-        state = state.processEvent(SessionEvent.deviceDisconnected);
+        state.onDeviceDisconnected();
         expect(state.status, SessionStatus.pausedByDisconnection);
 
         // Reconnect
-        final result =
-            state.processEventWithEffects(SessionEvent.deviceReconnected);
+        mockHandler.reset();
+        state.onDeviceReconnected();
 
-        expect(result.state.status, SessionStatus.running);
-        final intervalEffect =
-            result.effects.whereType<IntervalChanged>().first;
-        expect(intervalEffect.newInterval.title, 'Work');
+        expect(state.status, SessionStatus.running);
+        expect(mockHandler.intervalChanges.first.title, 'Work');
       });
     });
 
-    group('timerTick effects', () {
-      test('emits NotifyListeners on normal tick', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+    group('timerTick handler calls', () {
+      test('calls notifyListeners on normal tick', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        mockHandler.reset();
+        state.onTimerTick();
+
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('emits IntervalChanged when interval changes', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+      test('calls intervalChanged when interval changes', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick to last second of first interval
-        var current = state;
         for (int i = 0; i < 59; i++) {
-          current = current.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // This tick should transition to next interval
-        final result = current.processEventWithEffects(SessionEvent.timerTick);
+        mockHandler.reset();
+        state.onTimerTick();
 
-        expect(result.effects, contains(isA<IntervalChanged>()));
-        final intervalEffect =
-            result.effects.whereType<IntervalChanged>().first;
-        expect(intervalEffect.newInterval.title, 'Work');
+        expect(mockHandler.intervalChangedCalled, true);
+        expect(mockHandler.intervalChanges.first.title, 'Work');
       });
 
-      test('emits PlayWarningSound in last 4 seconds of interval', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+      test('calls playWarningSound in last 4 seconds of interval', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick to second 55 (5 seconds remaining)
-        var current = state;
         for (int i = 0; i < 55; i++) {
-          current = current.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
-        // This tick should emit warning sound (4 seconds remaining after tick)
-        final result = current.processEventWithEffects(SessionEvent.timerTick);
+        // This tick should call warning sound (4 seconds remaining after tick)
+        mockHandler.reset();
+        state.onTimerTick();
 
-        expect(result.effects, contains(isA<PlayWarningSound>()));
+        expect(mockHandler.playWarningSoundCalled, true);
       });
 
-      test('emits SessionCompleted and StopTimer when duration reached', () {
+      test('calls sessionCompleted and stopTimer when duration reached', () {
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
@@ -1133,102 +1100,100 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(shortSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(shortSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick to last second
-        state = state.processEvent(SessionEvent.timerTick);
-        state = state.processEvent(SessionEvent.timerTick);
+        state.onTimerTick();
+        state.onTimerTick();
 
         // This tick should complete
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+        mockHandler.reset();
+        state.onTimerTick();
 
-        expect(result.effects, contains(isA<StopTimer>()));
-        expect(result.effects, contains(isA<SessionCompleted>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        expect(mockHandler.stopTimerCalled, true);
+        expect(mockHandler.sessionCompletedCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('emits no effects when not running', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+      test('calls no handler methods when not running', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onTimerTick();
 
-        expect(result.effects, isEmpty);
+        expect(mockHandler.calls, isEmpty);
       });
 
       test('increments elapsed time correctly', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onTimerTick();
 
-        expect(result.state.elapsedSeconds, 1);
+        expect(state.elapsedSeconds, 1);
       });
 
-      test('emits PlayWarningSound at start of interval (first tick)', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+      test('does not call playWarningSound at intervalElapsed=1', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        // First tick is at elapsed=1, which is intervalElapsed=1
-        // shouldPlayWarningSound is true when intervalElapsed==0 or intervalTimeLeft<=4
-        // After first tick, intervalElapsed=1, so warning depends on intervalTimeLeft
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+        mockHandler.reset();
+        state.onTimerTick();
 
         // After tick, intervalElapsed = 1, intervalTimeLeft = 59
         // shouldPlayWarningSound checks intervalTimeLeft <= 4 OR intervalElapsed == 0
         // So no warning sound here (intervalElapsed=1, intervalTimeLeft=59)
-        expect(result.effects.whereType<PlayWarningSound>(), isEmpty);
+        expect(mockHandler.playWarningSoundCalled, false);
       });
 
-      test('emits PlayWarningSound at exactly 4 seconds remaining', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+      test('calls playWarningSound at exactly 4 seconds remaining', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick to second 55 (after this tick, intervalTimeLeft will be 4)
-        var current = state;
         for (int i = 0; i < 55; i++) {
-          current = current.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // At 55 ticks, intervalElapsed=55, intervalTimeLeft=5
-        final result = current.processEventWithEffects(SessionEvent.timerTick);
+        mockHandler.reset();
+        state.onTimerTick();
         // After tick: intervalElapsed=56, intervalTimeLeft=4
-        expect(result.effects, contains(isA<PlayWarningSound>()));
+        expect(mockHandler.playWarningSoundCalled, true);
       });
 
-      test('emits PlayWarningSound at 3, 2, 1 seconds remaining', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+      test('calls playWarningSound at 3, 2, 1 seconds remaining', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        var current = state;
         for (int i = 0; i < 56; i++) {
-          current = current.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
 
         // At 56 ticks: intervalElapsed=56, intervalTimeLeft=4
         // Tick to 57: intervalTimeLeft=3
-        var result = current.processEventWithEffects(SessionEvent.timerTick);
-        expect(result.effects, contains(isA<PlayWarningSound>()));
-        current = result.state;
+        mockHandler.reset();
+        state.onTimerTick();
+        expect(mockHandler.playWarningSoundCalled, true);
 
         // Tick to 58: intervalTimeLeft=2
-        result = current.processEventWithEffects(SessionEvent.timerTick);
-        expect(result.effects, contains(isA<PlayWarningSound>()));
-        current = result.state;
+        mockHandler.reset();
+        state.onTimerTick();
+        expect(mockHandler.playWarningSoundCalled, true);
 
         // Tick to 59: intervalTimeLeft=1
-        result = current.processEventWithEffects(SessionEvent.timerTick);
-        expect(result.effects, contains(isA<PlayWarningSound>()));
+        mockHandler.reset();
+        state.onTimerTick();
+        expect(mockHandler.playWarningSoundCalled, true);
       });
 
-      test('does not emit IntervalChanged when staying in same interval', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
+      test('does not call intervalChanged when staying in same interval', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick a few times within first interval
-        var current = state;
         for (int i = 0; i < 30; i++) {
-          final result = current.processEventWithEffects(SessionEvent.timerTick);
-          expect(result.effects.whereType<IntervalChanged>(), isEmpty);
-          current = result.state;
+          mockHandler.reset();
+          state.onTimerTick();
+          expect(mockHandler.intervalChangedCalled, false);
         }
       });
 
@@ -1241,36 +1206,38 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(shortSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(shortSession, handler: mockHandler);
+        state.onDataChanged();
 
-        state = state.processEvent(SessionEvent.timerTick);
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+        state.onTimerTick();
+        state.onTimerTick();
 
-        expect(result.state.status, SessionStatus.completed);
-        expect(result.state.isCompleted, true);
-        expect(result.state.hasEnded, true);
+        expect(state.status, SessionStatus.completed);
+        expect(state.isCompleted, true);
+        expect(state.hasEnded, true);
       });
 
-      test('emits no effects when paused by user', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
+      test('calls no handler methods when paused by user', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onUserPaused();
 
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+        mockHandler.reset();
+        state.onTimerTick();
 
-        expect(result.effects, isEmpty);
-        expect(result.state.elapsedSeconds, 0);
+        expect(mockHandler.calls, isEmpty);
+        expect(state.elapsedSeconds, 0);
       });
 
-      test('emits no effects when paused by disconnection', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
+      test('calls no handler methods when paused by disconnection', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        state.onDeviceDisconnected();
 
-        final result = state.processEventWithEffects(SessionEvent.timerTick);
+        mockHandler.reset();
+        state.onTimerTick();
 
-        expect(result.effects, isEmpty);
+        expect(mockHandler.calls, isEmpty);
       });
 
       test('handles multiple interval transitions in sequence', () {
@@ -1284,165 +1251,48 @@ void main() {
           ],
         );
 
-        var state = TrainingSessionState.initial(multiIntervalSession)
-            .processEvent(SessionEvent.dataChanged);
+        final state = TrainingSessionState.initial(multiIntervalSession, handler: mockHandler);
+        state.onDataChanged();
 
         // Tick to transition from A to B
         for (int i = 0; i < 4; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
-        var result = state.processEventWithEffects(SessionEvent.timerTick);
-        expect(result.effects.whereType<IntervalChanged>().first.newInterval.title, 'B');
-        state = result.state;
+        mockHandler.reset();
+        state.onTimerTick();
+        expect(mockHandler.intervalChanges.first.title, 'B');
 
         // Tick to transition from B to C
         for (int i = 0; i < 4; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
+          state.onTimerTick();
         }
-        result = state.processEventWithEffects(SessionEvent.timerTick);
-        expect(result.effects.whereType<IntervalChanged>().first.newInterval.title, 'C');
+        mockHandler.reset();
+        state.onTimerTick();
+        expect(mockHandler.intervalChanges.first.title, 'C');
       });
     });
 
-    group('userStopped effects', () {
-      test('emits StopTimer, SendFtmsStopAndReset, and NotifyListeners', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result = state.processEventWithEffects(SessionEvent.userStopped);
+    group('userStopped handler calls', () {
+      test('calls stopTimer, sendFtmsStopAndReset, and notifyListeners', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
 
-        expect(result.effects, contains(isA<StopTimer>()));
-        expect(result.effects, contains(isA<SendFtmsStopAndReset>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
+        mockHandler.reset();
+        state.onUserStopped();
+
+        expect(mockHandler.stopTimerCalled, true);
+        expect(mockHandler.sendFtmsStopAndResetCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
       });
 
-      test('emits no effects when already ended', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.userStopped);
-        final result = state.processEventWithEffects(SessionEvent.userStopped);
+      test('calls no handler methods when already ended', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onUserStopped();
 
-        expect(result.effects, isEmpty);
-      });
-    });
+        mockHandler.reset();
+        state.onUserStopped();
 
-    group('durationReached effects', () {
-      test('emits StopTimer, SessionCompleted, and NotifyListeners when running', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects, contains(isA<StopTimer>()));
-        expect(result.effects, contains(isA<SessionCompleted>()));
-        expect(result.effects, contains(isA<NotifyListeners>()));
-      });
-
-      test('transitions state to completed', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.state.status, SessionStatus.completed);
-        expect(result.state.isCompleted, true);
-        expect(result.state.hasEnded, true);
-      });
-
-      test('emits no effects when not running', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects, isEmpty);
-      });
-
-      test('emits no effects when paused by user', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userPaused);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects, isEmpty);
-        expect(result.state.status, SessionStatus.pausedByUser);
-      });
-
-      test('emits no effects when paused by disconnection', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.deviceDisconnected);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects, isEmpty);
-        expect(result.state.status, SessionStatus.pausedByDisconnection);
-      });
-
-      test('emits no effects when already completed', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.durationReached);
-
-        expect(state.status, SessionStatus.completed);
-
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects, isEmpty);
-      });
-
-      test('emits no effects when already stopped', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged)
-            .processEvent(SessionEvent.userStopped);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects, isEmpty);
-      });
-
-      test('does not emit SendFtmsStopAndReset (completion is not stop)', () {
-        final state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.effects.whereType<SendFtmsStopAndReset>(), isEmpty);
-      });
-
-      test('preserves timing state when completing', () {
-        var state = TrainingSessionState.initial(testSession)
-            .processEvent(SessionEvent.dataChanged);
-
-        // Advance time
-        for (int i = 0; i < 30; i++) {
-          state = state.processEvent(SessionEvent.timerTick);
-        }
-
-        final result =
-            state.processEventWithEffects(SessionEvent.durationReached);
-
-        expect(result.state.elapsedSeconds, 30);
-        expect(result.state.timing, state.timing);
-      });
-    });
-
-    group('StateTransitionResult', () {
-      test('unchanged factory creates result with empty effects', () {
-        final state = TrainingSessionState.initial(testSession);
-        final result = StateTransitionResult.unchanged(state);
-
-        expect(result.state, same(state));
-        expect(result.effects, isEmpty);
-      });
-
-      test('processEvent returns same state as processEventWithEffects', () {
-        final state = TrainingSessionState.initial(testSession);
-
-        final stateOnly = state.processEvent(SessionEvent.dataChanged);
-        final resultWithEffects =
-            state.processEventWithEffects(SessionEvent.dataChanged);
-
-        expect(stateOnly, equals(resultWithEffects.state));
+        expect(mockHandler.calls, isEmpty);
       });
     });
   });
