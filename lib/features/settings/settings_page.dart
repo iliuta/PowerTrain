@@ -90,31 +90,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> _onWillPop() async {
-    if (!_hasChanges) return true;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unsaved Changes'),
-        content: const Text(
-            'You have unsaved changes. Do you want to save them before leaving?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // discard
-            child: const Text('Discard'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true); // save
-              _saveSettings();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    return result ?? false; // cancel
+    if (_hasChanges) {
+      await _saveSettings();
+    }
+    return true;
   }
 
   @override
@@ -143,20 +122,7 @@ class _SettingsPageState extends State<SettingsPage> {
               }
             },
           ),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _saveSettings,
-              child: const Text(
-                'SAVE',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-        ],
-      ),
+        ),
       body: _buildBody(),
       ),
     );

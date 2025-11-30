@@ -54,7 +54,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
       title: 'Fitness Profile',
       subtitle: 'Your personal fitness metrics for accurate training targets',
       children: [
-        if (widget.userSettings.developerMode) _buildCyclingFtpField(),
+        _buildCyclingFtpField(),
         _buildRowingFtpField(),
         const Divider(),
         _buildDeveloperModeField(),
