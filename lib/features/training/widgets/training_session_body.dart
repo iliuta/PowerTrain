@@ -24,7 +24,9 @@ class TrainingSessionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SafeArea(
+      bottom: false,
+      child: Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
@@ -66,6 +68,7 @@ class TrainingSessionBody extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 

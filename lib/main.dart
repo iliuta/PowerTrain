@@ -50,15 +50,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     // Configure edge-to-edge display for Android 15+
-    // Make status bar and navigation bar transparent
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
+    // System UI overlay style is not set to avoid deprecated APIs
     
     return MaterialApp(
       title: 'Fitness machines',

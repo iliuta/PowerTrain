@@ -170,52 +170,56 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     if (_userSettings == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Failed to load settings',
-              style: TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadSettings,
-              child: const Text('Retry'),
-            ),
-          ],
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Failed to load settings',
+                style: TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadSettings,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          UserPreferencesSection(
-            userSettings: _userSettings!,
-            onChanged: _onUserSettingsChanged,
-          ),
-          const SizedBox(height: 24),
-          SettingsSection(
-            title: 'About',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('PowerTrain 1.0.2'),
-                subtitle: const Text('Indoor Rowing with your FTMS compatible fitness equipment.'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-        ],
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            UserPreferencesSection(
+              userSettings: _userSettings!,
+              onChanged: _onUserSettingsChanged,
+            ),
+            const SizedBox(height: 24),
+            SettingsSection(
+              title: 'About',
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('PowerTrain 1.0.2'),
+                  subtitle: const Text('Indoor Rowing with your FTMS compatible fitness equipment.'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

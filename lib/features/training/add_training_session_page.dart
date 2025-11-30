@@ -279,7 +279,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           ),
         ],
       ),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           // Session Title
           Padding(
@@ -356,6 +357,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                   ),
           ),
         ],
+      ),
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,

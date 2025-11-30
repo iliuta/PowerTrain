@@ -130,7 +130,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return SafeArea(
+      child: SingleChildScrollView(
       child: StreamBuilder<DeviceData?>(
         stream: ftmsBloc.ftmsDeviceDataControllerStream,
         builder: (c, snapshot) {
@@ -314,6 +315,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
           );
         },
       ),
+    ),
     );
   }
 }

@@ -179,7 +179,9 @@ class _ScanPageState extends State<ScanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return SafeArea(
+      top: false, // AppBar handles top insets
+      child: Center(
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
@@ -312,6 +314,7 @@ class _ScanPageState extends State<ScanPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }
