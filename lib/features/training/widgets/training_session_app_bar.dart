@@ -33,7 +33,7 @@ class TrainingSessionAppBar extends StatelessWidget
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (controller.sessionPaused) ...[
+          if (controller.state.isPaused) ...[
             const SizedBox(width: 8),
             const Icon(
               Icons.pause_circle,
@@ -51,17 +51,17 @@ class TrainingSessionAppBar extends StatelessWidget
           ],
         ],
       ),
-      actions: controller.sessionCompleted
+      actions: controller.state.hasEnded
           ? null
           : [
               IconButton(
-                onPressed: controller.sessionPaused
+                onPressed: controller.state.isPaused
                     ? controller.resumeSession
                     : controller.pauseSession,
                 icon: Icon(
-                    controller.sessionPaused ? Icons.play_arrow : Icons.pause),
-                tooltip: controller.sessionPaused ? 'Resume' : 'Pause',
-                color: controller.sessionPaused ? Colors.green : Colors.orange,
+                    controller.state.isPaused ? Icons.play_arrow : Icons.pause),
+                tooltip: controller.state.isPaused ? 'Resume' : 'Pause',
+                color: controller.state.isPaused ? Colors.green : Colors.orange,
               ),
               IconButton(
                 onPressed: onStopPressed,

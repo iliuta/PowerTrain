@@ -24,6 +24,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isTrainingSessionExpanded = false;
   int _freeRideDurationMinutes = 20;
   UserSettings? _userSettings;
+  Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   bool _isLoadingSettings = true;
   bool _isDeviceAvailable = true;
   DeviceDataType? _deviceDataType;
@@ -39,8 +40,13 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
 
   Future<void> _loadUserSettings() async {
     final settings = await UserSettings.loadDefault();
+    final configs = <DeviceType, LiveDataDisplayConfig?>{};
+    for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
+      configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+    }
     setState(() {
       _userSettings = settings;
+      _configs = configs;
       _isLoadingSettings = false;
     });
   }
@@ -115,6 +121,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     return TrainingSessionExpansionPanelList(
       sessions: _trainingSessions!,
       scrollController: ScrollController(),
+      userSettings: _userSettings,
+      configs: _configs,
       onSessionSelected: (session) {
         Navigator.of(context).push(
           MaterialPageRoute(

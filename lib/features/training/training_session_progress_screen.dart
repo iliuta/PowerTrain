@@ -25,6 +25,8 @@ class TrainingSessionProgressScreen extends StatefulWidget {
 }
 
 class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressScreen> {
+  UserSettings? _userSettings;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +35,14 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    _loadUserSettings();
+  }
+
+  Future<void> _loadUserSettings() async {
+    final settings = await UserSettings.loadDefault();
+    setState(() {
+      _userSettings = settings;
+    });
   }
 
   @override
@@ -49,6 +59,12 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
 
   @override
   Widget build(BuildContext context) {
+    if (_userSettings == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return FutureBuilder<LiveDataDisplayConfig?>(
       future: _loadConfig(),
       builder: (context, snapshot) {
@@ -92,18 +108,16 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
 
   Future<ExpandedTrainingSessionDefinition> _expandSession() async {
     try {
-      final userSettings = await UserSettings.loadDefault();
       final config = await LiveDataDisplayConfig.loadForFtmsMachineType(widget.session.ftmsMachineType);
       return widget.session.expand(
-        userSettings: userSettings,
+        userSettings: _userSettings!,
         config: config,
       );
     } catch (e) {
       // If expansion fails, create a minimal expanded session from the original
       debugPrint('Failed to expand session: $e');
-      final userSettings = await UserSettings.loadDefault();
       return widget.session.expand(
-        userSettings: userSettings,
+        userSettings: _userSettings!,
         config: null,
       );
     }

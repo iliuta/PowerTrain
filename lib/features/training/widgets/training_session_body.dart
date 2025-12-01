@@ -31,11 +31,11 @@ class TrainingSessionBody extends StatelessWidget {
       child: Column(
         children: [
           SessionProgressBar(
-            progress: controller.elapsed / controller.totalDuration,
-            timeLeft: controller.mainTimeLeft,
-            elapsed: controller.elapsed,
+            progress: controller.state.elapsedSeconds / controller.state.totalDuration,
+            timeLeft: controller.state.sessionTimeLeft,
+            elapsed: controller.state.elapsedSeconds,
             formatTime: _formatTime,
-            intervals: controller.intervals,
+            intervals: controller.state.intervals,
             machineType: session.ftmsMachineType,
             config: config,
           ),
@@ -46,10 +46,10 @@ class TrainingSessionBody extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: TrainingIntervalList(
-                    intervals: controller.intervals,
-                    currentInterval: controller.currentInterval,
-                    intervalElapsed: controller.intervalElapsed,
-                    intervalTimeLeft: controller.intervalTimeLeft,
+                    intervals: controller.state.intervals,
+                    currentInterval: controller.state.currentIntervalIndex,
+                    intervalElapsed: controller.state.intervalElapsedSeconds,
+                    intervalTimeLeft: controller.state.intervalTimeLeft,
                     formatMMSS: _formatMMSS,
                     config: config,
                   ),
@@ -59,7 +59,7 @@ class TrainingSessionBody extends StatelessWidget {
                   flex: 3,
                   child: LiveFTMSDataWidget(
                     ftmsDevice: ftmsDevice,
-                    targets: controller.current.targets,
+                    targets: controller.state.currentInterval.targets,
                     machineType: session.ftmsMachineType,
                   ),
                 ),
