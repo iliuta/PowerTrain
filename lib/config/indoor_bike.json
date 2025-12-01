@@ -1,6 +1,6 @@
 {
   "ftmsMachineType": "DeviceDataType.indoorBike",
-  "availableInDeveloperModeOnly": true,
+  "availableInDeveloperModeOnly": false,
   "fields": [
     {
       "name": "Instantaneous Speed",
@@ -40,6 +40,27 @@
       "formatter": "intFormatter",
       "unit": "bpm",
       "icon": "heart"
+    },
+    {
+      "name": "Average Speed",
+      "label": "Avg speed",
+      "display": "number",
+      "unit": "km/h",
+      "icon": "speed"
+    },
+    {
+      "name": "Average Power",
+      "label": "Avg power",
+      "display": "number",
+      "unit": "W",
+      "icon": "power"
+    },
+    {
+      "name": "Total Distance",
+      "label": "Distance",
+      "display": "number",
+      "unit": "m",
+      "icon": "power"
     }
   ]
 }

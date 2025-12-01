@@ -85,6 +85,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
     }
   }
   
+
   Widget _buildFeatureControl(String featureName, bool isSupported, {
     MachineControlPointOpcodeType? relatedCommand,
     bool needsInput = false,
@@ -208,7 +209,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
         
         final features = snapshot.data!.getFeatureFlags();
         final deviceName = widget.ftmsDevice.platformName;
-        
+
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

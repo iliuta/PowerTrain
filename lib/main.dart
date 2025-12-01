@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,7 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Set log level for production
-  FlutterBluePlus.setLogLevel(LogLevel.info);
+  FlutterBluePlus.setLogLevel(LogLevel.warning);
   
   // Initialize device navigation callbacks to avoid circular dependencies
   initializeDeviceNavigation();
@@ -50,15 +49,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     // Configure edge-to-edge display for Android 15+
-    // Make status bar and navigation bar transparent
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
+    // System UI overlay style is not set to avoid deprecated APIs
     
     return MaterialApp(
       title: 'Fitness machines',

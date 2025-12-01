@@ -28,6 +28,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
   String? _error;
   DeviceType _selectedMachineType = DeviceType.rower;
   UserSettings? _userSettings;
+  Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   List<DeviceType> _availableDeviceTypes = [DeviceType.rower, DeviceType.indoorBike];
 
   @override
@@ -39,8 +40,13 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
   Future<void> _loadUserSettings() async {
     try {
       final userSettings = await UserSettings.loadDefault();
+      final configs = <DeviceType, LiveDataDisplayConfig?>{};
+      for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
+        configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+      }
       setState(() {
         _userSettings = userSettings;
+        _configs = configs;
       });
       await _filterAvailableDeviceTypes();
       _loadSessions();
@@ -296,84 +302,92 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
     }
 
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey[400],
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadSessions,
-              child: const Text('Retry'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadSessions,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     if (_sessions == null || _sessions!.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.fitness_center,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No training sessions found',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.fitness_center,
+                size: 64,
+                color: Colors.grey[400],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'No training sessions available for $_selectedMachineType',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 14,
+              const SizedBox(height: 16),
+              Text(
+                'No training sessions found',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try selecting a different machine type above',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
+              const SizedBox(height: 8),
+              Text(
+                'No training sessions available for $_selectedMachineType',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 14,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'Try selecting a different machine type above',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return TrainingSessionExpansionPanelList(
-      sessions: _sessions!,
-      scrollController: ScrollController(),
-      onSessionSelected: _onSessionSelected,
-      onSessionEdit: _onSessionEdit,
-      onSessionDelete: _onSessionDelete,
-      onSessionDuplicate: _onSessionDuplicate,
+    return SafeArea(
+      child: TrainingSessionExpansionPanelList(
+        sessions: _sessions!,
+        scrollController: ScrollController(),
+        userSettings: _userSettings,
+        configs: _configs,
+        onSessionSelected: _onSessionSelected,
+        onSessionEdit: _onSessionEdit,
+        onSessionDelete: _onSessionDelete,
+        onSessionDuplicate: _onSessionDuplicate,
+      ),
     );
   }
 

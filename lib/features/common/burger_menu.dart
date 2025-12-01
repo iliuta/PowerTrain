@@ -3,6 +3,7 @@ import '../training/training_sessions_page.dart';
 import '../settings/settings_page.dart';
 import '../fit_files/fit_file_manager_page.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'help_page.dart';
 
 /// A burger menu widget with navigation options and device status
 class BurgerMenu extends StatelessWidget {
@@ -47,6 +48,14 @@ class BurgerMenu extends StatelessWidget {
             dense: true,
           ),
         ),
+        const PopupMenuItem<String>(
+          value: 'help',
+          child: ListTile(
+            leading: Icon(Icons.help),
+            title: Text('Help'),
+            dense: true,
+          ),
+        ),
       ],
     );
   }
@@ -71,6 +80,13 @@ class BurgerMenu extends StatelessWidget {
         break;
       case 'settings':
         _showSettingsDialog(context);
+        break;
+      case 'help':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const HelpPage(),
+          ),
+        );
         break;
       case 'disconnect':
         _disconnectDevice(context);

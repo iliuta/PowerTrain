@@ -16,12 +16,13 @@ The code is based on [flutter_ftms]([url](https://github.com/Malte2036/flutter_f
 
 The machines MUST support the [FTMS bluetooth protocol]([url](https://www.bluetooth.com/specifications/specs/fitness-machine-service-1-0/)).
 
-The app is intended to work with rowers only. I know it works with the Domyos Woodrower, probably with other FTMS rowers but I haven't tested them. Feedback is appreciated.
+The application is intended to work primarily with rowers. It definitely works with Domyos Woodrower but should work with other FTMS rowers as well.
 
-But, if you activate developer mode in the settings, you may try indoor bikes as well. For trainers, the resistance control is not supported. For indoor bikes, the app supports external cadence sensors.
+The application also supports indoor bikes supporting the FTMS protocol. It has been tested with a Zwift Hub trainer.
 
 External bluetooth heart rate monitors are supported.
 
+For indoor bikes you can pair a cadence sensor as well.
 
 # Disclaimer
 This is a personal project. Use it at your own risk. If you browse the code, you might see pieces of code that are not very clean or not covered by tests. That's all right, it's my playground. I don't have time to make it perfect, but I try to keep it working. Again, feedback is appreciated.
@@ -41,11 +42,11 @@ This is a personal project. Use it at your own risk. If you browse the code, you
 
 - **Bluetooth Connectivity**: scan for, connect to and display data from FTMS-compatible fitness machines (bikes and rowers) using Bluetooth Low Energy (BLE).
 - **Heart rate monitoring**: connect to heart rate monitors (HRMs) via Bluetooth and display real-time heart rate data.
-- **Cadence sensors**: connect to cadence sensors via Bluetooth and display real-time heart cadence data.
-- **Structured Training Sessions**: load and execute interval-based training sessions with support for both simple and grouped intervals.
+- **Cadence sensors** for indoor bikes: connect to cadence sensors via Bluetooth and display real-time heart cadence data.
+- **Bluetooth autoconnect**: when the application starts it automatically connects to the last known devices (fitness machine or sensors).
+- **Structured Training Sessions**: load and execute interval-based training sessions with support for both simple and grouped intervals. Visual progress bar and detailed feedback during workouts, including interval targets and completion status.
 - **Edit your own training sessions**: create and modify training sessions. Data stored locally in JSON format.
-- **Session Progress Tracking**: Visual progress bar and detailed feedback during workouts, including interval targets and completion status.
-- **FIT file generation**: When a training session is over, a FIT file is generated in the application private storage and automatically sent to Strava. 
+- **Strava upload or FIT file generation**: If connected to Strava, the workout is automatically uploaded at the end of the session. If not connected to Strava, a FIT file is generated and stored locally for manual upload later or sharing with other apps.
 
 For build, test, and usage instructions, see the rest of this README.
 
@@ -53,7 +54,11 @@ For build, test, and usage instructions, see the rest of this README.
 
 The rower I have can be controlled by the app. When editing a training session, for each interval you can set a target resistance level. I don't know what values are accepted by other rowers but you can try different values.
 
+For testing, activate developer mode in the settings. Then connect to the machine and you'll see a menu "Machine features". You can try different resistance levels there. Don't forget to request control first.
+
 In my case, the number must be the resistance level displayed on the rower multiplied by 10. The rower has 15 resistance levels, so the value that the app transmits to the rower can be 10, 20, ..., 150. Yours ... I don't know.
+
+For home trainers, the resistance is a percentage from 0 to 100.
 
 ## Getting Started
 
@@ -80,9 +85,13 @@ flutter pub get
 The Android device ID can be found with `flutter devices`. It must be in developer mode.
 
    ```zsh
-   flutter devicces
+   flutter devices
    flutter install -d <device_id> -PdevBuild
    ```
+Sometimes you'll need to kill the adb server:
+    ```
+    adb kill-server
+    ```
 
 #### macOS
 ```zsh

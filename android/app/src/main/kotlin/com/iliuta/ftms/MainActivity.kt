@@ -7,9 +7,9 @@ import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity: FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Enable edge-to-edge display for Android 15+
+        // Enable edge-to-edge display for Android 10+ (API 29)
         // This removes the deprecated status bar and navigation bar color APIs
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         

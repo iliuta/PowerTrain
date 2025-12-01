@@ -90,31 +90,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> _onWillPop() async {
-    if (!_hasChanges) return true;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unsaved Changes'),
-        content: const Text(
-            'You have unsaved changes. Do you want to save them before leaving?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // discard
-            child: const Text('Discard'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true); // save
-              _saveSettings();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    return result ?? false; // cancel
+    if (_hasChanges) {
+      await _saveSettings();
+    }
+    return true;
   }
 
   @override
@@ -143,20 +122,7 @@ class _SettingsPageState extends State<SettingsPage> {
               }
             },
           ),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _saveSettings,
-              child: const Text(
-                'SAVE',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-        ],
-      ),
+        ),
       body: _buildBody(),
       ),
     );
@@ -170,52 +136,56 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     if (_userSettings == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Failed to load settings',
-              style: TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadSettings,
-              child: const Text('Retry'),
-            ),
-          ],
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Failed to load settings',
+                style: TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadSettings,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          UserPreferencesSection(
-            userSettings: _userSettings!,
-            onChanged: _onUserSettingsChanged,
-          ),
-          const SizedBox(height: 24),
-          SettingsSection(
-            title: 'About',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('PowerTrain 1.0.2'),
-                subtitle: const Text('Indoor Rowing with your FTMS compatible fitness equipment.'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-        ],
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            UserPreferencesSection(
+              userSettings: _userSettings!,
+              onChanged: _onUserSettingsChanged,
+            ),
+            const SizedBox(height: 24),
+            SettingsSection(
+              title: 'About',
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('PowerTrain 1.1.0'),
+                  subtitle: const Text('Indoor Rowing with your FTMS compatible fitness equipment.'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
