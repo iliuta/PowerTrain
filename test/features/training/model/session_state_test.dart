@@ -989,7 +989,7 @@ void main() {
         mockHandler.reset();
         state.onDeviceReconnected();
 
-        expect(mockHandler.sendFtmsResumeCalled, false);
+        expect(mockHandler.sendFtmsResumeCalled, true);
       });
 
       test('updates isDeviceConnected when reconnecting from created state', () {

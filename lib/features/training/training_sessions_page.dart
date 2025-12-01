@@ -28,6 +28,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
   String? _error;
   DeviceType _selectedMachineType = DeviceType.rower;
   UserSettings? _userSettings;
+  Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   List<DeviceType> _availableDeviceTypes = [DeviceType.rower, DeviceType.indoorBike];
 
   @override
@@ -39,8 +40,13 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
   Future<void> _loadUserSettings() async {
     try {
       final userSettings = await UserSettings.loadDefault();
+      final configs = <DeviceType, LiveDataDisplayConfig?>{};
+      for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
+        configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+      }
       setState(() {
         _userSettings = userSettings;
+        _configs = configs;
       });
       await _filterAvailableDeviceTypes();
       _loadSessions();
@@ -375,6 +381,8 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
       child: TrainingSessionExpansionPanelList(
         sessions: _sessions!,
         scrollController: ScrollController(),
+        userSettings: _userSettings,
+        configs: _configs,
         onSessionSelected: _onSessionSelected,
         onSessionEdit: _onSessionEdit,
         onSessionDelete: _onSessionDelete,

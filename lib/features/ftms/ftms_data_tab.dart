@@ -30,6 +30,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   String? _configError;
   final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
   UserSettings? _userSettings;
+  Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   bool _isLoadingSettings = true;
   bool _isDeviceAvailable = true;
 
@@ -42,8 +43,13 @@ class FTMSDataTabState extends State<FTMSDataTab> {
 
   Future<void> _loadUserSettings() async {
     final settings = await UserSettings.loadDefault();
+    final configs = <DeviceType, LiveDataDisplayConfig?>{};
+    for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
+      configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+    }
     setState(() {
       _userSettings = settings;
+      _configs = configs;
       _isLoadingSettings = false;
     });
   }
@@ -217,6 +223,8 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                             return TrainingSessionExpansionPanelList(
                               sessions: sessions,
                               scrollController: scrollController,
+                              userSettings: _userSettings,
+                              configs: _configs,
                             );
                           },
                         ),

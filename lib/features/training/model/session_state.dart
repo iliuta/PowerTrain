@@ -285,6 +285,9 @@ class TrainingSessionState {
     if (status == SessionStatus.pausedByDisconnection) {
       status = SessionStatus.running;
       isDeviceConnected = true;
+      if (status != SessionStatus.pausedByUser) {
+        _handler?.onSendFtmsResume();
+      }
       _handler?.onStartTimer();
       _handler?.onIntervalChanged(timing.currentInterval);
       _handler?.onNotifyListeners();
