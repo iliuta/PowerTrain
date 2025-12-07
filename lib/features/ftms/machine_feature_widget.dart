@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 
 import '../../core/bloc/ftms_bloc.dart';
+import '../../core/models/supported_resistance_level_range.dart';
+import '../../core/models/supported_power_range.dart';
 import '../../core/services/ftms_service.dart';
 
 class MachineFeatureWidget extends StatefulWidget {
@@ -19,6 +21,8 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
   final Map<String, TextEditingController> _controllers = {};
   String? _lastError;
   bool _isLoading = false;
+  SupportedResistanceLevelRange? _resistanceLevelRange;
+  SupportedPowerRange? _powerRange;
   
   @override
   void initState() {
@@ -40,10 +44,36 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
     try {
       final machineFeature = await FTMS.readMachineFeatureCharacteristic(widget.ftmsDevice);
       ftmsBloc.ftmsMachineFeaturesControllerSink.add(machineFeature);
+      
+      // Also try to load supported resistance level range and power range
+      _loadSupportedResistanceLevelRange();
+      _loadSupportedPowerRange();
     } catch (e) {
       setState(() => _lastError = 'Failed to load features: $e');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+  
+  Future<void> _loadSupportedResistanceLevelRange() async {
+    try {
+      final ftmsService = FTMSService(widget.ftmsDevice);
+      final range = await ftmsService.readSupportedResistanceLevelRange();
+      setState(() => _resistanceLevelRange = range);
+    } catch (e) {
+      // Not all devices support this characteristic, so we silently fail
+      debugPrint('Supported Resistance Level Range not available: $e');
+    }
+  }
+  
+  Future<void> _loadSupportedPowerRange() async {
+    try {
+      final ftmsService = FTMSService(widget.ftmsDevice);
+      final range = await ftmsService.readSupportedPowerRange();
+      setState(() => _powerRange = range);
+    } catch (e) {
+      // Not all devices support this characteristic, so we silently fail
+      debugPrint('Supported Power Range not available: $e');
     }
   }
   
@@ -278,11 +308,93 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                 features[MachineFeatureFlag.resistanceLevelFlag] ?? false,
                 relatedCommand: MachineControlPointOpcodeType.setTargetResistanceLevel,
                 needsInput: true,
-                inputLabel: 'Level',
+                inputLabel: 'Level (Ω)',
                 defaultValue: '50',
-                minValue: 0,
-                maxValue: 200,
+                minValue: _resistanceLevelRange?.minControlValue ?? 0,
+                maxValue: _resistanceLevelRange?.maxControlValue ?? 200,
               ),
+              
+              // Display supported resistance level range if available
+              if (_resistanceLevelRange != null)
+                Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  color: Colors.blue[50],
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Device Supported Range:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Min',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  '${_resistanceLevelRange!.minResistanceLevel} Ω',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Max',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  '${_resistanceLevelRange!.maxResistanceLevel} Ω',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Step',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  '${_resistanceLevelRange!.minIncrement} Ω',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               
               _buildFeatureControl(
                 'Power Target (ERG Mode)',
@@ -294,6 +406,88 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                 minValue: 0,
                 maxValue: 1000,
               ),
+              
+              // Display supported power range if available
+              if (_powerRange != null)
+                Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  color: Colors.blue[50],
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Supported Range:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Min',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  '${_powerRange!.minPower.toStringAsFixed(0)} W',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Max',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  '${_powerRange!.maxPower.toStringAsFixed(0)} W',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Increment',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  '${_powerRange!.minIncrement.toStringAsFixed(0)} W',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               
               _buildFeatureControl(
                 'Inclination',
