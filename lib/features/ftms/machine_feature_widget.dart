@@ -305,7 +305,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
               
               _buildFeatureControl(
                 'Resistance Level',
-                features[MachineFeatureFlag.resistanceLevelFlag] ?? false,
+                (features[MachineFeatureFlag.resistanceLevelFlag] ?? false) && _resistanceLevelRange != null,
                 relatedCommand: MachineControlPointOpcodeType.setTargetResistanceLevel,
                 needsInput: true,
                 inputLabel: 'Level (Ω)',
@@ -398,7 +398,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
               
               _buildFeatureControl(
                 'Power Target (ERG Mode)',
-                features[MachineFeatureFlag.powerMeasurementFlag] ?? false,
+                (features[MachineFeatureFlag.powerMeasurementFlag] ?? false) && _powerRange != null,
                 relatedCommand: MachineControlPointOpcodeType.setTargetPower,
                 needsInput: true,
                 inputLabel: 'Watts',
