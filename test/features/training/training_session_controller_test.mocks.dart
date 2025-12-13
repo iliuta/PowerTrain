@@ -4,7 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i8;
-import 'dart:io' as _i15;
+import 'dart:io' as _i17;
 import 'dart:typed_data' as _i11;
 
 import 'package:audioplayers/audioplayers.dart' as _i7;
@@ -12,12 +12,14 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart' as _i10;
 import 'package:flutter_blue_plus_platform_interface/flutter_blue_plus_platform_interface.dart'
     as _i2;
 import 'package:flutter_ftms/flutter_ftms.dart' as _i3;
-import 'package:ftms/core/models/live_data_field_value.dart' as _i14;
-import 'package:ftms/core/services/fit/training_data_recorder.dart' as _i13;
+import 'package:ftms/core/models/live_data_field_value.dart' as _i16;
+import 'package:ftms/core/models/supported_power_range.dart' as _i14;
+import 'package:ftms/core/models/supported_resistance_level_range.dart' as _i13;
+import 'package:ftms/core/services/fit/training_data_recorder.dart' as _i15;
 import 'package:ftms/core/services/ftms_service.dart' as _i12;
 import 'package:ftms/core/services/strava/strava_activity_uploader.dart' as _i6;
 import 'package:ftms/core/services/strava/strava_oauth_handler.dart' as _i5;
-import 'package:ftms/core/services/strava/strava_service.dart' as _i16;
+import 'package:ftms/core/services/strava/strava_service.dart' as _i18;
 import 'package:ftms/core/services/strava/strava_token_manager.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i9;
@@ -489,13 +491,34 @@ class MockFTMSService extends _i1.Mock implements _i12.FTMSService {
         returnValue: _i8.Future<void>.value(),
         returnValueForMissingStub: _i8.Future<void>.value(),
       ) as _i8.Future<void>);
+
+  @override
+  _i8.Future<_i13.SupportedResistanceLevelRange?>
+      readSupportedResistanceLevelRange() => (super.noSuchMethod(
+            Invocation.method(
+              #readSupportedResistanceLevelRange,
+              [],
+            ),
+            returnValue:
+                _i8.Future<_i13.SupportedResistanceLevelRange?>.value(),
+          ) as _i8.Future<_i13.SupportedResistanceLevelRange?>);
+
+  @override
+  _i8.Future<_i14.SupportedPowerRange?> readSupportedPowerRange() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #readSupportedPowerRange,
+          [],
+        ),
+        returnValue: _i8.Future<_i14.SupportedPowerRange?>.value(),
+      ) as _i8.Future<_i14.SupportedPowerRange?>);
 }
 
 /// A class which mocks [TrainingDataRecorder].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockTrainingDataRecorder extends _i1.Mock
-    implements _i13.TrainingDataRecorder {
+    implements _i15.TrainingDataRecorder {
   MockTrainingDataRecorder() {
     _i1.throwOnMissingStub(this);
   }
@@ -541,7 +564,7 @@ class MockTrainingDataRecorder extends _i1.Mock
 
   @override
   void recordDataPoint({
-    required Map<String, _i14.LiveDataFieldValue>? ftmsParams,
+    required Map<String, _i16.LiveDataFieldValue>? ftmsParams,
     double? resistanceLevel,
     DateTime? timestamp,
   }) =>
@@ -569,7 +592,7 @@ class MockTrainingDataRecorder extends _i1.Mock
 
   @override
   _i8.Future<String?> generateFitFileToDirectory(
-          _i15.Directory? outputDirectory) =>
+          _i17.Directory? outputDirectory) =>
       (super.noSuchMethod(
         Invocation.method(
           #generateFitFileToDirectory,
@@ -591,7 +614,7 @@ class MockTrainingDataRecorder extends _i1.Mock
 /// A class which mocks [StravaService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockStravaService extends _i1.Mock implements _i16.StravaService {
+class MockStravaService extends _i1.Mock implements _i18.StravaService {
   MockStravaService() {
     _i1.throwOnMissingStub(this);
   }
