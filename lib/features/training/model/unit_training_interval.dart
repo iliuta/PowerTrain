@@ -101,6 +101,7 @@ class UnitTrainingInterval extends TrainingInterval {
     return UnitTrainingInterval(
       title: title,
       duration: duration,
+      distance: distance,
       targets: targets != null ? Map<String, dynamic>.from(targets!) : null,
       resistanceLevel: resistanceLevel,
       repeat: repeat,

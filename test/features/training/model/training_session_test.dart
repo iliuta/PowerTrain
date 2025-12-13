@@ -374,9 +374,9 @@ void main() {
     });
 
     test('createTemplate creates bike template with correct structure', () {
-      final session = TrainingSessionDefinition.createTemplate(DeviceType.indoorBike, 600);
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.indoorBike, workoutValue: 600);
 
-      expect(session.title, equals('New Cycling Training Session'));
+      expect(session.title, equals('New Cycling Time Training Session'));
       expect(session.ftmsMachineType, equals(DeviceType.indoorBike));
       expect(session.isCustom, isTrue);
       expect(session.intervals, hasLength(1));
@@ -389,9 +389,9 @@ void main() {
     });
 
     test('createTemplate creates rower template with correct structure', () {
-      final session = TrainingSessionDefinition.createTemplate(DeviceType.rower, 600);
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.rower, workoutValue: 600);
 
-      expect(session.title, equals('New Rowing Training Session'));
+      expect(session.title, equals('New Rowing Time Training Session'));
       expect(session.ftmsMachineType, equals(DeviceType.rower));
       expect(session.isCustom, isTrue);
       expect(session.intervals, hasLength(3));

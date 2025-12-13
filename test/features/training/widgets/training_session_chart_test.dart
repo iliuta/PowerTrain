@@ -163,7 +163,7 @@ void main() {
 
       // Check that the chart widget is displayed
       expect(find.byType(TrainingSessionChart), findsOneWidget);
-      
+
       // For distance-based sessions, we expect some distance labels to be shown
       // The exact labels depend on the formatting logic
       expect(find.byType(Text), findsWidgets); // Just check that text widgets exist

@@ -44,6 +44,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   LiveDataDisplayConfig? _config;
   UserSettings? _userSettings;
   bool _isLoading = true;
+  bool _isDistanceBased = false;
 
   // Check if we're in edit mode
   bool get _isEditMode => widget.existingSession != null;
@@ -90,15 +91,21 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     _initializeSession(widget.existingSession!);
   }
 
-  void _initializeWithTemplate() {
+  void _initializeWithTemplate({bool isDistanceBased = false}) {
     // Create templated session
-    final templateSession = TrainingSessionDefinition.createTemplate(widget.machineType, 1200);
+    final templateSession = TrainingSessionDefinition.createTemplate(
+      widget.machineType,
+      isDistanceBased: isDistanceBased,
+    );
     _initializeSession(templateSession);
   }
 
   void _initializeSession(TrainingSessionDefinition session) {
     // Set the title
     _titleController.text = session.title;
+    
+    // Set distance based flag
+    _isDistanceBased = session.isDistanceBased;
     
     // Clear and populate intervals with generated keys
     _intervals.clear();
@@ -127,7 +134,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         machineType: widget.machineType,
         userSettings: _userSettings,
         config: _config,
-        isDistanceBased: false,
+        isDistanceBased: _isDistanceBased,
       );
       expanded.addAll(expandedTargetsIntervals);
     }
@@ -139,7 +146,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     setState(() {
       _intervals[key] = UnitTrainingInterval(
         title: 'Interval ${_intervals.length + 1}',
-        duration: 300, // 5 minutes default
+        duration: _isDistanceBased ? null : 300, // 5 minutes default for time-based
+        distance: _isDistanceBased ? 2000 : null, // 2km default for distance-based
         targets: {},
         resistanceLevel: null,
         repeat: 1,
@@ -154,7 +162,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         intervals: [
           UnitTrainingInterval(
             title: 'Interval 1',
-            duration: 240, // 4 minutes
+            duration: _isDistanceBased ? null : 240, // 4 minutes for time-based
+            distance: _isDistanceBased ? 1500 : null, // 1.5km for distance-based
             targets: {},
             resistanceLevel: null,
           ),
@@ -296,6 +305,41 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             ),
           ),
 
+          // Session Type Toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _isEditMode 
+                          ? 'Session Type: ${_isDistanceBased ? 'Distance-based' : 'Time-based'}'
+                          : 'Distance-based Session',
+                        style: TextStyle(
+                          fontSize: 16, 
+                          fontWeight: FontWeight.w500,
+                          color: _isEditMode ? Colors.grey : null,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: _isDistanceBased,
+                      onChanged: _isEditMode ? null : (value) {
+                        setState(() {
+                          _isDistanceBased = value;
+                          _initializeWithTemplate(isDistanceBased: value);
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // Training Chart
           if (_expandedIntervals.isNotEmpty)
             Card(
@@ -315,7 +359,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       machineType: widget.machineType,
                       height: 120,
                       config: _config,
-                      isDistanceBased: false,
+                      isDistanceBased: _isDistanceBased,
                     ),
                   ],
                 ),
@@ -430,14 +474,25 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
   String _getIntervalSubtitle(TrainingInterval interval) {
     if (interval is UnitTrainingInterval) {
-      final dur = interval.duration ?? 0;
-      final duration = Duration(seconds: dur);
-      return '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+      if (_isDistanceBased) {
+        final dist = interval.distance ?? 0;
+        return '${(dist / 1000).toStringAsFixed(1)} km';
+      } else {
+        final dur = interval.duration ?? 0;
+        final duration = Duration(seconds: dur);
+        return '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+      }
     } else if (interval is GroupTrainingInterval) {
-      final totalDuration = interval.intervals.fold<int>(0, (sum, i) => sum + (i.duration ?? 0));
-      final repeatCount = interval.repeat ?? 1;
-      final duration = Duration(seconds: totalDuration * repeatCount);
-      return '${interval.intervals.length} intervals, ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} total';
+      if (_isDistanceBased) {
+        final totalDistance = interval.intervals.fold<int>(0, (sum, i) => sum + (i.distance ?? 0));
+        final repeatCount = interval.repeat ?? 1;
+        return '${interval.intervals.length} intervals, ${(totalDistance * repeatCount / 1000).toStringAsFixed(1)} km total';
+      } else {
+        final totalDuration = interval.intervals.fold<int>(0, (sum, i) => sum + (i.duration ?? 0));
+        final repeatCount = interval.repeat ?? 1;
+        final duration = Duration(seconds: totalDuration * repeatCount);
+        return '${interval.intervals.length} intervals, ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} total';
+      }
     }
     return '';
   }
@@ -474,56 +529,110 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           ),
           const SizedBox(height: 16),
 
-          // Duration
-          Row(
-            children: [
-              const SizedBox(width: 80, child: Text('Duration:')),
-              IconButton(
-                icon: const Icon(Icons.remove),
-                onPressed: (interval.duration ?? 0) > 10
-                    ? () {
-                        final newDuration = ((interval.duration ?? 0) - 10).clamp(10, 3600);
-                        onUpdate(UnitTrainingInterval(
-                          title: interval.title,
-                          duration: newDuration.toInt(),
-                          targets: interval.targets,
-                          resistanceLevel: interval.resistanceLevel,
-                          repeat: interval.repeat,
-                        ));
-                      }
-                    : null,
-              ),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    '${Duration(seconds: interval.duration ?? 0).inMinutes}:${((interval.duration ?? 0) % 60).toString().padLeft(2, '0')}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
+          // Duration or Distance
+          if (_isDistanceBased) ...[
+            Row(
+              children: [
+                const SizedBox(width: 80, child: Text('Distance:')),
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: (interval.distance ?? 0) > 100
+                      ? () {
+                          final newDistance = ((interval.distance ?? 0) - 100).clamp(100, 50000);
+                          onUpdate(UnitTrainingInterval(
+                            title: interval.title,
+                            duration: interval.duration,
+                            distance: newDistance.toInt(),
+                            targets: interval.targets,
+                            resistanceLevel: interval.resistanceLevel,
+                            repeat: interval.repeat,
+                          ));
+                        }
+                      : null,
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${((interval.distance ?? 0) / 1000).toStringAsFixed(1)} km',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
                   ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: (interval.duration ?? 0) < 3600
-                    ? () {
-                        final newDuration = ((interval.duration ?? 0) + 10).clamp(10, 3600);
-                        onUpdate(UnitTrainingInterval(
-                          title: interval.title,
-                          duration: newDuration.toInt(),
-                          targets: interval.targets,
-                          resistanceLevel: interval.resistanceLevel,
-                          repeat: interval.repeat,
-                        ));
-                      }
-                    : null,
-              ),
-            ],
-          ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: (interval.distance ?? 0) < 50000
+                      ? () {
+                          final newDistance = ((interval.distance ?? 0) + 100).clamp(100, 50000);
+                          onUpdate(UnitTrainingInterval(
+                            title: interval.title,
+                            duration: interval.duration,
+                            distance: newDistance.toInt(),
+                            targets: interval.targets,
+                            resistanceLevel: interval.resistanceLevel,
+                            repeat: interval.repeat,
+                          ));
+                        }
+                      : null,
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                const SizedBox(width: 80, child: Text('Duration:')),
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: (interval.duration ?? 0) > 10
+                      ? () {
+                          final newDuration = ((interval.duration ?? 0) - 10).clamp(10, 3600);
+                          onUpdate(UnitTrainingInterval(
+                            title: interval.title,
+                            duration: newDuration.toInt(),
+                            targets: interval.targets,
+                            resistanceLevel: interval.resistanceLevel,
+                            repeat: interval.repeat,
+                          ));
+                        }
+                      : null,
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${Duration(seconds: interval.duration ?? 0).inMinutes}:${((interval.duration ?? 0) % 60).toString().padLeft(2, '0')}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: (interval.duration ?? 0) < 3600
+                      ? () {
+                          final newDuration = ((interval.duration ?? 0) + 10).clamp(10, 3600);
+                          onUpdate(UnitTrainingInterval(
+                            title: interval.title,
+                            duration: newDuration.toInt(),
+                            targets: interval.targets,
+                            resistanceLevel: interval.resistanceLevel,
+                            repeat: interval.repeat,
+                          ));
+                        }
+                      : null,
+                ),
+              ],
+            ),
+          ],
 
           // Targets
           const SizedBox(height: 16),
@@ -820,7 +929,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     setState(() {
       final newSubInterval = UnitTrainingInterval(
         title: 'Interval ${groupInterval.intervals.length + 1}',
-        duration: 120, // 2 minutes default
+        duration: _isDistanceBased ? null : 120, // 2 minutes default for time-based
+        distance: _isDistanceBased ? 1000 : null, // 1km default for distance-based
         targets: {},
         resistanceLevel: null,
       );
@@ -900,6 +1010,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         ftmsMachineType: widget.machineType,
         intervals: _intervalsList,
         isCustom: true,
+        isDistanceBased: _isDistanceBased,
       );
 
       // Save the session

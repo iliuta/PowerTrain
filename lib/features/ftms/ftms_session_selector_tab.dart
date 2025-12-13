@@ -279,7 +279,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                     final durationSeconds = _freeRideDurationMinutes * 60;
                                     final session = TrainingSessionDefinition.createTemplate(
                                       DeviceType.fromFtms(_deviceDataType!),
-                                      durationSeconds,
+                                      workoutValue: durationSeconds,
                                     );
                                     Navigator.of(context).push(
                                       MaterialPageRoute(

@@ -24,103 +24,88 @@ class TrainingSessionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDistanceBased = session.isDistanceBased;
-    final progress = isDistanceBased 
-        ? controller.state.elapsedDistance / controller.state.totalDistance
-        : controller.state.elapsedSeconds / controller.state.totalDuration;
-    final timeLeft = isDistanceBased 
-        ? controller.state.sessionDistanceLeft 
-        : controller.state.sessionTimeLeft;
-    final elapsed = isDistanceBased 
-        ? controller.state.elapsedDistance 
-        : controller.state.elapsedSeconds;
-    final formatTime = isDistanceBased ? _formatDistance : _formatTime;
-    final intervalElapsed = isDistanceBased 
-        ? controller.state.intervalElapsedDistance 
-        : controller.state.intervalElapsedSeconds;
-    final intervalTimeLeft = isDistanceBased 
-        ? controller.state.intervalDistanceLeft 
-        : controller.state.intervalTimeLeft;
-    final formatMMSS = isDistanceBased ? _formatDistanceMM : _formatMMSS;
-
     return SafeArea(
       bottom: false,
       child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          SessionProgressBar(
-            progress: progress,
-            timeLeft: timeLeft,
-            elapsed: elapsed,
-            formatTime: formatTime,
-            intervals: controller.state.intervals,
-            machineType: session.ftmsMachineType,
-            config: config,
-            isDistanceBased: isDistanceBased,
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: TrainingIntervalList(
-                    intervals: controller.state.intervals,
-                    currentInterval: controller.state.currentIntervalIndex,
-                    intervalElapsed: intervalElapsed,
-                    intervalTimeLeft: intervalTimeLeft,
-                    formatMMSS: formatMMSS,
-                    config: config,
-                    isDistanceBased: isDistanceBased,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: LiveFTMSDataWidget(
-                    ftmsDevice: ftmsDevice,
-                    targets: controller.state.currentInterval.targets,
-                    machineType: session.ftmsMachineType,
-                  ),
-                ),
-              ],
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            SessionProgressBar(
+              progress: session.isDistanceBased 
+                ? (controller.state.totalDistance > 0 ? controller.state.elapsedDistance / controller.state.totalDistance : 0.0)
+                : (controller.state.totalDuration > 0 ? controller.state.elapsedSeconds / controller.state.totalDuration : 0.0),
+              timeLeft: session.isDistanceBased ? controller.state.sessionDistanceLeft : controller.state.sessionTimeLeft,
+              elapsed: session.isDistanceBased ? controller.state.elapsedDistance : controller.state.elapsedSeconds,
+              formatTime: session.isDistanceBased ? _formatDistance : _formatTime,
+              intervals: controller.state.intervals,
+              machineType: session.ftmsMachineType,
+              config: config,
+              isDistanceBased: session.isDistanceBased,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: TrainingIntervalList(
+                      intervals: controller.state.intervals,
+                      currentInterval: controller.state.currentIntervalIndex,
+                      intervalElapsed: session.isDistanceBased 
+                        ? controller.state.intervalElapsedDistance 
+                        : controller.state.intervalElapsedSeconds,
+                      intervalTimeLeft: session.isDistanceBased 
+                        ? controller.state.intervalDistanceLeft 
+                        : controller.state.intervalTimeLeft,
+                      formatMMSS: _formatMMSS,
+                      formatDistance: _formatDistance,
+                      config: config,
+                      isDistanceBased: session.isDistanceBased,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: LiveFTMSDataWidget(
+                      ftmsDevice: ftmsDevice,
+                      targets: controller.state.currentInterval.targets,
+                      machineType: session.ftmsMachineType,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
-  String _formatTime(num value) {
-    final seconds = value.toInt();
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    final s = seconds % 60;
-    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
-  String _formatMMSS(num value) {
-    final seconds = value.toInt();
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
   String _formatDistance(num meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
+    final double m = meters.toDouble();
+    if (m >= 1000) {
+      return '${(m / 1000).toStringAsFixed(1)}km';
     } else {
-      return '${meters.toStringAsFixed(0)}m';
+      return '${m.toStringAsFixed(0)}m';
     }
   }
 
-  String _formatDistanceMM(num meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
+  String _formatTime(num seconds) {
+    int totalSeconds = seconds.toInt();
+    int hours = totalSeconds ~/ 3600;
+    int mins = (totalSeconds % 3600) ~/ 60;
+    int secs = totalSeconds % 60;
+    if (hours > 0) {
+      return '$hours:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     } else {
-      return '${meters.toStringAsFixed(0)}m';
+      return '$mins:${secs.toString().padLeft(2, '0')}';
     }
+  }
+
+  String _formatMMSS(num seconds) {
+    int totalSeconds = seconds.toInt();
+    int mins = totalSeconds ~/ 60;
+    int secs = totalSeconds % 60;
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 }

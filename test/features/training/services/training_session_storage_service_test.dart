@@ -322,7 +322,7 @@ void main() {
 
       // THEN: Verify bike sessions content (second call, from cache)
       expect(bikeSessionsSecondCall.length, 4,
-          reason: '2 built-in + 1 GitHub (cached) + 1 custom for bike');
+          reason: '1 built-in + 1 GitHub (cached) + 1 custom for bike');
 
       expect(
           bikeSessionsSecondCall
@@ -536,11 +536,11 @@ void main() {
           await service.loadTrainingSessions(DeviceType.indoorBike);
 
       // THEN: Verify bike sessions loaded from disk cache
-      // Built-in: 2 bike sessions
+      // Built-in: 3 bike sessions
       // GitHub: 1 bike session (from disk cache, filtered)
       // Custom: 1 bike session
       expect(bikeSessionsFirstCall.length, 4,
-          reason: '2 built-in + 1 GitHub (from disk cache) + 1 custom for bike');
+          reason: '3 built-in + 1 GitHub (from disk cache) + 1 custom for bike');
 
       final githubBike = bikeSessionsFirstCall
           .firstWhere((s) => s.title == 'GitHub Bike Session');

@@ -49,6 +49,10 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     final totalDuration = widget.isDistanceBased
         ? widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.distance ?? 0))
         : widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
+    
+    // If totalDuration is 0, use equal widths
+    final useEqualWidths = totalDuration == 0;
+    final effectiveTotalDuration = useEqualWidths ? widget.intervals.length : totalDuration;
     final intensityKey = _getIntensityKey();
 
     return SizedBox(
@@ -72,6 +76,8 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
                           painter: _TrainingChartPainter(
                             intervals: widget.intervals,
                             totalDuration: totalDuration,
+                            effectiveTotalDuration: effectiveTotalDuration,
+                            useEqualWidths: useEqualWidths,
                             intensityKey: intensityKey,
                             machineType: widget.machineType,
                             hoveredIndex: _hoveredIntervalIndex,
@@ -207,9 +213,9 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
               ),
               const SizedBox(height: 4),
               Text(
-                widget.isDistanceBased 
-                  ? 'Distance: ${_formatDistance(interval.distance ?? 0)}'
-                  : 'Duration: ${_formatDuration(interval.duration ?? 0)}',
+                widget.isDistanceBased
+                    ? 'Distance: ${_formatDistance(interval.distance ?? 0)}'
+                    : 'Duration: ${_formatDuration(interval.duration ?? 0)}',
                 style: const TextStyle(fontSize: 12),
               ),
               if (interval.targets != null && interval.targets!.isNotEmpty) ...[
@@ -284,6 +290,8 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
 class _TrainingChartPainter extends CustomPainter {
   final List<ExpandedUnitTrainingInterval> intervals;
   final int totalDuration;
+  final int effectiveTotalDuration;
+  final bool useEqualWidths;
   final String intensityKey;
   final int? hoveredIndex;
   final DeviceType machineType;
@@ -293,6 +301,8 @@ class _TrainingChartPainter extends CustomPainter {
   _TrainingChartPainter({
     required this.intervals,
     required this.totalDuration,
+    required this.effectiveTotalDuration,
+    required this.useEqualWidths,
     required this.intensityKey,
     required this.machineType,
     this.hoveredIndex,
@@ -326,7 +336,9 @@ class _TrainingChartPainter extends CustomPainter {
     
     for (int i = 0; i < intervals.length; i++) {
       final interval = intervals[i];
-      final barWidth = ((isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0)) / totalDuration) * size.width;
+      final barWidth = useEqualWidths 
+        ? size.width / intervals.length 
+        : ((isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0)) / effectiveTotalDuration) * size.width;
       final intensity = _getIntensityValue(interval);
       
       // Normalize intensity to chart height (inverted because higher intensity = taller bar)
@@ -506,6 +518,8 @@ class _TrainingChartPainter extends CustomPainter {
     return oldDelegate is! _TrainingChartPainter ||
            oldDelegate.intervals != intervals ||
            oldDelegate.totalDuration != totalDuration ||
+           oldDelegate.effectiveTotalDuration != effectiveTotalDuration ||
+           oldDelegate.useEqualWidths != useEqualWidths ||
            oldDelegate.intensityKey != intensityKey ||
            oldDelegate.machineType != machineType ||
            oldDelegate.hoveredIndex != hoveredIndex ||

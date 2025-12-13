@@ -13,7 +13,7 @@ class SessionProgressBar extends StatelessWidget {
   final DeviceType machineType;
   final LiveDataDisplayConfig? config;
   final bool isDistanceBased;
-  
+
   const SessionProgressBar({
     super.key,
     required this.progress,
