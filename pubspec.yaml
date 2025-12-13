@@ -57,6 +57,7 @@ dependencies:
   device_info_plus: ^12.2.0
   meta: ^1.16.0
   webview_flutter: ^4.8.0
+  in_app_review: ^2.0.9
 
 dev_dependencies:
   flutter_test:
