@@ -141,6 +141,28 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     return expanded;
   }
 
+  int get _distanceIncrement {
+    switch (widget.machineType) {
+      case DeviceType.rower:
+        return 50; // 50m for rowers
+      case DeviceType.indoorBike:
+        return 1000; // 1000m (1km) for indoor bikes
+    }
+  }
+
+  int get _minDistance {
+    return _distanceIncrement;
+  }
+
+  String _formatDistance(int distance) {
+    switch (widget.machineType) {
+      case DeviceType.rower:
+        return '$distance m';
+      case DeviceType.indoorBike:
+        return '${(distance / 1000).toStringAsFixed(1)} km';
+    }
+  }
+
   void _addUnitInterval() {
     final key = 'interval_${DateTime.now().millisecondsSinceEpoch}';
     setState(() {
@@ -476,7 +498,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     if (interval is UnitTrainingInterval) {
       if (_isDistanceBased) {
         final dist = interval.distance ?? 0;
-        return '${(dist / 1000).toStringAsFixed(1)} km';
+        return _formatDistance(dist);
       } else {
         final dur = interval.duration ?? 0;
         final duration = Duration(seconds: dur);
@@ -521,6 +543,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
               onUpdate(UnitTrainingInterval(
                 title: value.isEmpty ? null : value,
                 duration: interval.duration,
+                distance: interval.distance,
                 targets: interval.targets,
                 resistanceLevel: interval.resistanceLevel,
                 repeat: interval.repeat,
@@ -536,9 +559,9 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                 const SizedBox(width: 80, child: Text('Distance:')),
                 IconButton(
                   icon: const Icon(Icons.remove),
-                  onPressed: (interval.distance ?? 0) > 100
+                  onPressed: (interval.distance ?? 0) > _minDistance
                       ? () {
-                          final newDistance = ((interval.distance ?? 0) - 100).clamp(100, 50000);
+                          final newDistance = ((interval.distance ?? 0) - _distanceIncrement).clamp(_minDistance, 50000);
                           onUpdate(UnitTrainingInterval(
                             title: interval.title,
                             duration: interval.duration,
@@ -558,7 +581,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      '${((interval.distance ?? 0) / 1000).toStringAsFixed(1)} km',
+                      _formatDistance(interval.distance ?? 0),
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 16),
                     ),
@@ -568,7 +591,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                   icon: const Icon(Icons.add),
                   onPressed: (interval.distance ?? 0) < 50000
                       ? () {
-                          final newDistance = ((interval.distance ?? 0) + 100).clamp(100, 50000);
+                          final newDistance = ((interval.distance ?? 0) + _distanceIncrement).clamp(_minDistance, 50000);
                           onUpdate(UnitTrainingInterval(
                             title: interval.title,
                             duration: interval.duration,
@@ -594,6 +617,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                           onUpdate(UnitTrainingInterval(
                             title: interval.title,
                             duration: newDuration.toInt(),
+                            distance: interval.distance,
                             targets: interval.targets,
                             resistanceLevel: interval.resistanceLevel,
                             repeat: interval.repeat,
@@ -623,6 +647,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                           onUpdate(UnitTrainingInterval(
                             title: interval.title,
                             duration: newDuration.toInt(),
+                            distance: interval.distance,
                             targets: interval.targets,
                             resistanceLevel: interval.resistanceLevel,
                             repeat: interval.repeat,
@@ -665,6 +690,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       onUpdate(UnitTrainingInterval(
                         title: interval.title,
                         duration: interval.duration,
+                        distance: interval.distance,
                         targets: interval.targets,
                         resistanceLevel: intValue,
                         repeat: interval.repeat,
@@ -746,6 +772,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       onUpdate(UnitTrainingInterval(
                         title: interval.title,
                         duration: interval.duration,
+                        distance: interval.distance,
                         targets: newTargets,
                         resistanceLevel: interval.resistanceLevel,
                         repeat: interval.repeat,
@@ -777,6 +804,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                   onUpdate(UnitTrainingInterval(
                     title: interval.title,
                     duration: interval.duration,
+                    distance: interval.distance,
                     targets: newTargets,
                     resistanceLevel: interval.resistanceLevel,
                     repeat: interval.repeat,
