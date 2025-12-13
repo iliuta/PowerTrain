@@ -12,7 +12,6 @@ class StravaTokenManager {
   StravaTokenManager({FlutterSecureStorage? storage}) 
       : _storage = storage ?? const FlutterSecureStorage(
           aOptions: AndroidOptions(
-            encryptedSharedPreferences: true,
             sharedPreferencesName: 'FlutterSecureStorageShared',
             preferencesKeyPrefix: 'VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIHNlY3VyZSBzdG9yYWdlCg',
           ),

@@ -9,11 +9,18 @@ import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
 import '../training/model/training_session.dart';
+import 'ftms_machine_features_tab.dart';
+import 'ftms_device_data_features_tab.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
+  final Future<void> Function(MachineControlPointOpcodeType) writeCommand;
 
-  const FTMSessionSelectorTab({super.key, required this.ftmsDevice});
+  const FTMSessionSelectorTab({
+    super.key,
+    required this.ftmsDevice,
+    required this.writeCommand,
+  });
 
   @override
   State<FTMSessionSelectorTab> createState() => _FTMSessionSelectorTabState();
@@ -22,6 +29,8 @@ class FTMSessionSelectorTab extends StatefulWidget {
 class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isFreeRideExpanded = false;
   bool _isTrainingSessionExpanded = false;
+  bool _isMachineFeaturesExpanded = false;
+  bool _isDeviceDataFeaturesExpanded = false;
   int _freeRideDurationMinutes = 20;
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?>? _configs;
@@ -318,6 +327,62 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Device Data Features Section (only show if developer mode is enabled)
+                if (_userSettings?.developerMode == true)
+                  Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          title: const Text('Device Data Features'),
+                          trailing: Icon(
+                            _isDeviceDataFeaturesExpanded ? Icons.expand_less : Icons.expand_more,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _isDeviceDataFeaturesExpanded = !_isDeviceDataFeaturesExpanded;
+                            });
+                          },
+                        ),
+                        if (_isDeviceDataFeaturesExpanded)
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            child: FTMSDeviceDataFeaturesTab(
+                              ftmsDevice: widget.ftmsDevice,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (_userSettings?.developerMode == true)
+                  const SizedBox(height: 16),
+                // Machine Features Section (only show if developer mode is enabled)
+                if (_userSettings?.developerMode == true)
+                  Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          title: const Text('Machine Features'),
+                          trailing: Icon(
+                            _isMachineFeaturesExpanded ? Icons.expand_less : Icons.expand_more,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _isMachineFeaturesExpanded = !_isMachineFeaturesExpanded;
+                            });
+                          },
+                        ),
+                        if (_isMachineFeaturesExpanded)
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: FTMSMachineFeaturesTab(
+                              ftmsDevice: widget.ftmsDevice,
+                              writeCommand: widget.writeCommand,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           );
