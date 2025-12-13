@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.2'
+          flutter-version: '3.38.5'
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -41,14 +41,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.2'
+          flutter-version: '3.38.5'
       - name: Restore Flutter dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: ${{ runner.os }}-flutter-3.38.2-${{ hashFiles('pubspec.yaml') }}
+          key: ${{ runner.os }}-flutter-3.38.5-${{ hashFiles('pubspec.yaml') }}
       - name: Install dependencies
         run: flutter pub get --offline
       - name: Flutter analyze
@@ -61,14 +61,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.2'
+          flutter-version: '3.38.5'
       - name: Restore Flutter dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: ${{ runner.os }}-flutter-3.38.2-${{ hashFiles('pubspec.yaml') }}
+          key: ${{ runner.os }}-flutter-3.38.5-${{ hashFiles('pubspec.yaml') }}
       - name: Install dependencies
         run: flutter pub get --offline
       - name: Run tests
