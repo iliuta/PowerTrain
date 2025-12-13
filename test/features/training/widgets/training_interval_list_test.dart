@@ -20,6 +20,7 @@ void main() {
               intervalElapsed: 20,
               intervalTimeLeft: 100,
               formatMMSS: (s) => '00:${s.toString().padLeft(2, '0')}',
+              isDistanceBased: false,
             ),
           ),
         ),

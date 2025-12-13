@@ -35,6 +35,7 @@ class GroupTrainingInterval extends TrainingInterval {
     required DeviceType machineType,
     UserSettings? userSettings,
     LiveDataDisplayConfig? config,
+    required bool isDistanceBased,
   }) {
     final r = repeat ?? 1;
     final flat = <ExpandedUnitTrainingInterval>[];
@@ -44,6 +45,7 @@ class GroupTrainingInterval extends TrainingInterval {
           machineType: machineType,
           userSettings: userSettings,
           config: config,
+          isDistanceBased: isDistanceBased,
         ));
       }
     }

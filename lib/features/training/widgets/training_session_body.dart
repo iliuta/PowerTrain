@@ -24,6 +24,25 @@ class TrainingSessionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDistanceBased = session.isDistanceBased;
+    final progress = isDistanceBased 
+        ? controller.state.elapsedDistance / controller.state.totalDistance
+        : controller.state.elapsedSeconds / controller.state.totalDuration;
+    final timeLeft = isDistanceBased 
+        ? controller.state.sessionDistanceLeft 
+        : controller.state.sessionTimeLeft;
+    final elapsed = isDistanceBased 
+        ? controller.state.elapsedDistance 
+        : controller.state.elapsedSeconds;
+    final formatTime = isDistanceBased ? _formatDistance : _formatTime;
+    final intervalElapsed = isDistanceBased 
+        ? controller.state.intervalElapsedDistance 
+        : controller.state.intervalElapsedSeconds;
+    final intervalTimeLeft = isDistanceBased 
+        ? controller.state.intervalDistanceLeft 
+        : controller.state.intervalTimeLeft;
+    final formatMMSS = isDistanceBased ? _formatDistanceMM : _formatMMSS;
+
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -31,13 +50,14 @@ class TrainingSessionBody extends StatelessWidget {
       child: Column(
         children: [
           SessionProgressBar(
-            progress: controller.state.elapsedSeconds / controller.state.totalDuration,
-            timeLeft: controller.state.sessionTimeLeft,
-            elapsed: controller.state.elapsedSeconds,
-            formatTime: _formatTime,
+            progress: progress,
+            timeLeft: timeLeft,
+            elapsed: elapsed,
+            formatTime: formatTime,
             intervals: controller.state.intervals,
             machineType: session.ftmsMachineType,
             config: config,
+            isDistanceBased: isDistanceBased,
           ),
           const SizedBox(height: 4),
           Expanded(
@@ -48,10 +68,11 @@ class TrainingSessionBody extends StatelessWidget {
                   child: TrainingIntervalList(
                     intervals: controller.state.intervals,
                     currentInterval: controller.state.currentIntervalIndex,
-                    intervalElapsed: controller.state.intervalElapsedSeconds,
-                    intervalTimeLeft: controller.state.intervalTimeLeft,
-                    formatMMSS: _formatMMSS,
+                    intervalElapsed: intervalElapsed,
+                    intervalTimeLeft: intervalTimeLeft,
+                    formatMMSS: formatMMSS,
                     config: config,
+                    isDistanceBased: isDistanceBased,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -72,16 +93,34 @@ class TrainingSessionBody extends StatelessWidget {
     );
   }
 
-  String _formatTime(int seconds) {
+  String _formatTime(num value) {
+    final seconds = value.toInt();
     final h = seconds ~/ 3600;
     final m = (seconds % 3600) ~/ 60;
     final s = seconds % 60;
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  String _formatMMSS(int seconds) {
+  String _formatMMSS(num value) {
+    final seconds = value.toInt();
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDistance(num meters) {
+    if (meters >= 1000) {
+      return '${(meters / 1000).toStringAsFixed(1)}km';
+    } else {
+      return '${meters.toStringAsFixed(0)}m';
+    }
+  }
+
+  String _formatDistanceMM(num meters) {
+    if (meters >= 1000) {
+      return '${(meters / 1000).toStringAsFixed(1)}km';
+    } else {
+      return '${meters.toStringAsFixed(0)}m';
+    }
   }
 }

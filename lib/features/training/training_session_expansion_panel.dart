@@ -171,6 +171,7 @@ class _TrainingSessionExpansionPanelListState
                     machineType: session.ftmsMachineType,
                     height: 120,
                     config: config,
+                    isDistanceBased: expandedSession.isDistanceBased,
                   ),
                 ],
               ),

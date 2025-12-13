@@ -127,6 +127,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         machineType: widget.machineType,
         userSettings: _userSettings,
         config: _config,
+        isDistanceBased: false,
       );
       expanded.addAll(expandedTargetsIntervals);
     }
@@ -314,6 +315,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       machineType: widget.machineType,
                       height: 120,
                       config: _config,
+                      isDistanceBased: false,
                     ),
                   ],
                 ),
@@ -428,10 +430,11 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
   String _getIntervalSubtitle(TrainingInterval interval) {
     if (interval is UnitTrainingInterval) {
-      final duration = Duration(seconds: interval.duration);
+      final dur = interval.duration ?? 0;
+      final duration = Duration(seconds: dur);
       return '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
     } else if (interval is GroupTrainingInterval) {
-      final totalDuration = interval.intervals.fold<int>(0, (sum, i) => sum + i.duration);
+      final totalDuration = interval.intervals.fold<int>(0, (sum, i) => sum + (i.duration ?? 0));
       final repeatCount = interval.repeat ?? 1;
       final duration = Duration(seconds: totalDuration * repeatCount);
       return '${interval.intervals.length} intervals, ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} total';
@@ -477,12 +480,12 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
               const SizedBox(width: 80, child: Text('Duration:')),
               IconButton(
                 icon: const Icon(Icons.remove),
-                onPressed: interval.duration > 10
+                onPressed: (interval.duration ?? 0) > 10
                     ? () {
-                        final newDuration = (interval.duration - 10).clamp(10, 3600);
+                        final newDuration = ((interval.duration ?? 0) - 10).clamp(10, 3600);
                         onUpdate(UnitTrainingInterval(
                           title: interval.title,
-                          duration: newDuration,
+                          duration: newDuration.toInt(),
                           targets: interval.targets,
                           resistanceLevel: interval.resistanceLevel,
                           repeat: interval.repeat,
@@ -498,7 +501,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${Duration(seconds: interval.duration).inMinutes}:${(interval.duration % 60).toString().padLeft(2, '0')}',
+                    '${Duration(seconds: interval.duration ?? 0).inMinutes}:${((interval.duration ?? 0) % 60).toString().padLeft(2, '0')}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16),
                   ),
@@ -506,12 +509,12 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
               ),
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: interval.duration < 3600
+                onPressed: (interval.duration ?? 0) < 3600
                     ? () {
-                        final newDuration = (interval.duration + 10).clamp(10, 3600);
+                        final newDuration = ((interval.duration ?? 0) + 10).clamp(10, 3600);
                         onUpdate(UnitTrainingInterval(
                           title: interval.title,
-                          duration: newDuration,
+                          duration: newDuration.toInt(),
                           targets: interval.targets,
                           resistanceLevel: interval.resistanceLevel,
                           repeat: interval.repeat,

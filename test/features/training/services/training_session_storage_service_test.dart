@@ -294,11 +294,11 @@ void main() {
           await service.loadTrainingSessions(DeviceType.indoorBike);
 
       // THEN: Verify bike sessions content (first call)
-      // Built-in: 2 bike sessions (endurance-ride, 16-min-test)
+      // Built-in: 2 bike sessions (16min-test, distance-test)
       // GitHub: 1 bike session
       // Custom: 1 bike session
-      expect(bikeSessionsFirstCall.length, 3,
-          reason: '1 built-in + 1 GitHub + 1 custom for bike');
+      expect(bikeSessionsFirstCall.length, 4,
+          reason: '2 built-in + 1 GitHub + 1 custom for bike');
 
       final githubBike = bikeSessionsFirstCall
           .firstWhere((s) => s.title == 'GitHub Bike Session');
@@ -321,8 +321,8 @@ void main() {
           await service.loadTrainingSessions(DeviceType.indoorBike);
 
       // THEN: Verify bike sessions content (second call, from cache)
-      expect(bikeSessionsSecondCall.length, 3,
-          reason: '1 built-in + 1 GitHub (cached) + 1 custom for bike');
+      expect(bikeSessionsSecondCall.length, 4,
+          reason: '2 built-in + 1 GitHub (cached) + 1 custom for bike');
 
       expect(
           bikeSessionsSecondCall
@@ -539,8 +539,8 @@ void main() {
       // Built-in: 2 bike sessions
       // GitHub: 1 bike session (from disk cache, filtered)
       // Custom: 1 bike session
-      expect(bikeSessionsFirstCall.length, 3,
-          reason: '1 built-in + 1 GitHub (from disk cache) + 1 custom for bike');
+      expect(bikeSessionsFirstCall.length, 4,
+          reason: '2 built-in + 1 GitHub (from disk cache) + 1 custom for bike');
 
       final githubBike = bikeSessionsFirstCall
           .firstWhere((s) => s.title == 'GitHub Bike Session');
@@ -563,8 +563,8 @@ void main() {
           await service.loadTrainingSessions(DeviceType.indoorBike);
 
       // THEN: Verify same results from memory cache
-      expect(bikeSessionsSecondCall.length, 3,
-          reason: '1 built-in + 1 GitHub (from memory cache) + 1 custom for bike');
+      expect(bikeSessionsSecondCall.length, 4,
+          reason: '2 built-in + 1 GitHub (from memory cache) + 1 custom for bike');
 
       // Verify HTTP was called to validate cache freshness (checking Last-Modified header)
       // The service always validates cache by checking GitHub, even when loading from disk

@@ -1,0 +1,31 @@
+{
+    "title": "Test Distance Session",
+    "ftmsMachineType": "DeviceDataType.indoorBike",
+    "isDistanceBased": true,
+    "intervals": [
+        {
+            "title": "Warm Up",
+            "distance": 200,
+            "targets": {
+                "Instantaneous Power": "50%",
+                "Instantaneous Cadence": 85
+            }
+        },
+        {
+            "title": "Main Effort",
+            "distance": 300,
+            "targets": {
+                "Instantaneous Power": "70%",
+                "Instantaneous Cadence": 100
+            }
+        },
+        {
+            "title": "Cool Down",
+            "distance": 100,
+            "targets": {
+                "Instantaneous Power": "40%",
+                "Instantaneous Cadence": 85
+            }
+        }
+    ]
+}

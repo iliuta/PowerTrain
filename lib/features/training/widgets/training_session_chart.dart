@@ -14,6 +14,7 @@ class TrainingSessionChart extends StatefulWidget {
   final double height;
   final LiveDataDisplayConfig? config;
   final double? currentProgress;
+  final bool isDistanceBased;
 
   const TrainingSessionChart({
     super.key,
@@ -22,6 +23,7 @@ class TrainingSessionChart extends StatefulWidget {
     this.height = 120,
     this.config,
     this.currentProgress,
+    this.isDistanceBased = false,
   });
 
   @override
@@ -44,7 +46,9 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
       );
     }
 
-    final totalDuration = widget.intervals.fold<int>(0, (sum, interval) => sum + interval.duration);
+    final totalDuration = widget.isDistanceBased
+        ? widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.distance ?? 0))
+        : widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
     final intensityKey = _getIntensityKey();
 
     return SizedBox(
@@ -72,12 +76,13 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
                             machineType: widget.machineType,
                             hoveredIndex: _hoveredIntervalIndex,
                             currentProgress: widget.currentProgress,
+                            isDistanceBased: widget.isDistanceBased,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildTimeAxisLabels(totalDuration),
+                    _buildAxisLabels(totalDuration),
                   ],
                 ),
               ),
@@ -95,7 +100,9 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     // Cancel any pending clear hover timer
     _clearHoverTimer?.cancel();
     
-    final totalDuration = widget.intervals.fold<int>(0, (sum, interval) => sum + interval.duration);
+    final totalDuration = widget.isDistanceBased
+        ? widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.distance ?? 0))
+        : widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
     
@@ -110,7 +117,8 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     
     for (int i = 0; i < widget.intervals.length; i++) {
       final interval = widget.intervals[i];
-      final barWidth = (interval.duration / totalDuration) * paddedWidth;
+      final intervalValue = widget.isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0);
+      final barWidth = (intervalValue / totalDuration) * paddedWidth;
       
       if (position.dx >= currentX && position.dx <= currentX + barWidth) {
         hoveredIndex = i;
@@ -199,7 +207,9 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Duration: ${_formatDuration(interval.duration)}',
+                widget.isDistanceBased 
+                  ? 'Distance: ${_formatDistance(interval.distance ?? 0)}'
+                  : 'Duration: ${_formatDuration(interval.duration ?? 0)}',
                 style: const TextStyle(fontSize: 12),
               ),
               if (interval.targets != null && interval.targets!.isNotEmpty) ...[
@@ -235,16 +245,16 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     }
   }
 
-  Widget _buildTimeAxisLabels(int totalDuration) {
+  Widget _buildAxisLabels(int totalValue) {
     final labels = <Widget>[];
-    final numLabels = 5; // Show 5 time labels
+    final numLabels = 5; // Show 5 labels
     
     for (int i = 0; i <= numLabels; i++) {
-      final timeSeconds = (totalDuration * i / numLabels).round();
-      final timeText = _formatTime(timeSeconds);
+      final value = (totalValue * i / numLabels).round();
+      final valueText = widget.isDistanceBased ? _formatDistance(value) : _formatTime(value);
       labels.add(Expanded(
         child: Text(
-          timeText,
+          valueText,
           textAlign: i == 0 ? TextAlign.start : 
                    i == numLabels ? TextAlign.end : TextAlign.center,
           style: const TextStyle(fontSize: 10, color: Colors.grey),
@@ -260,6 +270,15 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     final remainingSeconds = seconds % 60;
     return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
   }
+
+  String _formatDistance(int meters) {
+    if (meters >= 1000) {
+      final km = meters / 1000;
+      return '${km.toStringAsFixed(1)}km';
+    } else {
+      return '${meters}m';
+    }
+  }
 }
 
 class _TrainingChartPainter extends CustomPainter {
@@ -269,6 +288,7 @@ class _TrainingChartPainter extends CustomPainter {
   final int? hoveredIndex;
   final DeviceType machineType;
   final double? currentProgress;
+  final bool isDistanceBased;
 
   _TrainingChartPainter({
     required this.intervals,
@@ -277,6 +297,7 @@ class _TrainingChartPainter extends CustomPainter {
     required this.machineType,
     this.hoveredIndex,
     this.currentProgress,
+    this.isDistanceBased = false,
   });
 
   @override
@@ -305,7 +326,7 @@ class _TrainingChartPainter extends CustomPainter {
     
     for (int i = 0; i < intervals.length; i++) {
       final interval = intervals[i];
-      final barWidth = (interval.duration / totalDuration) * size.width;
+      final barWidth = ((isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0)) / totalDuration) * size.width;
       final intensity = _getIntensityValue(interval);
       
       // Normalize intensity to chart height (inverted because higher intensity = taller bar)

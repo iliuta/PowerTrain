@@ -13,6 +13,7 @@ class TrainingSessionDefinition {
   final DeviceType ftmsMachineType;
   final List<TrainingInterval> intervals;
   final bool isCustom;
+  final bool isDistanceBased;
   /// The original non-expanded session definition for editing purposes
   final TrainingSessionDefinition? originalSession;
 
@@ -21,6 +22,7 @@ class TrainingSessionDefinition {
     required this.ftmsMachineType, 
     required this.intervals,
     this.isCustom = false,
+    this.isDistanceBased = false,
     this.originalSession,
   });
 
@@ -35,6 +37,7 @@ class TrainingSessionDefinition {
       ftmsMachineType: DeviceType.fromString(json['ftmsMachineType']),
       intervals: intervals,
       isCustom: isCustom,
+      isDistanceBased: json['isDistanceBased'] ?? false,
     );
   }
 
@@ -43,6 +46,7 @@ class TrainingSessionDefinition {
       'title': title,
       'ftmsMachineType': ftmsMachineType.name,
       'intervals': intervals.map((interval) => interval.toJson()).toList(),
+      'isDistanceBased': isDistanceBased,
     };
   }
 
@@ -54,6 +58,7 @@ class TrainingSessionDefinition {
       ftmsMachineType: ftmsMachineType,
       intervals: intervals.map((interval) => interval.copy()).toList(),
       isCustom: isCustom,
+      isDistanceBased: isDistanceBased,
       originalSession: originalSession?.copy(),
     );
   }
@@ -72,6 +77,7 @@ class TrainingSessionDefinition {
         machineType: ftmsMachineType,
         userSettings: userSettings,
         config: config,
+        isDistanceBased: isDistanceBased,
       );
       expandedIntervals.addAll(expandedTargetsInterval);
     }
@@ -81,6 +87,7 @@ class TrainingSessionDefinition {
       ftmsMachineType: ftmsMachineType,
       intervals: expandedIntervals,
       isCustom: isCustom,
+      isDistanceBased: isDistanceBased,
     );
   }
 

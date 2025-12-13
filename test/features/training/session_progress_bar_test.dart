@@ -28,6 +28,7 @@ void main() {
               ),
             ],
             machineType: DeviceType.indoorBike,
+            isDistanceBased: false,
           ),
         ),
       ),

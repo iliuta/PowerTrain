@@ -80,7 +80,7 @@ void main() {
         'targets': {'Instantaneous Power': '120%'},
       };
       final intervals = UnitTrainingInterval.fromJson(json)
-          .expand(
+          .expand(isDistanceBased: false, 
             machineType: DeviceType.indoorBike,
             userSettings: userSettings,
             config: config,
@@ -98,7 +98,7 @@ void main() {
         'targets': {'Instantaneous Pace': '50%'},
       };
       final interval = UnitTrainingInterval.fromJson(json)
-          .expand(
+          .expand(isDistanceBased: false, 
             machineType: DeviceType.rower,
             userSettings: userSettings,
             config: config,
@@ -115,7 +115,7 @@ void main() {
         'targets': {'Instantaneous Power': '120%'},
       };
       final interval = UnitTrainingInterval.fromJson(json)
-          .expand(
+          .expand(isDistanceBased: false, 
             machineType: DeviceType.indoorBike,
             userSettings: null,
             config: config,
@@ -148,7 +148,7 @@ void main() {
         },
       };
       final ExpandedUnitTrainingInterval interval = UnitTrainingInterval.fromJson(json)
-          .expand(
+          .expand(isDistanceBased: false, 
             machineType: DeviceType.indoorBike,
             userSettings: userSettings,
             config: config,
@@ -174,7 +174,7 @@ void main() {
         },
       };
       final interval = UnitTrainingInterval.fromJson(json)
-          .expand(
+          .expand(isDistanceBased: false, 
             machineType: DeviceType.rower,
             userSettings: userSettings,
             config: config,

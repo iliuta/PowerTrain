@@ -8,10 +8,11 @@ import 'interval_target_fields_display.dart';
 class TrainingIntervalList extends StatelessWidget {
   final List<ExpandedUnitTrainingInterval> intervals;
   final int currentInterval;
-  final int intervalElapsed;
-  final int intervalTimeLeft;
-  final String Function(int) formatMMSS;
+  final num intervalElapsed;
+  final num intervalTimeLeft;
+  final String Function(num) formatMMSS;
   final LiveDataDisplayConfig? config;
+  final bool isDistanceBased;
 
   const TrainingIntervalList({
     super.key,
@@ -21,6 +22,7 @@ class TrainingIntervalList extends StatelessWidget {
     required this.intervalTimeLeft,
     required this.formatMMSS,
     this.config,
+    this.isDistanceBased = false,
   });
 
   @override
@@ -31,7 +33,8 @@ class TrainingIntervalList extends StatelessWidget {
       itemBuilder: (context, idx) {
         final ExpandedUnitTrainingInterval interval = remainingIntervals[idx];
         final isCurrent = idx == 0;
-        final intervalProgress = isCurrent ? intervalElapsed / interval.duration : 0.0;
+        final totalIntervalValue = isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0);
+        final intervalProgress = isCurrent ? intervalElapsed / totalIntervalValue : 0.0;
         return Card(
           color: isCurrent ? Colors.blue[50] : null,
           child: ListTile(
@@ -65,7 +68,7 @@ class TrainingIntervalList extends StatelessWidget {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       )
                     else
-                      Text(formatMMSS(interval.duration)),
+                      Text(formatMMSS(totalIntervalValue)),
                   ],
                 ),
                 IntervalTargetFieldsDisplay(
