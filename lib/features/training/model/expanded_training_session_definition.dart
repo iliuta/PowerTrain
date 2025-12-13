@@ -8,12 +8,14 @@ class ExpandedTrainingSessionDefinition {
   final DeviceType ftmsMachineType;
   final List<ExpandedUnitTrainingInterval> intervals;
   final bool isCustom;
+  final bool isDistanceBased;
 
   ExpandedTrainingSessionDefinition({
     required this.title,
     required this.ftmsMachineType,
     required this.intervals,
     this.isCustom = false,
+    this.isDistanceBased = false,
   });
 
 }

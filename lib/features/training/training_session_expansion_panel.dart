@@ -171,6 +171,7 @@ class _TrainingSessionExpansionPanelListState
                     machineType: session.ftmsMachineType,
                     height: 120,
                     config: config,
+                    isDistanceBased: expandedSession.isDistanceBased,
                   ),
                 ],
               ),
@@ -345,6 +346,7 @@ class _TrainingSessionExpansionPanelListState
         ftmsMachineType: duplicatedSession.ftmsMachineType,
         intervals: duplicatedSession.intervals,
         isCustom: true,
+        isDistanceBased: duplicatedSession.isDistanceBased,
       );
 
       // Save the duplicated session

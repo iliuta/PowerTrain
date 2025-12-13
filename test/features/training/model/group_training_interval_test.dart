@@ -127,6 +127,7 @@ void main() {
         machineType: DeviceType.indoorBike,
         userSettings: userSettings,
         config: config,
+        isDistanceBased: false,
       );
       
       expect(expanded, hasLength(2));
@@ -151,7 +152,7 @@ void main() {
         repeat: 3,
       );
       
-      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, );
+      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false);
       
       // Group repeats 3 times, unitInterval1 repeats 2 times each, unitInterval2 repeats 1 time each
       // Total: 3 * (2 + 1) = 9 intervals
@@ -180,7 +181,7 @@ void main() {
         repeat: null,
       );
       
-      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, );
+      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false);
       
       expect(expanded, hasLength(1));
       expect(expanded.first.title, equals('Test'));
@@ -197,7 +198,7 @@ void main() {
         repeat: 0,
       );
       
-      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, );
+      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false);
       
       expect(expanded, hasLength(1));
       expect(expanded.first.title, equals('Test'));

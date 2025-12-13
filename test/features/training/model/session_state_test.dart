@@ -131,7 +131,7 @@ void main() {
     group('tick', () {
       test('increments elapsed by 1', () {
         final timing = SessionTiming.fromSession(testSession);
-        final newTiming = timing.tick();
+        final newTiming = timing.tick(testSession);
 
         expect(newTiming.elapsedSeconds, 1);
       });
@@ -142,7 +142,7 @@ void main() {
 
         // Tick 30 times (still in first interval)
         for (int i = 0; i < 30; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.currentIntervalIndex, 0);
@@ -156,7 +156,7 @@ void main() {
 
         // Tick 60 times (exactly at transition)
         for (int i = 0; i < 60; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.currentIntervalIndex, 1);
@@ -170,7 +170,7 @@ void main() {
 
         // Tick 180 times (60 + 120 = start of third interval)
         for (int i = 0; i < 180; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.currentIntervalIndex, 2);
@@ -184,7 +184,7 @@ void main() {
 
         // Tick 300 times (more than total duration of 240)
         for (int i = 0; i < 300; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.elapsedSeconds, 240);
@@ -196,7 +196,7 @@ void main() {
         var current = timing;
 
         for (int i = 0; i < 240; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.isDurationReached, true);
@@ -207,7 +207,7 @@ void main() {
     group('didIntervalChange', () {
       test('returns false when interval has not changed', () {
         final timing = SessionTiming.fromSession(testSession);
-        final after = timing.tick();
+        final after = timing.tick(testSession);
 
         expect(after.didIntervalChange(timing), false);
       });
@@ -218,11 +218,11 @@ void main() {
 
         // Get to second 59 (last second of first interval)
         for (int i = 0; i < 59; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         final before = current;
-        final after = current.tick(); // This should transition to interval 1
+        final after = current.tick(testSession); // This should transition to interval 1
 
         expect(after.didIntervalChange(before), true);
       });
@@ -240,7 +240,7 @@ void main() {
         var current = timing;
 
         for (int i = 0; i < 30; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.shouldPlayWarningSound, false);
@@ -252,7 +252,7 @@ void main() {
 
         // Get to second 56 (4 seconds remaining in first interval)
         for (int i = 0; i < 56; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.intervalTimeLeft, 4);
@@ -265,7 +265,7 @@ void main() {
 
         // Get to second 59 (1 second remaining in first interval)
         for (int i = 0; i < 59; i++) {
-          current = current.tick();
+          current = current.tick(testSession);
         }
 
         expect(current.intervalTimeLeft, 1);
@@ -279,7 +279,7 @@ void main() {
 
       expect(timing1, equals(timing2));
 
-      final timing3 = timing1.tick();
+      final timing3 = timing1.tick(testSession);
       expect(timing1, isNot(equals(timing3)));
     });
   });

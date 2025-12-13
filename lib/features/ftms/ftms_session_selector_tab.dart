@@ -32,6 +32,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isMachineFeaturesExpanded = false;
   bool _isDeviceDataFeaturesExpanded = false;
   int _freeRideDurationMinutes = 20;
+  bool _isFreeRideDistanceBased = false;
+  int _freeRideDistanceMeters = 5000; // 5km default
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   bool _isLoadingSettings = true;
@@ -39,6 +41,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   DeviceDataType? _deviceDataType;
   List<TrainingSessionDefinition>? _trainingSessions;
   bool _isLoadingTrainingSessions = false;
+
+  int get _freeRideDistanceIncrement {
+    if (_deviceDataType == null) return 1000; // default to 1km
+    final deviceType = DeviceType.fromFtms(_deviceDataType!);
+    return deviceType == DeviceType.rower ? 250 : 1000; // 250m for rowers, 1km for bikes
+  }
 
   @override
   void initState() {
@@ -234,52 +242,110 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              const Text('Duration:'),
-                              const SizedBox(height: 8),
+                              // Toggle between Time and Distance
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove),
-                                    onPressed: _freeRideDurationMinutes > 1
-                                        ? () {
-                                            setState(() {
-                                              _freeRideDurationMinutes--;
-                                            });
-                                          }
-                                        : null,
+                                  const Text('Time'),
+                                  Switch(
+                                    value: _isFreeRideDistanceBased,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _isFreeRideDistanceBased = value;
+                                      });
+                                    },
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      '$_freeRideDurationMinutes min',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.add),
-                                    onPressed: _freeRideDurationMinutes < 120
-                                        ? () {
-                                            setState(() {
-                                              _freeRideDurationMinutes++;
-                                            });
-                                          }
-                                        : null,
-                                  ),
+                                  const Text('Distance'),
                                 ],
                               ),
+                              const SizedBox(height: 16),
+                              Text(_isFreeRideDistanceBased ? 'Distance:' : 'Duration:'),
+                              const SizedBox(height: 8),
+                              if (_isFreeRideDistanceBased)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: _freeRideDistanceMeters > _freeRideDistanceIncrement
+                                          ? () {
+                                              setState(() {
+                                                _freeRideDistanceMeters -= _freeRideDistanceIncrement;
+                                              });
+                                            }
+                                          : null,
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '${(_freeRideDistanceMeters / 1000).toStringAsFixed(1)} km',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add),
+                                      onPressed: _freeRideDistanceMeters < 50000
+                                          ? () {
+                                              setState(() {
+                                                _freeRideDistanceMeters += _freeRideDistanceIncrement;
+                                              });
+                                            }
+                                          : null,
+                                    ),
+                                  ],
+                                )
+                              else
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: _freeRideDurationMinutes > 1
+                                          ? () {
+                                              setState(() {
+                                                _freeRideDurationMinutes--;
+                                              });
+                                            }
+                                          : null,
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '$_freeRideDurationMinutes min',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add),
+                                      onPressed: _freeRideDurationMinutes < 120
+                                          ? () {
+                                              setState(() {
+                                                _freeRideDurationMinutes++;
+                                              });
+                                            }
+                                          : null,
+                                    ),
+                                  ],
+                                ),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () {
                                   if (_deviceDataType != null) {
-                                    final durationSeconds = _freeRideDurationMinutes * 60;
+                                    final workoutValue = _isFreeRideDistanceBased
+                                        ? _freeRideDistanceMeters
+                                        : _freeRideDurationMinutes * 60;
                                     final session = TrainingSessionDefinition.createTemplate(
                                       DeviceType.fromFtms(_deviceDataType!),
-                                      durationSeconds,
+                                      isDistanceBased: _isFreeRideDistanceBased,
+                                      workoutValue: workoutValue,
                                     );
                                     Navigator.of(context).push(
                                       MaterialPageRoute(

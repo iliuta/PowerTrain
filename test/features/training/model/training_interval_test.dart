@@ -49,7 +49,7 @@ void main() {
       );
       
       expect(interval.repeat, equals(1));
-      expect(interval.expand(machineType: DeviceType.indoorBike), isA<List<ExpandedUnitTrainingInterval>>());
+      expect(interval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false), isA<List<ExpandedUnitTrainingInterval>>());
       expect(interval.copy(), isA<UnitTrainingInterval>());
       expect(interval.toJson(), isA<Map<String, dynamic>>());
     });
@@ -67,7 +67,7 @@ void main() {
       );
       
       expect(interval.repeat, equals(2));
-      expect(interval.expand(machineType: DeviceType.indoorBike), isA<List<ExpandedUnitTrainingInterval>>());
+      expect(interval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false), isA<List<ExpandedUnitTrainingInterval>>());
       expect(interval.copy(), isA<GroupTrainingInterval>());
       expect(interval.toJson(), isA<Map<String, dynamic>>());
     });

@@ -42,23 +42,35 @@ class SessionTiming {
   /// Total elapsed time in seconds since session started
   final int elapsedSeconds;
 
+  /// Total elapsed distance in meters since session started
+  final double elapsedDistance;
+
   /// Index of the current interval (0-based)
   final int currentIntervalIndex;
 
   /// List of cumulative start times for each interval
   final List<int> intervalStartTimes;
 
+  /// List of cumulative start distances for each interval
+  final List<double> intervalStartDistances;
+
   /// Total session duration in seconds
   final int totalDuration;
+
+  /// Total session distance in meters
+  final double totalDistance;
 
   /// List of intervals with their durations
   final List<ExpandedUnitTrainingInterval> intervals;
 
   const SessionTiming({
     required this.elapsedSeconds,
+    required this.elapsedDistance,
     required this.currentIntervalIndex,
     required this.intervalStartTimes,
+    required this.intervalStartDistances,
     required this.totalDuration,
+    required this.totalDistance,
     required this.intervals,
   });
 
@@ -66,16 +78,26 @@ class SessionTiming {
   factory SessionTiming.fromSession(ExpandedTrainingSessionDefinition session) {
     final intervals = session.intervals;
     final intervalStartTimes = <int>[];
-    int acc = 0;
+    final intervalStartDistances = <double>[];
+    int accTime = 0;
+    double accDistance = 0.0;
     for (final interval in intervals) {
-      intervalStartTimes.add(acc);
-      acc += interval.duration;
+      intervalStartTimes.add(accTime);
+      intervalStartDistances.add(accDistance);
+      if (session.isDistanceBased) {
+        accDistance += (interval.distance ?? 0);
+      } else {
+        accTime += (interval.duration ?? 0);
+      }
     }
     return SessionTiming(
       elapsedSeconds: 0,
+      elapsedDistance: 0.0,
       currentIntervalIndex: 0,
       intervalStartTimes: intervalStartTimes,
-      totalDuration: acc,
+      intervalStartDistances: intervalStartDistances,
+      totalDuration: accTime,
+      totalDistance: accDistance,
       intervals: intervals,
     );
   }
@@ -83,13 +105,24 @@ class SessionTiming {
   /// Time remaining in the entire session (in seconds)
   int get sessionTimeLeft => totalDuration - elapsedSeconds;
 
+  /// Distance remaining in the entire session (in meters)
+  double get sessionDistanceLeft => totalDistance - elapsedDistance;
+
   /// Time elapsed in the current interval (in seconds)
   int get intervalElapsedSeconds =>
       elapsedSeconds - intervalStartTimes[currentIntervalIndex];
 
+  /// Distance elapsed in the current interval (in meters)
+  double get intervalElapsedDistance =>
+      elapsedDistance - intervalStartDistances[currentIntervalIndex];
+
   /// Time remaining in the current interval (in seconds)
   int get intervalTimeLeft =>
-      currentInterval.duration - intervalElapsedSeconds;
+      (currentInterval.duration ?? 0) - intervalElapsedSeconds;
+
+  /// Distance remaining in the current interval (in meters)
+  double get intervalDistanceLeft =>
+      (currentInterval.distance ?? 0) - intervalElapsedDistance;
 
   /// The current interval
   ExpandedUnitTrainingInterval get currentInterval =>
@@ -102,28 +135,68 @@ class SessionTiming {
   /// Whether the session duration has been reached
   bool get isDurationReached => elapsedSeconds >= totalDuration;
 
+  /// Whether the session distance has been reached
+  bool get isDistanceReached => elapsedDistance >= totalDistance;
+
   /// Whether we're in the last few seconds of an interval (for warning sounds)
   bool get shouldPlayWarningSound =>
       intervalTimeLeft <= 4 || intervalElapsedSeconds == 0;
 
+  /// Whether we're in the last few meters of an interval (for warning sounds)
+  bool get shouldPlayWarningSoundDistance =>
+      intervalDistanceLeft <= 10; // assuming 10 meters warning
+
   /// Creates a new SessionTiming with one second added
-  SessionTiming tick() {
-    if (isDurationReached) return this;
+  SessionTiming tick(ExpandedTrainingSessionDefinition session) {
+    if (session.isDistanceBased ? isDistanceReached : isDurationReached) return this;
 
     final newElapsed = elapsedSeconds + 1;
 
     // Calculate new interval index
     int newIntervalIndex = currentIntervalIndex;
-    while (newIntervalIndex < intervals.length - 1 &&
-        newElapsed >= intervalStartTimes[newIntervalIndex + 1]) {
-      newIntervalIndex++;
+    if (session.isDistanceBased) {
+      while (newIntervalIndex < intervals.length - 1 &&
+          elapsedDistance >= intervalStartDistances[newIntervalIndex + 1]) {
+        newIntervalIndex++;
+      }
+    } else {
+      while (newIntervalIndex < intervals.length - 1 &&
+          newElapsed >= intervalStartTimes[newIntervalIndex + 1]) {
+        newIntervalIndex++;
+      }
     }
 
     return SessionTiming(
       elapsedSeconds: newElapsed,
+      elapsedDistance: elapsedDistance,
       currentIntervalIndex: newIntervalIndex,
       intervalStartTimes: intervalStartTimes,
+      intervalStartDistances: intervalStartDistances,
       totalDuration: totalDuration,
+      totalDistance: totalDistance,
+      intervals: intervals,
+    );
+  }
+
+  /// Creates a new SessionTiming with updated distance
+  SessionTiming updateDistance(double newDistance, ExpandedTrainingSessionDefinition session) {
+    if (!session.isDistanceBased || newDistance <= elapsedDistance) return this;
+
+    // Calculate new interval index
+    int newIntervalIndex = currentIntervalIndex;
+    while (newIntervalIndex < intervals.length - 1 &&
+        newDistance >= intervalStartDistances[newIntervalIndex + 1]) {
+      newIntervalIndex++;
+    }
+
+    return SessionTiming(
+      elapsedSeconds: elapsedSeconds,
+      elapsedDistance: newDistance,
+      currentIntervalIndex: newIntervalIndex,
+      intervalStartTimes: intervalStartTimes,
+      intervalStartDistances: intervalStartDistances,
+      totalDuration: totalDuration,
+      totalDistance: totalDistance,
       intervals: intervals,
     );
   }
@@ -138,18 +211,22 @@ class SessionTiming {
       other is SessionTiming &&
           runtimeType == other.runtimeType &&
           elapsedSeconds == other.elapsedSeconds &&
+          elapsedDistance == other.elapsedDistance &&
           currentIntervalIndex == other.currentIntervalIndex &&
-          totalDuration == other.totalDuration;
+          totalDuration == other.totalDuration &&
+          totalDistance == other.totalDistance;
 
   @override
   int get hashCode =>
       elapsedSeconds.hashCode ^
+      elapsedDistance.hashCode ^
       currentIntervalIndex.hashCode ^
-      totalDuration.hashCode;
+      totalDuration.hashCode ^
+      totalDistance.hashCode;
 
   @override
   String toString() =>
-      'SessionTiming(elapsed: $elapsedSeconds, interval: $currentIntervalIndex, '
+      'SessionTiming(elapsed: $elapsedSeconds, distance: $elapsedDistance, interval: $currentIntervalIndex, '
       'intervalElapsed: $intervalElapsedSeconds, sessionTimeLeft: $sessionTimeLeft)';
 }
 
@@ -225,16 +302,22 @@ class TrainingSessionState {
   // ============ Timing convenience getters ============
 
   int get totalDuration => timing.totalDuration;
+  double get totalDistance => timing.totalDistance;
   int get elapsedSeconds => timing.elapsedSeconds;
+  double get elapsedDistance => timing.elapsedDistance;
   int get sessionTimeLeft => timing.sessionTimeLeft;
+  double get sessionDistanceLeft => timing.sessionDistanceLeft;
   int get intervalElapsedSeconds => timing.intervalElapsedSeconds;
+  double get intervalElapsedDistance => timing.intervalElapsedDistance;
   int get intervalTimeLeft => timing.intervalTimeLeft;
+  double get intervalDistanceLeft => timing.intervalDistanceLeft;
   int get currentIntervalIndex => timing.currentIntervalIndex;
   ExpandedUnitTrainingInterval get currentInterval => timing.currentInterval;
   List<ExpandedUnitTrainingInterval> get remainingIntervals =>
       timing.remainingIntervals;
   List<ExpandedUnitTrainingInterval> get intervals => timing.intervals;
   List<int> get intervalStartTimes => timing.intervalStartTimes;
+  List<double> get intervalStartDistances => timing.intervalStartDistances;
 
   // ============ State transition methods ============
 
@@ -303,7 +386,7 @@ class TrainingSessionState {
     if (status != SessionStatus.running) return;
 
     final previousTiming = timing;
-    timing = timing.tick();
+    timing = timing.tick(session);
 
     // Check for interval change
     if (timing.didIntervalChange(previousTiming)) {
@@ -311,12 +394,41 @@ class TrainingSessionState {
     }
 
     // Check for warning sound
-    if (timing.shouldPlayWarningSound) {
+    if (session.isDistanceBased ? timing.shouldPlayWarningSoundDistance : timing.shouldPlayWarningSound) {
       _handler?.onPlayWarningSound();
     }
 
     // Check for completion
-    if (timing.isDurationReached) {
+    if (session.isDistanceBased ? timing.isDistanceReached : timing.isDurationReached) {
+      status = SessionStatus.completed;
+      _handler?.onStopTimer();
+      _handler?.onSessionCompleted();
+      _handler?.onNotifyListeners();
+      return;
+    }
+
+    _handler?.onNotifyListeners();
+  }
+
+  /// Handles distance update event
+  void onDistanceUpdate(double distance) {
+    if (!session.isDistanceBased || status != SessionStatus.running) return;
+
+    final previousTiming = timing;
+    timing = timing.updateDistance(distance, session);
+
+    // Check for interval change
+    if (timing.didIntervalChange(previousTiming)) {
+      _handler?.onIntervalChanged(timing.currentInterval);
+    }
+
+    // Check for warning sound
+    if (timing.shouldPlayWarningSoundDistance) {
+      _handler?.onPlayWarningSound();
+    }
+
+    // Check for completion
+    if (timing.isDistanceReached) {
       status = SessionStatus.completed;
       _handler?.onStopTimer();
       _handler?.onSessionCompleted();
