@@ -6,6 +6,7 @@ import '../../core/services/strava/strava_service.dart';
 import '../../core/services/devices/bt_device.dart';
 import '../../core/services/devices/bt_device_manager.dart';
 import '../../core/services/devices/bt_scan_service.dart';
+import 'dart:async';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart' as ph;
 
@@ -26,12 +27,21 @@ class _ScanPageState extends State<ScanPage> {
   final BluetoothScanService _bluetoothScanService = BluetoothScanService();
   bool _isConnectingStrava = false;
   String? _stravaStatus;
+  StreamSubscription<BluetoothAdapterState>? _adapterStateSubscription;
+  bool _hasStartedScan = false;
   
   @override
   void initState() {
     super.initState();
     _printBluetoothState();
     _checkStravaStatus();
+    _listenToAdapterState();
+  }
+
+  @override
+  void dispose() {
+    _adapterStateSubscription?.cancel();
+    super.dispose();
   }
   
   Future<void> _checkStravaStatus() async {
@@ -135,11 +145,24 @@ class _ScanPageState extends State<ScanPage> {
     }
   }
 
+  void _listenToAdapterState() {
+    _adapterStateSubscription = FlutterBluePlus.adapterState.listen((state) {
+      logger.i('Bluetooth adapter state changed: $state');
+      if (state == BluetoothAdapterState.on && !_hasStartedScan && mounted) {
+        _hasStartedScan = true;
+        _startScan();
+      }
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Start scanning for FTMS devices as soon as the page is shown
-    _startScan();
+    // Check if adapter is already on and start scanning if not already done
+    if (FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on && !_hasStartedScan) {
+      _hasStartedScan = true;
+      _startScan();
+    }
   }
 
   Future<void> _startScan() async {

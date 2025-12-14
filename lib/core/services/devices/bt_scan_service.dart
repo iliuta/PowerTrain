@@ -31,6 +31,12 @@ class BluetoothScanService {
   }) async {
     logger.i('Starting Bluetooth scan process...');
 
+    // Check if Bluetooth adapter is on
+    if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
+      logger.w('Bluetooth adapter is not on. Current state: ${FlutterBluePlus.adapterStateNow}');
+      return BTScanResult.scanError;
+    }
+
     // Request Bluetooth permissions first
     logger.i('Requesting Bluetooth permissions...');
     final hasPermissions = await _requestBluetoothPermissions();
