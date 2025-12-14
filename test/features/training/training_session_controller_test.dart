@@ -13,6 +13,7 @@ import 'package:ftms/core/services/ftms_service.dart';
 import 'package:ftms/core/services/strava/strava_service.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/features/training/model/unit_training_interval.dart';
 import 'package:ftms/features/training/model/session_state.dart';
 import 'package:ftms/features/training/training_session_controller.dart';
 import 'package:mockito/annotations.dart';
@@ -150,18 +151,21 @@ void main() {
             title: 'Warmup', 
             resistanceLevel: 1,
             targets: {'power': 100},
+            originalInterval: UnitTrainingInterval(duration: 60, title: 'Warmup', resistanceLevel: 1, targets: {'power': 100}),
           ),
           ExpandedUnitTrainingInterval(
             duration: 120, 
             title: 'Main', 
             resistanceLevel: 2,
             targets: {'power': 200},
+            originalInterval: UnitTrainingInterval(duration: 120, title: 'Main', resistanceLevel: 2, targets: {'power': 200}),
           ),
           ExpandedUnitTrainingInterval(
             duration: 30, 
             title: 'Cooldown', 
             resistanceLevel: 1,
             targets: {'power': 80},
+            originalInterval: UnitTrainingInterval(duration: 30, title: 'Cooldown', resistanceLevel: 1, targets: {'power': 80}),
           ),
         ],
       );
@@ -685,11 +689,14 @@ void main() {
 
     group('Device Type Parsing', () {
       test('parses rowing machine type correctly', () {
+        // Create dummy original interval for testing
+        final rowInterval = UnitTrainingInterval(duration: 60, title: 'Row');
+
         final rowingSession = ExpandedTrainingSessionDefinition(
           title: 'Rowing Session',
           ftmsMachineType: DeviceType.rower,
           intervals: <ExpandedUnitTrainingInterval>[
-            ExpandedUnitTrainingInterval(duration: 60, title: 'Row'),
+            ExpandedUnitTrainingInterval(duration: 60, title: 'Row', originalInterval: rowInterval),
           ],
         );
 
@@ -843,6 +850,9 @@ void main() {
       });
 
       test('session completes naturally when timer reaches duration', () async {
+        // Create dummy original interval for testing
+        final quickInterval = UnitTrainingInterval(duration: 2, title: 'Quick', resistanceLevel: 1);
+
         // Create a very short session (2 seconds total)
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short Session',
@@ -852,6 +862,7 @@ void main() {
               duration: 2,
               title: 'Quick',
               resistanceLevel: 1,
+              originalInterval: quickInterval,
             ),
           ],
         );
@@ -898,6 +909,9 @@ void main() {
       });
 
       test('_handleSessionCompleted sends FTMS stop and reset commands', () async {
+        // Create dummy original interval for testing
+        final instantInterval = UnitTrainingInterval(duration: 1, title: 'Instant', resistanceLevel: 1);
+
         // Create a very short session (1 second)
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Micro Session',
@@ -907,6 +921,7 @@ void main() {
               duration: 1,
               title: 'Instant',
               resistanceLevel: 1,
+              originalInterval: instantInterval,
             ),
           ],
         );
@@ -951,6 +966,9 @@ void main() {
       });
 
       test('natural completion triggers FIT file generation', () async {
+        // Create dummy original interval for testing
+        final quickInterval = UnitTrainingInterval(duration: 1, title: 'Quick', resistanceLevel: 1);
+
         // Create a very short session
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'FIT Test Session',
@@ -960,6 +978,7 @@ void main() {
               duration: 1,
               title: 'Quick',
               resistanceLevel: 1,
+              originalInterval: quickInterval,
             ),
           ],
         );
@@ -1010,6 +1029,10 @@ void main() {
       });
 
       test('interval changes during natural session progression', () async {
+        // Create dummy original intervals for testing
+        final intervalA = UnitTrainingInterval(duration: 2, title: 'Interval A', resistanceLevel: 1);
+        final intervalB = UnitTrainingInterval(duration: 2, title: 'Interval B', resistanceLevel: 3);
+
         // Create a session with short intervals
         final multiIntervalSession = ExpandedTrainingSessionDefinition(
           title: 'Multi Interval Session',
@@ -1019,11 +1042,13 @@ void main() {
               duration: 2,
               title: 'Interval A',
               resistanceLevel: 1,
+              originalInterval: intervalA,
             ),
             ExpandedUnitTrainingInterval(
               duration: 2,
               title: 'Interval B',
               resistanceLevel: 3,
+              originalInterval: intervalB,
             ),
           ],
         );
@@ -1401,11 +1426,12 @@ void main() {
       });
 
       test('uses correct activity type for rowing machine', () async {
+        final rowInterval = UnitTrainingInterval(duration: 60, title: 'Row');
         final rowingSession = ExpandedTrainingSessionDefinition(
           title: 'Rowing Test',
           ftmsMachineType: DeviceType.rower,
           intervals: <ExpandedUnitTrainingInterval>[
-            ExpandedUnitTrainingInterval(duration: 60, title: 'Row'),
+            ExpandedUnitTrainingInterval(duration: 60, title: 'Row', originalInterval: rowInterval),
           ],
         );
 

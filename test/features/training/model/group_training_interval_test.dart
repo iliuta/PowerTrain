@@ -132,6 +132,8 @@ void main() {
       
       expect(expanded, hasLength(2));
       expect(expanded.first.targets!['Instantaneous Power'], equals(300)); // 120% of 250
+      expect(expanded.first.originalInterval, equals(unitInterval));
+      expect(expanded.last.originalInterval, equals(unitInterval));
     });
 
     test('expand returns flattened list of UnitTrainingInterval', () {
@@ -168,6 +170,14 @@ void main() {
       expect(expanded[6].title, equals('Test1'));
       expect(expanded[7].title, equals('Test1'));
       expect(expanded[8].title, equals('Test2'));
+      // Check original intervals
+      for (int i = 0; i < 9; i++) {
+        if (i % 3 == 0 || i % 3 == 1) {
+          expect(expanded[i].originalInterval, equals(unitInterval1));
+        } else {
+          expect(expanded[i].originalInterval, equals(unitInterval2));
+        }
+      }
     });
 
     test('expand handles null repeat as 1', () {
@@ -185,6 +195,7 @@ void main() {
       
       expect(expanded, hasLength(1));
       expect(expanded.first.title, equals('Test'));
+      expect(expanded.first.originalInterval, equals(unitInterval));
     });
 
     test('expand handles zero repeat as 1', () {
@@ -202,6 +213,7 @@ void main() {
       
       expect(expanded, hasLength(1));
       expect(expanded.first.title, equals('Test'));
+      expect(expanded.first.originalInterval, equals(unitInterval));
     });
 
     test('copy creates deep copy with same values', () {

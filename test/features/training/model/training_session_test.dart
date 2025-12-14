@@ -197,6 +197,8 @@ void main() {
       // Should have 2 expanded intervals (repeat: 2)
       expect(expanded.intervals, hasLength(2));
       expect(expanded.intervals.first.targets!['Instantaneous Power'], equals(300)); // 120% of 250
+      expect(expanded.intervals.first.originalInterval, equals(unitInterval));
+      expect(expanded.intervals.last.originalInterval, equals(unitInterval));
     });
 
     test('expand handles GroupTrainingInterval', () {
@@ -228,6 +230,9 @@ void main() {
       // Should have 3 expanded intervals (group repeat: 3)
       expect(expanded.intervals, hasLength(3));
       expect(expanded.intervals.first.targets!['Instantaneous Power'], equals(300)); // 120% of 250
+      for (final interval in expanded.intervals) {
+        expect(interval.originalInterval, equals(unitInterval));
+      }
     });
 
     test('unitIntervals returns intervals cast to UnitTrainingInterval', () {
@@ -256,6 +261,8 @@ void main() {
       expect(intervals, hasLength(2));
       expect(intervals[0].title, equals('Test 1'));
       expect(intervals[1].title, equals('Test 2'));
+      expect(intervals[0].originalInterval, equals(unitInterval1));
+      expect(intervals[1].originalInterval, equals(unitInterval2));
     });
 
     test('copy creates deep copy with same values', () {

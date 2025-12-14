@@ -79,14 +79,15 @@ void main() {
         'duration': 60,
         'targets': {'Instantaneous Power': '120%'},
       };
-      final intervals = UnitTrainingInterval.fromJson(json)
-          .expand(isDistanceBased: false, 
+      final original = UnitTrainingInterval.fromJson(json);
+      final intervals = original.expand(isDistanceBased: false, 
             machineType: DeviceType.indoorBike,
             userSettings: userSettings,
             config: config,
           );
       // 120% of 250 = 300
       expect(intervals.first.targets!['Instantaneous Power'], 300);
+      expect(intervals.first.originalInterval, equals(original));
     });
 
     test('FTP percentage parsing for rower resolves to seconds', () {
@@ -97,7 +98,8 @@ void main() {
         'duration': 60,
         'targets': {'Instantaneous Pace': '50%'},
       };
-      final interval = UnitTrainingInterval.fromJson(json)
+      final original = UnitTrainingInterval.fromJson(json);
+      final interval = original
           .expand(isDistanceBased: false, 
             machineType: DeviceType.rower,
             userSettings: userSettings,
@@ -105,6 +107,7 @@ void main() {
           );
       // 120% of 2:00 = 144 seconds
       expect(interval.first.targets!['Instantaneous Pace'], 240);
+      expect(interval.first.originalInterval, equals(original));
     });
 
     test('FTP percentage parsing is ignored if userSettings is null', () {
@@ -114,7 +117,8 @@ void main() {
         'duration': 60,
         'targets': {'Instantaneous Power': '120%'},
       };
-      final interval = UnitTrainingInterval.fromJson(json)
+      final original = UnitTrainingInterval.fromJson(json);
+      final interval = original
           .expand(isDistanceBased: false, 
             machineType: DeviceType.indoorBike,
             userSettings: null,
@@ -122,6 +126,7 @@ void main() {
           );
       // Should remain as string
       expect(interval.first.targets!['Instantaneous Power'], '120%');
+      expect(interval.first.originalInterval, equals(original));
     });
 
     test('fromJson does not expand targets', () {
@@ -147,8 +152,8 @@ void main() {
           'Heart Rate': '85%', // Should NOT be resolved (no userSetting)
         },
       };
-      final ExpandedUnitTrainingInterval interval = UnitTrainingInterval.fromJson(json)
-          .expand(isDistanceBased: false, 
+      final original = UnitTrainingInterval.fromJson(json);
+      final ExpandedUnitTrainingInterval interval = original.expand(isDistanceBased: false, 
             machineType: DeviceType.indoorBike,
             userSettings: userSettings,
             config: config,
@@ -159,6 +164,7 @@ void main() {
       // Cadence and Heart Rate should remain as strings (not resolved)
       expect(interval.targets!['Instantaneous Cadence'], '90%');
       expect(interval.targets!['Heart Rate'], '85%');
+      expect(interval.originalInterval, equals(original));
     });
 
     test('rower only applies power strategy to Instantaneous Pace', () {
@@ -173,8 +179,8 @@ void main() {
           'Instantaneous Power': '90%', // Should NOT be resolved (no userSetting for rower)
         },
       };
-      final interval = UnitTrainingInterval.fromJson(json)
-          .expand(isDistanceBased: false, 
+      final original = UnitTrainingInterval.fromJson(json);
+      final interval = original.expand(isDistanceBased: false, 
             machineType: DeviceType.rower,
             userSettings: userSettings,
             config: config,
@@ -185,6 +191,7 @@ void main() {
       // Stroke Rate and Power should remain as strings (not resolved)
       expect(interval.first.targets!['Stroke Rate'], '120%');
       expect(interval.first.targets!['Instantaneous Power'], '90%');
+      expect(interval.first.originalInterval, equals(original));
     });
   });
 

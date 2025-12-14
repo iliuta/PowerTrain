@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/features/training/model/unit_training_interval.dart';
 import 'package:ftms/features/training/widgets/training_interval_list.dart';
 
 void main() {
   group('TrainingIntervalList', () {
     testWidgets('displays intervals and highlights current', (WidgetTester tester) async {
+      final dummyInterval1 = UnitTrainingInterval(title: 'Warmup', duration: 60, resistanceLevel: 1, targets: {'power': 100});
+      final dummyInterval2 = UnitTrainingInterval(title: 'Main', duration: 120, resistanceLevel: 2, targets: {'power': 200});
+      final dummyInterval3 = UnitTrainingInterval(title: 'Cooldown', duration: 30, resistanceLevel: 1, targets: {'power': 80});
       final intervals = <ExpandedUnitTrainingInterval>[
-        ExpandedUnitTrainingInterval(duration: 60, title: 'Warmup', resistanceLevel: 1, targets: {'power': 100}),
-        ExpandedUnitTrainingInterval(duration: 120, title: 'Main', resistanceLevel: 2, targets: {'power': 200}),
-        ExpandedUnitTrainingInterval(duration: 30, title: 'Cooldown', resistanceLevel: 1, targets: {'power': 80}),
+        ExpandedUnitTrainingInterval(duration: 60, title: 'Warmup', resistanceLevel: 1, targets: {'power': 100}, originalInterval: dummyInterval1),
+        ExpandedUnitTrainingInterval(duration: 120, title: 'Main', resistanceLevel: 2, targets: {'power': 200}, originalInterval: dummyInterval2),
+        ExpandedUnitTrainingInterval(duration: 30, title: 'Cooldown', resistanceLevel: 1, targets: {'power': 80}, originalInterval: dummyInterval3),
       ];
       await tester.pumpWidget(
         MaterialApp(

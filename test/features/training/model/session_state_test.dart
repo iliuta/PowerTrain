@@ -3,6 +3,7 @@ import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/session_state.dart';
+import 'package:ftms/features/training/model/unit_training_interval.dart';
 
 /// Mock handler that records which methods were called
 class MockSessionEffectHandler implements SessionEffectHandler {
@@ -60,6 +61,9 @@ void main() {
     late ExpandedTrainingSessionDefinition testSession;
 
     setUp(() {
+      final warmupOriginal = UnitTrainingInterval(title: 'Warmup', duration: 60, resistanceLevel: 5);
+      final workOriginal = UnitTrainingInterval(title: 'Work', duration: 120, resistanceLevel: 10);
+      final cooldownOriginal = UnitTrainingInterval(title: 'Cooldown', duration: 60, resistanceLevel: 3);
       testSession = ExpandedTrainingSessionDefinition(
         title: 'Test Session',
         ftmsMachineType: DeviceType.rower,
@@ -68,16 +72,19 @@ void main() {
             title: 'Warmup',
             duration: 60,
             resistanceLevel: 5,
+            originalInterval: warmupOriginal,
           ),
           ExpandedUnitTrainingInterval(
             title: 'Work',
             duration: 120,
             resistanceLevel: 10,
+            originalInterval: workOriginal,
           ),
           ExpandedUnitTrainingInterval(
             title: 'Cooldown',
             duration: 60,
             resistanceLevel: 3,
+            originalInterval: cooldownOriginal,
           ),
         ],
       );
@@ -288,6 +295,8 @@ void main() {
     late ExpandedTrainingSessionDefinition testSession;
 
     setUp(() {
+      final warmupOriginal = UnitTrainingInterval(title: 'Warmup', duration: 60, resistanceLevel: 5);
+      final workOriginal = UnitTrainingInterval(title: 'Work', duration: 120, resistanceLevel: 10);
       testSession = ExpandedTrainingSessionDefinition(
         title: 'Test Session',
         ftmsMachineType: DeviceType.rower,
@@ -296,11 +305,13 @@ void main() {
             title: 'Warmup',
             duration: 60,
             resistanceLevel: 5,
+            originalInterval: warmupOriginal,
           ),
           ExpandedUnitTrainingInterval(
             title: 'Work',
             duration: 120,
             resistanceLevel: 10,
+            originalInterval: workOriginal,
           ),
         ],
       );
@@ -506,12 +517,14 @@ void main() {
 
       test('completes session when duration reached', () {
         // Create a very short session
+        final original = UnitTrainingInterval(duration: 3);
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
           intervals: [
             ExpandedUnitTrainingInterval(
               duration: 3,
+              originalInterval: original,
             ),
           ],
         );
@@ -571,11 +584,12 @@ void main() {
       });
 
       test('does not transition if already completed', () {
+        final shortInterval = UnitTrainingInterval(duration: 1, title: 'Short');
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
           intervals: [
-            ExpandedUnitTrainingInterval(duration: 1),
+            ExpandedUnitTrainingInterval(duration: 1, originalInterval: shortInterval),
           ],
         );
 
@@ -687,13 +701,16 @@ void main() {
 
       test('interval transitions during full session', () {
         // Session with 3 short intervals
+        final intervalA = UnitTrainingInterval(duration: 5, title: 'A');
+        final intervalB = UnitTrainingInterval(duration: 5, title: 'B');
+        final intervalC = UnitTrainingInterval(duration: 5, title: 'C');
         final multiIntervalSession = ExpandedTrainingSessionDefinition(
           title: 'Multi',
           ftmsMachineType: DeviceType.rower,
           intervals: [
-            ExpandedUnitTrainingInterval(title: 'A', duration: 5),
-            ExpandedUnitTrainingInterval(title: 'B', duration: 5),
-            ExpandedUnitTrainingInterval(title: 'C', duration: 5),
+            ExpandedUnitTrainingInterval(title: 'A', duration: 5, originalInterval: intervalA),
+            ExpandedUnitTrainingInterval(title: 'B', duration: 5, originalInterval: intervalB),
+            ExpandedUnitTrainingInterval(title: 'C', duration: 5, originalInterval: intervalC),
           ],
         );
 
@@ -750,6 +767,8 @@ void main() {
     late MockSessionEffectHandler mockHandler;
 
     setUp(() {
+      final warmupOriginal = UnitTrainingInterval(title: 'Warmup', duration: 60, resistanceLevel: 5);
+      final workOriginal = UnitTrainingInterval(title: 'Work', duration: 120, resistanceLevel: 10);
       testSession = ExpandedTrainingSessionDefinition(
         title: 'Test Session',
         ftmsMachineType: DeviceType.rower,
@@ -758,11 +777,13 @@ void main() {
             title: 'Warmup',
             duration: 60,
             resistanceLevel: 5,
+            originalInterval: warmupOriginal,
           ),
           ExpandedUnitTrainingInterval(
             title: 'Work',
             duration: 120,
             resistanceLevel: 10,
+            originalInterval: workOriginal,
           ),
         ],
       );
@@ -907,11 +928,12 @@ void main() {
       });
 
       test('calls no handler methods when session is completed', () {
+        final shortInterval = UnitTrainingInterval(duration: 1, title: 'Short');
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
           intervals: [
-            ExpandedUnitTrainingInterval(duration: 1),
+            ExpandedUnitTrainingInterval(duration: 1, originalInterval: shortInterval),
           ],
         );
 
@@ -1092,11 +1114,12 @@ void main() {
       });
 
       test('calls sessionCompleted and stopTimer when duration reached', () {
+        final original = UnitTrainingInterval(duration: 3);
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
           intervals: [
-            ExpandedUnitTrainingInterval(duration: 3),
+            ExpandedUnitTrainingInterval(duration: 3, originalInterval: original),
           ],
         );
 
@@ -1198,11 +1221,12 @@ void main() {
       });
 
       test('transitions state to completed when duration reached', () {
+        final original = UnitTrainingInterval(duration: 2);
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
           ftmsMachineType: DeviceType.rower,
           intervals: [
-            ExpandedUnitTrainingInterval(duration: 2),
+            ExpandedUnitTrainingInterval(duration: 2, originalInterval: original),
           ],
         );
 
@@ -1241,13 +1265,16 @@ void main() {
       });
 
       test('handles multiple interval transitions in sequence', () {
+        final originalA = UnitTrainingInterval(title: 'A', duration: 5);
+        final originalB = UnitTrainingInterval(title: 'B', duration: 5);
+        final originalC = UnitTrainingInterval(title: 'C', duration: 5);
         final multiIntervalSession = ExpandedTrainingSessionDefinition(
           title: 'Multi',
           ftmsMachineType: DeviceType.rower,
           intervals: [
-            ExpandedUnitTrainingInterval(title: 'A', duration: 5),
-            ExpandedUnitTrainingInterval(title: 'B', duration: 5),
-            ExpandedUnitTrainingInterval(title: 'C', duration: 5),
+            ExpandedUnitTrainingInterval(title: 'A', duration: 5, originalInterval: originalA),
+            ExpandedUnitTrainingInterval(title: 'B', duration: 5, originalInterval: originalB),
+            ExpandedUnitTrainingInterval(title: 'C', duration: 5, originalInterval: originalC),
           ],
         );
 

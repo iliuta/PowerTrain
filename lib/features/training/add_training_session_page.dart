@@ -383,7 +383,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     TrainingSessionChart(
                       intervals: _expandedIntervals,
                       machineType: widget.machineType,
-                      height: 70,
+                      height: 90,
                       config: _config,
                       isDistanceBased: _isDistanceBased,
                     ),

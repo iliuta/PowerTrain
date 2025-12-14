@@ -49,7 +49,7 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     final totalDuration = widget.isDistanceBased
         ? widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.distance ?? 0))
         : widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
-    
+
     // If totalDuration is 0, use equal widths
     final useEqualWidths = totalDuration == 0;
     final effectiveTotalDuration = useEqualWidths ? widget.intervals.length : totalDuration;
@@ -105,34 +105,34 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
   void _handleHover(Offset position) {
     // Cancel any pending clear hover timer
     _clearHoverTimer?.cancel();
-    
+
     final totalDuration = widget.isDistanceBased
         ? widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.distance ?? 0))
         : widget.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
-    
+
     final chartSize = renderBox.size;
     final paddedWidth = chartSize.width - 16; // Account for padding
-    
+
     if (paddedWidth <= 0) return;
-    
+
     // Calculate which interval the touch/hover is over
     double currentX = 8; // Account for left padding
     int? hoveredIndex;
-    
+
     for (int i = 0; i < widget.intervals.length; i++) {
       final interval = widget.intervals[i];
       final intervalValue = widget.isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0);
       final barWidth = (intervalValue / totalDuration) * paddedWidth;
-      
+
       if (position.dx >= currentX && position.dx <= currentX + barWidth) {
         hoveredIndex = i;
         break;
       }
       currentX += barWidth;
     }
-    
+
     setState(() {
       _hoveredIntervalIndex = hoveredIndex;
       _hoverPosition = hoveredIndex != null ? position : null;
@@ -162,15 +162,15 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     if (_hoveredIntervalIndex == null || _hoverPosition == null) {
       return const SizedBox.shrink();
     }
-    
+
     final interval = widget.intervals[_hoveredIntervalIndex!];
     final position = _hoverPosition!;
-    
+
     // Calculate smart positioning to avoid truncation
     const tooltipWidth = 200.0;
     const tooltipHeight = 100.0; // Increased height to accommodate more content
     const padding = 0.0; // Increased padding now that tooltip is outside container
-    
+
     // Calculate horizontal position - adjust for the 8px padding
     double left = position.dx + 8; // Add 8px to account for container padding
     if (left + tooltipWidth > containerSize.width - padding) {
@@ -181,11 +181,11 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     if (left < padding) {
       left = padding;
     }
-    
-  
+
+
     double top = (containerSize.height - tooltipHeight) / 2 - 10; // Center vertically with a slight offset
 
-    
+
     return Positioned(
       left: left,
       top: top,
@@ -254,20 +254,20 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
   Widget _buildAxisLabels(int totalValue) {
     final labels = <Widget>[];
     final numLabels = 5; // Show 5 labels
-    
+
     for (int i = 0; i <= numLabels; i++) {
       final value = (totalValue * i / numLabels).round();
       final valueText = widget.isDistanceBased ? _formatDistance(value) : _formatTime(value);
       labels.add(Expanded(
         child: Text(
           valueText,
-          textAlign: i == 0 ? TextAlign.start : 
+          textAlign: i == 0 ? TextAlign.start :
                    i == numLabels ? TextAlign.end : TextAlign.center,
           style: const TextStyle(fontSize: 10, color: Colors.grey),
         ),
       ));
     }
-    
+
     return Row(children: labels);
   }
 
@@ -322,10 +322,10 @@ class _TrainingChartPainter extends CustomPainter {
     // Find min and max intensity values
     final intensities = intervals.map((interval) => _getIntensityValue(interval)).toList();
     if (intensities.isEmpty) return;
-    
+
     final minIntensity = intensities.reduce((a, b) => a < b ? a : b);
     final maxIntensity = intensities.reduce((a, b) => a > b ? a : b);
-    
+
     // Handle case where all values are the same
     final intensityRange = maxIntensity - minIntensity;
     final paddedMin = intensityRange > 0 ? minIntensity - (intensityRange * 0.1) : minIntensity - 10;
@@ -333,24 +333,24 @@ class _TrainingChartPainter extends CustomPainter {
     final paddedRange = paddedMax - paddedMin;
 
     double currentX = 0;
-    
+
     for (int i = 0; i < intervals.length; i++) {
       final interval = intervals[i];
-      final barWidth = useEqualWidths 
-        ? size.width / intervals.length 
+      final barWidth = useEqualWidths
+        ? size.width / intervals.length
         : ((isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0)) / effectiveTotalDuration) * size.width;
       final intensity = _getIntensityValue(interval);
-      
+
       // Normalize intensity to chart height (inverted because higher intensity = taller bar)
       final normalizedIntensity = paddedRange > 0 ? (intensity - paddedMin) / paddedRange : 0.5;
       final barHeight = normalizedIntensity * size.height;
-      
+
       // Ensure values are valid numbers
       if (barWidth.isNaN || barHeight.isNaN || !barWidth.isFinite || !barHeight.isFinite) {
         currentX += barWidth.isFinite ? barWidth : 0;
         continue;
       }
-      
+
       // Draw the bar first
       final rect = Rect.fromLTWH(
         currentX,
@@ -358,16 +358,16 @@ class _TrainingChartPainter extends CustomPainter {
         barWidth,
         barHeight,
       );
-      
+
       // Choose color based on intensity and hover state
       if (i == hoveredIndex) {
         // Highlight hovered bar
-        paint.color = _getIntensityColor(normalizedIntensity).withValues(alpha: 0.8);
+        paint.color = _getIntensityColor(intensity).withValues(alpha: 0.8);
         paint.strokeWidth = 2;
         paint.style = PaintingStyle.fill;
-        
+
         canvas.drawRect(rect, paint);
-        
+
         // Add border to hovered bar
         final borderPaint = Paint()
           ..color = Colors.black
@@ -375,11 +375,11 @@ class _TrainingChartPainter extends CustomPainter {
           ..style = PaintingStyle.stroke;
         canvas.drawRect(rect, borderPaint);
       } else {
-        paint.color = _getIntensityColor(normalizedIntensity);
+        paint.color = _getIntensityColor(intensity);
         paint.style = PaintingStyle.fill;
         canvas.drawRect(rect, paint);
       }
-      
+
       // Draw interval separator (except for the last one)
       if (i < intervals.length - 1) {
         final separatorPaint = Paint()
@@ -391,7 +391,7 @@ class _TrainingChartPainter extends CustomPainter {
           separatorPaint,
         );
       }
-      
+
       // Draw interval title if there's enough space
       if (barWidth > 30) {
         final textSpan = TextSpan(
@@ -407,7 +407,7 @@ class _TrainingChartPainter extends CustomPainter {
           textDirection: TextDirection.ltr,
         );
         textPainter.layout(maxWidth: barWidth - 4);
-        
+
         if (textPainter.width < barWidth - 4) {
           textPainter.paint(
             canvas,
@@ -418,10 +418,10 @@ class _TrainingChartPainter extends CustomPainter {
           );
         }
       }
-      
+
       currentX += barWidth;
     }
-    
+
     // Draw baseline
     final baselinePaint = Paint()
       ..color = Colors.grey
@@ -431,7 +431,7 @@ class _TrainingChartPainter extends CustomPainter {
       Offset(size.width, size.height),
       baselinePaint,
     );
-    
+
     // Draw progress indicator line
     if (currentProgress != null && currentProgress! >= 0 && currentProgress! <= 1) {
       final progressX = currentProgress! * size.width;
@@ -439,14 +439,14 @@ class _TrainingChartPainter extends CustomPainter {
         ..color = Colors.blue
         ..strokeWidth = 3
         ..style = PaintingStyle.stroke;
-      
+
       // Draw vertical line
       canvas.drawLine(
         Offset(progressX, 0),
         Offset(progressX, size.height),
         progressPaint,
       );
-      
+
       // Draw circle at the bottom
       final circlePaint = Paint()
         ..color = Colors.blue
@@ -459,47 +459,54 @@ class _TrainingChartPainter extends CustomPainter {
     }
   }
 
+
+
   double _getIntensityValue(ExpandedUnitTrainingInterval interval) {
-    final targets = interval.targets;
-    if (targets == null) return 50.0; // Default value if no targets
+    final targets = interval.originalInterval.targets;
+    var defaultIntensityValue = _getDefaultMinIntensity();
+    if (targets == null) return defaultIntensityValue; // Default value if no targets
     final target = targets[intensityKey];
-    if (target == null) return 50.0; // Default value
-    
+    if (target == null) return defaultIntensityValue; // Default value
+
     double rawValue;
     if (target is String) {
       // Handle percentage strings like "100%", "95%"
       if (target.endsWith('%')) {
         final percentageStr = target.substring(0, target.length - 1);
-        rawValue = double.tryParse(percentageStr) ?? 50.0;
+        rawValue = double.tryParse(percentageStr) ?? defaultIntensityValue;
       } else {
-        rawValue = double.tryParse(target) ?? 50.0;
+        rawValue = double.tryParse(target) ?? defaultIntensityValue;
       }
     } else if (target is num) {
       rawValue = target.toDouble();
     } else {
-      rawValue = 50.0; // Default fallback
+      rawValue = defaultIntensityValue; // Default fallback
     }
-    
-    // For rowing pace, invert the relationship since higher pace values (slower pace) = lower intensity
-    if (machineType == DeviceType.rower && intensityKey == 'Instantaneous Pace') {
-      // If it's a percentage, use it directly (100% = baseline intensity)
-      if (target is String && target.endsWith('%')) {
-        return rawValue; // Percentage values work correctly for intensity
-      } else {
-        // For absolute pace values, invert them relative to a baseline
-        // Assume 120 seconds (2:00/500m) as baseline (100% intensity)
-        const baselinePaceSeconds = 120.0;
-        return (baselinePaceSeconds * 100) / rawValue; // Invert: slower pace = lower intensity
-      }
+
+    if (rawValue < defaultIntensityValue) {
+      rawValue = defaultIntensityValue;
     }
-    
+
     return rawValue;
   }
 
-  Color _getIntensityColor(double normalizedIntensity) {
+
+  double _getDefaultMinIntensity() {
+    return DeviceType.rower == machineType ? 85.0 : 50.0;
+  }
+
+  double _getDefaultMaxIntensity() {
+    return DeviceType.rower == machineType ? 107 : 100;
+  }
+
+
+  Color _getIntensityColor(double intensity) {
     // Clamp the value to [0, 1] to avoid issues
+    var defaultMinIntensity = _getDefaultMinIntensity();
+    var defaultMaxIntensity = _getDefaultMaxIntensity();
+    final normalizedIntensity = (intensity - defaultMinIntensity)/(defaultMaxIntensity - defaultMinIntensity);
     final clampedIntensity = normalizedIntensity.clamp(0.0, 1.0);
-    
+
     // Create a color gradient from green (low) to red (high)
     if (clampedIntensity < 0.33) {
       // Green to yellow

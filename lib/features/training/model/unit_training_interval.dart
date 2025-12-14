@@ -76,6 +76,7 @@ class UnitTrainingInterval extends TrainingInterval {
       distance: isDistanceBased ? distance : null,
       targets: expandedTargets,
       resistanceLevel: resistanceLevel,
+      originalInterval: this,
     );
   }
 
