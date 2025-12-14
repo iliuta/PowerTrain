@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/features/training/model/unit_training_interval.dart';
 import 'package:ftms/features/training/widgets/session_progress_bar.dart';
 import 'package:ftms/features/training/widgets/training_session_chart.dart';
 
 void main() {
   testWidgets('SessionProgressBar displays chart and formatted time', (WidgetTester tester) async {
+    // Create dummy original intervals for testing
+    final warmupInterval = UnitTrainingInterval(duration: 60, title: 'Warmup');
+    final workInterval = UnitTrainingInterval(duration: 120, title: 'Work');
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -20,11 +25,13 @@ void main() {
                 duration: 60,
                 title: 'Warmup',
                 targets: {'Instantaneous Power': 100},
+                originalInterval: warmupInterval,
               ),
               ExpandedUnitTrainingInterval(
                 duration: 120,
                 title: 'Work',
                 targets: {'Instantaneous Power': 200},
+                originalInterval: workInterval,
               ),
             ],
             machineType: DeviceType.indoorBike,

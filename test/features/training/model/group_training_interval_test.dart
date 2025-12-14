@@ -127,10 +127,13 @@ void main() {
         machineType: DeviceType.indoorBike,
         userSettings: userSettings,
         config: config,
+        isDistanceBased: false,
       );
       
       expect(expanded, hasLength(2));
       expect(expanded.first.targets!['Instantaneous Power'], equals(300)); // 120% of 250
+      expect(expanded.first.originalInterval, equals(unitInterval));
+      expect(expanded.last.originalInterval, equals(unitInterval));
     });
 
     test('expand returns flattened list of UnitTrainingInterval', () {
@@ -151,7 +154,7 @@ void main() {
         repeat: 3,
       );
       
-      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, );
+      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false);
       
       // Group repeats 3 times, unitInterval1 repeats 2 times each, unitInterval2 repeats 1 time each
       // Total: 3 * (2 + 1) = 9 intervals
@@ -167,6 +170,14 @@ void main() {
       expect(expanded[6].title, equals('Test1'));
       expect(expanded[7].title, equals('Test1'));
       expect(expanded[8].title, equals('Test2'));
+      // Check original intervals
+      for (int i = 0; i < 9; i++) {
+        if (i % 3 == 0 || i % 3 == 1) {
+          expect(expanded[i].originalInterval, equals(unitInterval1));
+        } else {
+          expect(expanded[i].originalInterval, equals(unitInterval2));
+        }
+      }
     });
 
     test('expand handles null repeat as 1', () {
@@ -180,10 +191,11 @@ void main() {
         repeat: null,
       );
       
-      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, );
+      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false);
       
       expect(expanded, hasLength(1));
       expect(expanded.first.title, equals('Test'));
+      expect(expanded.first.originalInterval, equals(unitInterval));
     });
 
     test('expand handles zero repeat as 1', () {
@@ -197,10 +209,11 @@ void main() {
         repeat: 0,
       );
       
-      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, );
+      final expanded = groupInterval.expand(machineType: DeviceType.indoorBike, isDistanceBased: false);
       
       expect(expanded, hasLength(1));
       expect(expanded.first.title, equals('Test'));
+      expect(expanded.first.originalInterval, equals(unitInterval));
     });
 
     test('copy creates deep copy with same values', () {

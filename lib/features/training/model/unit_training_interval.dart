@@ -8,7 +8,8 @@ import 'target_power_strategy.dart';
 
 class UnitTrainingInterval extends TrainingInterval {
   final String? title;
-  final int duration;
+  final int? duration;
+  final int? distance;
   final Map<String, dynamic>? targets;
   final int? resistanceLevel;
   @override
@@ -16,7 +17,8 @@ class UnitTrainingInterval extends TrainingInterval {
 
   UnitTrainingInterval(
       {this.title,
-      required this.duration,
+      this.duration,
+      this.distance,
       this.targets,
       this.resistanceLevel,
       this.repeat});
@@ -25,6 +27,7 @@ class UnitTrainingInterval extends TrainingInterval {
     return UnitTrainingInterval(
       title: json['title'],
       duration: json['duration'],
+      distance: json['distance'],
       targets: json['targets'] != null
           ? Map<String, dynamic>.from(json['targets'])
           : null,
@@ -38,6 +41,7 @@ class UnitTrainingInterval extends TrainingInterval {
     return {
       'title': title,
       'duration': duration,
+      'distance': distance,
       'targets': targets,
       'resistanceLevel': resistanceLevel,
       'repeat': repeat,
@@ -48,6 +52,7 @@ class UnitTrainingInterval extends TrainingInterval {
     required DeviceType machineType,
     UserSettings? userSettings,
     LiveDataDisplayConfig? config,
+    required bool isDistanceBased,
   }) {
     Map<String, dynamic>? expandedTargets;
     if (targets != null) {
@@ -67,9 +72,11 @@ class UnitTrainingInterval extends TrainingInterval {
     }
     return ExpandedUnitTrainingInterval(
       title: title,
-      duration: duration,
+      duration: isDistanceBased ? null : duration,
+      distance: isDistanceBased ? distance : null,
       targets: expandedTargets,
       resistanceLevel: resistanceLevel,
+      originalInterval: this,
     );
   }
 
@@ -78,6 +85,7 @@ class UnitTrainingInterval extends TrainingInterval {
     required DeviceType machineType,
     UserSettings? userSettings,
     LiveDataDisplayConfig? config,
+    required bool isDistanceBased,
   }) {
     final r = repeat ?? 1;
     return List.generate(
@@ -85,7 +93,8 @@ class UnitTrainingInterval extends TrainingInterval {
         (_) => _expand(
             machineType: machineType,
             userSettings: userSettings,
-            config: config));
+            config: config,
+            isDistanceBased: isDistanceBased));
   }
 
   @override
@@ -93,6 +102,7 @@ class UnitTrainingInterval extends TrainingInterval {
     return UnitTrainingInterval(
       title: title,
       duration: duration,
+      distance: distance,
       targets: targets != null ? Map<String, dynamic>.from(targets!) : null,
       resistanceLevel: resistanceLevel,
       repeat: repeat,

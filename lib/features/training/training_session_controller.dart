@@ -161,6 +161,16 @@ class TrainingSessionController extends ChangeNotifier
   void _onFtmsData(DeviceData? data) {
     if (data == null) return;
 
+    // For distance-based sessions, update distance from FTMS data
+    if (session.isDistanceBased && _state.isRunning) {
+      final paramValueMap = _dataProcessor.processDeviceData(data);
+      final totalDistanceParam = paramValueMap['Total Distance'];
+      if (totalDistanceParam != null) {
+        final distance = totalDistanceParam.getScaledValue().toDouble();
+        _state.onDistanceUpdate(distance);
+      }
+    }
+
     // Record data if session is running
     if (_state.isRunning) {
       _recordDataPoint(data);

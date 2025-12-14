@@ -1,15 +1,20 @@
 
-/// Expanded training interval with same fields as UnitTrainingInterval
+import 'unit_training_interval.dart';
+
 class ExpandedUnitTrainingInterval {
   final String? title;
-  final int duration;
+  final int? duration;
+  final int? distance;
   final Map<String, dynamic>? targets;
   final int? resistanceLevel;
+  final UnitTrainingInterval originalInterval;
 
   ExpandedUnitTrainingInterval({
     this.title,
-    required this.duration,
+    this.duration,
+    this.distance,
     this.targets,
     this.resistanceLevel,
+    required this.originalInterval,
   });
 }

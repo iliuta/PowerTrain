@@ -60,7 +60,8 @@
       "label": "Distance",
       "display": "number",
       "unit": "m",
-      "icon": "power"
+      "icon": "distance",
+      "isCumulative": true
     }
   ]
 }

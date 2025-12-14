@@ -202,8 +202,8 @@ void main() {
         final initialCardCount = find.byType(ExpansionTile).evaluate().length;
 
         // Tap the add button
-        await tester.tap(find.byIcon(Icons.add));
-        await tester.pump();
+        await tester.tap(find.byTooltip('Add Unit Interval'));
+        await tester.pumpAndSettle();
 
         final newCardCount = find.byType(ExpansionTile).evaluate().length;
         expect(newCardCount, initialCardCount + 1);
@@ -227,7 +227,7 @@ void main() {
 
         // Tap the group interval button (repeat icon)
         await tester.tap(find.byIcon(Icons.repeat));
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         final newCardCount = find.byType(ExpansionTile).evaluate().length;
         expect(newCardCount, initialCardCount + 1);
@@ -250,14 +250,18 @@ void main() {
         final initialCardCount = find.byType(ExpansionTile).evaluate().length;
 
         // Add an interval first
-        await tester.tap(find.byIcon(Icons.add));
-        await tester.pump();
+        await tester.tap(find.byTooltip('Add Unit Interval'));
+        await tester.pumpAndSettle();
 
         expect(find.byType(ExpansionTile).evaluate().length, initialCardCount + 1);
 
         // Find and tap the delete button on the interval card
-        await tester.tap(find.byIcon(Icons.delete).first);
-        await tester.pump();
+        // First expand the tile to ensure the delete button is accessible
+        await tester.tap(find.byType(ExpansionTile).first);
+        await tester.pumpAndSettle();
+        
+        await tester.tap(find.byTooltip('Delete').first, warnIfMissed: false);
+        await tester.pumpAndSettle();
 
         final finalCardCount = find.byType(ExpansionTile).evaluate().length;
         expect(finalCardCount, initialCardCount);
@@ -280,14 +284,14 @@ void main() {
         final initialCardCount = find.byType(ExpansionTile).evaluate().length;
 
         // Add an interval first
-        await tester.tap(find.byIcon(Icons.add));
-        await tester.pump();
+        await tester.tap(find.byTooltip('Add Unit Interval'));
+        await tester.pumpAndSettle();
 
         expect(find.byType(ExpansionTile).evaluate().length, initialCardCount + 1);
 
         // Find and tap the copy button on the interval card
-        await tester.tap(find.byIcon(Icons.copy).first);
-        await tester.pump();
+        await tester.tap(find.byTooltip('Duplicate').first, warnIfMissed: false);
+        await tester.pumpAndSettle();
 
         final finalCardCount = find.byType(ExpansionTile).evaluate().length;
         expect(finalCardCount, initialCardCount + 2);

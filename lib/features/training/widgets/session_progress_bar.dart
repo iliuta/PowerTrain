@@ -6,13 +6,14 @@ import 'training_session_chart.dart';
 
 class SessionProgressBar extends StatelessWidget {
   final double progress;
-  final int timeLeft;
-  final int elapsed;
-  final String Function(int) formatTime;
+  final num timeLeft;
+  final num elapsed;
+  final String Function(num) formatTime;
   final List<ExpandedUnitTrainingInterval> intervals;
   final DeviceType machineType;
   final LiveDataDisplayConfig? config;
-  
+  final bool isDistanceBased;
+
   const SessionProgressBar({
     super.key,
     required this.progress,
@@ -22,6 +23,7 @@ class SessionProgressBar extends StatelessWidget {
     required this.intervals,
     required this.machineType,
     this.config,
+    this.isDistanceBased = false,
   });
 
   @override
@@ -45,6 +47,7 @@ class SessionProgressBar extends StatelessWidget {
             height: 60,
             config: config,
             currentProgress: progress,
+            isDistanceBased: isDistanceBased,
           ),
         ),
         const SizedBox(width: 12),

@@ -10,6 +10,7 @@ abstract class TrainingInterval {
     required DeviceType machineType,
     UserSettings? userSettings,
     LiveDataDisplayConfig? config,
+    required bool isDistanceBased,
   });
   TrainingInterval copy();
   Map<String, dynamic> toJson();
