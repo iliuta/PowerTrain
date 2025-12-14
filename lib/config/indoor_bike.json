@@ -15,10 +15,7 @@
       "name": "Instantaneous Power",
       "label": "Power",
       "display": "number",
-      "formatter": "intFormatter",
       "unit": "W",
-      "min": 0,
-      "max": 1000,
       "icon": "power",
       "samplePeriodSeconds": 5,
       "availableAsTarget": true,
@@ -27,8 +24,10 @@
     {
       "name": "Instantaneous Cadence",
       "label": "Cadence",
-      "display": "number",
+      "display": "speedometer",
       "formatter": "intFormatter",
+      "min": 40,
+      "max": 140,
       "unit": "rpm",
       "icon": "cadence",
       "availableAsTarget": true

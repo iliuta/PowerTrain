@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../config/live_data_field_config.dart';
 import '../models/live_data_field_value.dart';
 import 'live_data_field_widget_registry.dart';
 
 /// Widget for displaying a single FTMS field.
-class LiveDataFieldWidget extends StatelessWidget {
+class LiveDataFieldWidget extends StatefulWidget {
   final LiveDataFieldConfig field;
   final LiveDataFieldValue? param;
   final dynamic target;
@@ -22,37 +24,90 @@ class LiveDataFieldWidget extends StatelessWidget {
   });
 
   @override
+  State<LiveDataFieldWidget> createState() => _LiveDataFieldWidgetState();
+}
+
+class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
+  late AudioPlayer _audioPlayer;
+  bool _wasOutOfRange = false;
+  Color? _backgroundColor;
+  Timer? _flashTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    _flashTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Color? color = defaultColor;
-    if (param == null) {
-      return Text('${field.label}: (not available)', style: const TextStyle(color: Colors.grey));
+    Color? color = widget.defaultColor;
+    if (widget.param == null) {
+      return Container(
+        color: _backgroundColor,
+        child: Text('${widget.field.label}: (not available)', style: const TextStyle(color: Colors.grey)),
+      );
     }
     
-    final value = param!.value;
-    final factor = param!.factor;
+    final value = widget.param!.value;
+    final factor = widget.param!.factor;
 
     color = _getFieldColor(value, factor, color);
 
-    final widgetBuilder = liveDataFieldWidgetRegistry[field.display];
+    // Check if out of range
+    bool isOutOfRange = false;
+    if (widget.target != null && widget.param != null) {
+      final targetValue = widget.target is num ? widget.target : num.tryParse(widget.target.toString());
+      isOutOfRange = !widget.param!.isWithinTarget(targetValue, widget.field.targetRange);
+    }
+
+    // Play sound and flash if just went out of range
+    if (isOutOfRange && !_wasOutOfRange) {
+      _audioPlayer.play(AssetSource('sounds/disappointing_beep.wav'));
+      _backgroundColor = Colors.red.withValues(alpha: 0.3);
+      _flashTimer?.cancel();
+      _flashTimer = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) setState(() => _backgroundColor = null);
+      });
+    }
+    _wasOutOfRange = isOutOfRange;
+
+    // Determine color
+    color = _getFieldColor(value, factor, color);
+
+    final widgetBuilder = liveDataFieldWidgetRegistry[widget.field.display];
     if (widgetBuilder != null) {
       // Compute target interval if target is available
-      final targetValue = target is num ? target : num.tryParse(target?.toString() ?? '');
-      final targetInterval = targetValue != null ? field.computeTargetInterval(targetValue) : null;
+      final targetValue = widget.target is num ? widget.target : num.tryParse(widget.target?.toString() ?? '');
+      final targetInterval = targetValue != null ? widget.field.computeTargetInterval(targetValue) : null;
       
-      return widgetBuilder(
-        displayField: field,
-        param: param!,
-        color: color,
-        targetInterval: targetInterval,
+      return Container(
+        color: _backgroundColor,
+        child: widgetBuilder(
+          displayField: widget.field,
+          param: widget.param!,
+          color: color,
+          targetInterval: targetInterval,
+        ),
       );
     }
-    return Text('${field.label}: (unknown display type)', style: const TextStyle(color: Colors.red));
+    return Container(
+      color: _backgroundColor,
+      child: Text('${widget.field.label}: (unknown display type)', style: const TextStyle(color: Colors.red)),
+    );
   }
 
   Color? _getFieldColor(dynamic value, num factor, Color? color) {
-    if (target != null && param != null) {
-      final targetValue = target is num ? target : num.tryParse(target.toString());
-      if (param!.isWithinTarget(targetValue, field.targetRange)) {
+    if (widget.target != null && widget.param != null) {
+      final targetValue = widget.target is num ? widget.target : num.tryParse(widget.target.toString());
+      if (widget.param!.isWithinTarget(targetValue, widget.field.targetRange)) {
         color = Colors.green[700];
       } else {
         color = Colors.red[700];

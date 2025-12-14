@@ -79,21 +79,35 @@ class SpeedometerWidget extends StatelessWidget {
               ),
           ],
         ),
-        SizedBox(
-          width: 120,
-          height: 65,
-          child: CustomPaint(
-            painter: _GaugePainter(
-              scaledValue.toDouble(), 
-              min!, 
-              max!, 
-              color,
-              targetInterval: targetInterval,
+        const SizedBox(height: 4), 
+        Stack(
+          children: [
+            SizedBox(
+              width: 120,
+              height: 65,
+              child: CustomPaint(
+                painter: _GaugePainter(
+                  scaledValue.toDouble(), 
+                  min!, 
+                  max!, 
+                  color,
+                  targetInterval: targetInterval,
+                ),
+              ),
             ),
-          ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 2),
+                  child: Text(formattedValue, style: TextStyle(fontSize: 16, color: color)),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 2), // Reduced spacing
-        Text(formattedValue, style: TextStyle(fontSize: 16, color: color)),
       ],
     );
   }

@@ -178,7 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('PowerTrain 1.2.0'),
+                  title: const Text('PowerTrain 1.2.1'),
                   subtitle: const Text('Indoor Rowing and Cycling with your FTMS compatible fitness equipment.'),
                 ),
               ],
