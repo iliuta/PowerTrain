@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
@@ -54,6 +55,9 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
     _loadConfiguration();
   }
 
@@ -302,7 +306,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             ),
             child: Text(
               _isEditMode ? 'Update' : 'Save',
@@ -316,7 +320,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         children: [
           // Session Title
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(10.0),
             child: TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -329,19 +333,19 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
           // Session Type Toggle
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         _isEditMode 
                           ? 'Session Type: ${_isDistanceBased ? 'Distance-based' : 'Time-based'}'
-                          : 'Distance-based Session',
+                          : 'Distance-based session',
                         style: TextStyle(
-                          fontSize: 16, 
+                          fontSize: 14, 
                           fontWeight: FontWeight.w500,
                           color: _isEditMode ? Colors.grey : null,
                         ),
@@ -365,9 +369,9 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           // Training Chart
           if (_expandedIntervals.isNotEmpty)
             Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16.0),
+              margin: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -375,11 +379,11 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       'Training Preview',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     TrainingSessionChart(
                       intervals: _expandedIntervals,
                       machineType: widget.machineType,
-                      height: 120,
+                      height: 70,
                       config: _config,
                       isDistanceBased: _isDistanceBased,
                     ),
@@ -399,7 +403,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     ),
                   )
                 : ReorderableListView(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(8.0),
                     onReorder: _reorderIntervals,
                     children: _intervals.entries.map((entry) {
                       final key = entry.key;
@@ -527,7 +531,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     Key? key,
   }) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -550,7 +554,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
               ));
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Duration or Distance
           if (_isDistanceBased) ...[
@@ -1070,6 +1074,12 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
   @override
   void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _titleController.dispose();
     super.dispose();
   }
