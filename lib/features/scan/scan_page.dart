@@ -8,6 +8,8 @@ import '../../core/services/devices/bt_device_manager.dart';
 import '../../core/services/devices/bt_scan_service.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart' as ph;
+import 'package:in_app_review/in_app_review.dart';
+import '../../core/services/in_app_review_service.dart';
 
 
 import 'scan_widgets.dart';
@@ -24,14 +26,17 @@ class _ScanPageState extends State<ScanPage> {
   bool get isInTest => Platform.environment['FLUTTER_TEST'] == 'true';
   final StravaService _stravaService = StravaService();
   final BluetoothScanService _bluetoothScanService = BluetoothScanService();
+  final InAppReviewService _reviewService = InAppReviewService();
   bool _isConnectingStrava = false;
   String? _stravaStatus;
+  bool _showReviewBanner = false;
   
   @override
   void initState() {
     super.initState();
     _printBluetoothState();
     _checkStravaStatus();
+    _checkAndRequestReview();
   }
   
   Future<void> _checkStravaStatus() async {
@@ -43,6 +48,34 @@ class _ScanPageState extends State<ScanPage> {
         _stravaStatus = null;
       }
     });
+  }
+  
+  Future<void> _checkAndRequestReview() async {
+    //await _reviewService.resetAll();
+    await _reviewService.incrementUsageCount();
+    if (await _reviewService.shouldShowReview()) {      
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        setState(() {
+          _showReviewBanner = true;
+        });
+      }
+    }
+  }
+
+  void _dismissReviewBanner() async {
+    await _reviewService.handleReviewDismissal();
+    setState(() {
+      _showReviewBanner = false;
+    });
+  }
+
+  void _requestReview() async {
+    final InAppReview inAppReview = InAppReview.instance;
+    await inAppReview.requestReview();
+    
+    await _reviewService.handleReviewCompleted();
+    _dismissReviewBanner();
   }
   
   Future<void> _handleStravaConnection() async {
@@ -253,6 +286,40 @@ class _ScanPageState extends State<ScanPage> {
               },
             ),
           ),
+          if (_showReviewBanner)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Container(
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Enjoying PowerTrain? Rate it on the app store!',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _requestReview,
+                      child: const Text('Rate Now'),
+                    ),
+                    IconButton(
+                      onPressed: _dismissReviewBanner,
+                      icon: const Icon(Icons.close, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           if (_stravaStatus != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
