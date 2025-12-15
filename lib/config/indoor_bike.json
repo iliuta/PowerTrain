@@ -61,6 +61,13 @@
       "unit": "m",
       "icon": "distance",
       "isCumulative": true
+    },
+    {
+      "name": "Resistance Level",
+      "label": "Resistance",
+      "display": "number",
+      "formatter": "intFormatter",
+      "icon": "resistance"
     }
   ]
 }
