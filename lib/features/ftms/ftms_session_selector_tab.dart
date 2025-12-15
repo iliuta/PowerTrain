@@ -9,6 +9,7 @@ import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
 import '../training/model/training_session.dart';
+import '../training/widgets/edit_target_fields_widget.dart';
 import 'ftms_machine_features_tab.dart';
 import 'ftms_device_data_features_tab.dart';
 
@@ -34,8 +35,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   int _freeRideDurationMinutes = 20;
   bool _isFreeRideDistanceBased = false;
   int _freeRideDistanceMeters = 5000; // 5km default
+  final Map<String, dynamic> _freeRideTargets = {};
   UserSettings? _userSettings;
-  Map<DeviceType, LiveDataDisplayConfig?>? _configs;
+  Map<DeviceType, LiveDataDisplayConfig?> _configs = {};
   bool _isLoadingSettings = true;
   bool _isDeviceAvailable = true;
   DeviceDataType? _deviceDataType;
@@ -336,6 +338,25 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   ],
                                 ),
                               const SizedBox(height: 16),
+                              const Text('Targets:', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              if (_deviceDataType != null && _userSettings != null && _configs[DeviceType.fromFtms(_deviceDataType!)] != null)
+                                EditTargetFieldsWidget(
+                                  machineType: DeviceType.fromFtms(_deviceDataType!),
+                                  userSettings: _userSettings!,
+                                  config: _configs[DeviceType.fromFtms(_deviceDataType!)]!,
+                                  targets: _freeRideTargets,
+                                  onTargetChanged: (name, value) {
+                                    setState(() {
+                                      if (value == null) {
+                                        _freeRideTargets.remove(name);
+                                      } else {
+                                        _freeRideTargets[name] = value;
+                                      }
+                                    });
+                                  },
+                                ),
+                              const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () {
                                   if (_deviceDataType != null) {
@@ -346,6 +367,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       DeviceType.fromFtms(_deviceDataType!),
                                       isDistanceBased: _isFreeRideDistanceBased,
                                       workoutValue: workoutValue,
+                                      targets: _freeRideTargets,
                                     );
                                     Navigator.of(context).push(
                                       MaterialPageRoute(

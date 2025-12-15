@@ -92,7 +92,7 @@ class TrainingSessionDefinition {
   }
 
   /// Creates a templated training session based on machine type
-  static TrainingSessionDefinition createTemplate(DeviceType machineType, {bool isDistanceBased = false, int? workoutValue}) {
+  static TrainingSessionDefinition createTemplate(DeviceType machineType, {bool isDistanceBased = false, int? workoutValue, Map<String, dynamic>? targets}) {
     final defaultWorkoutValue = isDistanceBased ? 5000 : 1200; // 5km for distance, 20min for time
     final actualWorkoutValue = workoutValue ?? defaultWorkoutValue;
     final String machineName = machineType == DeviceType.rower ? 'Rowing' : 'Cycling';
@@ -100,8 +100,8 @@ class TrainingSessionDefinition {
     final String title = 'New $machineName $sessionType Training Session';
 
     final intervals = machineType == DeviceType.indoorBike
-        ? _createBikeTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased)
-        : _createRowerTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased);
+        ? _createBikeTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets)
+        : _createRowerTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets);
 
     return TrainingSessionDefinition(
       title: title,
@@ -112,17 +112,17 @@ class TrainingSessionDefinition {
     );
   }
 
-  static List<TrainingInterval> _createBikeTemplate(int workoutValue, {bool isDistanceBased = false}) {
+  static List<TrainingInterval> _createBikeTemplate(int workoutValue, {bool isDistanceBased = false, Map<String, dynamic>? targets}) {
     final interval = UnitTrainingInterval(
       title: 'Workout',
       duration: isDistanceBased ? null : workoutValue,
       distance: isDistanceBased ? workoutValue : null,
-      targets: {},
+      targets: targets ?? {},
     );
     return [interval];
   }
 
-  static List<TrainingInterval> _createRowerTemplate(int workoutValue, {bool isDistanceBased = false}) {
+  static List<TrainingInterval> _createRowerTemplate(int workoutValue, {bool isDistanceBased = false, Map<String, dynamic>? targets}) {
     if (isDistanceBased) {
       // Distance-based rowing template
       final warmupDistance = 200; // 200m per interval
@@ -141,7 +141,7 @@ class TrainingSessionDefinition {
       final workoutInterval = UnitTrainingInterval(
         title: 'Workout',
         distance: workoutDistanceAdjusted > 0 ? workoutDistanceAdjusted : workoutValue,
-        targets: {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
+        targets: targets ?? {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
         resistanceLevel: 60,
       );
 
@@ -176,7 +176,7 @@ class TrainingSessionDefinition {
       final workoutInterval = UnitTrainingInterval(
         title: 'Workout',
         duration: workoutDurationAdjusted,
-        targets: {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
+        targets: targets ?? {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
         resistanceLevel: 60,
       );
 
