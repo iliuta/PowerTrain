@@ -438,6 +438,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                 controller: _resistanceController,
                                                 decoration: InputDecoration(
                                                   hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
+                                                  hintStyle: const TextStyle(fontSize: 12.0),
                                                   border: const OutlineInputBorder(),
                                                   errorBorder: const OutlineInputBorder(
                                                     borderSide: BorderSide(color: Colors.red),
@@ -446,7 +447,6 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                     borderSide: BorderSide(color: Colors.red, width: 2),
                                                   ),
                                                   isDense: true,
-                                                  suffixText: 'Ω',
                                                   errorText: !_isResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
                                                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                                 ),
