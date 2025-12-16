@@ -9,7 +9,7 @@ enum DeviceType {
   static DeviceType fromString(String type) {
     switch (type.toLowerCase()) {
       case 'devicedatatype.indoorbike':
-      case 'devicetype.indoorBike':
+      case 'devicetype.indoorbike':
       case 'indoorbike':
         return DeviceType.indoorBike;
       case 'devicedatatype.rower':

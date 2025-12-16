@@ -4,16 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
-import 'package:ftms/core/config/live_data_field_config.dart';
-import 'package:ftms/core/config/live_data_field_format_strategy.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import 'widgets/training_session_chart.dart';
+import 'widgets/edit_target_fields_widget.dart';
 import 'model/unit_training_interval.dart';
 import 'model/group_training_interval.dart';
 import 'model/training_interval.dart';
 import 'model/training_session.dart';
-import 'model/target_power_strategy.dart';
 import '../../features/settings/model/user_settings.dart';
 
 /// A page for creating new training sessions or editing existing ones
@@ -123,10 +121,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     });
   }
 
-  List<LiveDataFieldConfig> get _availableTargetFields {
-    if (_config == null) return [];
-    return _config!.fields.where((field) => field.availableAsTarget).toList();
-  }
+
 
   List<ExpandedUnitTrainingInterval> get _expandedIntervals {
     if (_userSettings == null) return [];
@@ -254,28 +249,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     });
   }
 
-  double _calculatePercentageFromValue(dynamic currentValue) {
-    // Use the existing target power strategy for consistent calculations
-    final strategy = TargetPowerStrategyFactory.getStrategy(widget.machineType);
-    return strategy.calculatePercentageFromValue(currentValue, _userSettings) ?? 0.0;
-  }
 
-  double _calculateValueFromPercentage(double percentage) {
-    // Use the existing target power strategy
-    final strategy = TargetPowerStrategyFactory.getStrategy(widget.machineType);
-    
-    // Create a percentage string and let the strategy resolve it
-    final percentageString = '${percentage.round()}%';
-    final resolvedValue = strategy.resolvePower(percentageString, _userSettings);
-    
-    // If the strategy resolved it to a number, use that; otherwise return 0
-    if (resolvedValue is num) {
-      return resolvedValue.toDouble();
-    }
-    
-    // Return 0 if strategy couldn't resolve the percentage
-    return 0.0;
-  }
 
 
 
@@ -667,11 +641,28 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           const SizedBox(height: 16),
           const Text('Targets:', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          ..._availableTargetFields.map((field) => _buildTargetField(
-            interval: interval,
-            field: field,
-            onUpdate: onUpdate,
-          )),
+          EditTargetFieldsWidget(
+            machineType: widget.machineType,
+            userSettings: _userSettings!,
+            config: _config!,
+            targets: interval.targets ?? {},
+            onTargetChanged: (name, value) {
+              final newTargets = Map<String, dynamic>.from(interval.targets ?? {});
+              if (value == null) {
+                newTargets.remove(name);
+              } else {
+                newTargets[name] = value;
+              }
+              onUpdate(UnitTrainingInterval(
+                title: interval.title,
+                duration: interval.duration,
+                distance: interval.distance,
+                targets: newTargets,
+                resistanceLevel: interval.resistanceLevel,
+                repeat: interval.repeat,
+              ));
+            },
+          ),
           // Resistance Level - only for non-indoor-bike machines
           if (widget.machineType != DeviceType.indoorBike) ...[
             const SizedBox(height: 16),
@@ -710,125 +701,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     );
   }
 
-  Widget _buildTargetField({
-    required UnitTrainingInterval interval,
-    required LiveDataFieldConfig field,
-    required Function(UnitTrainingInterval) onUpdate,
-  }) {
-    final currentValue = interval.targets?[field.name];
 
-    // Fields with userSetting always use percentage input
-    final bool canShowPercentage = field.userSetting != null;
-    
-    String initialPercentage = '';
-    if (canShowPercentage && currentValue != null) {
-      // For percentage-capable fields, extract percentage from current value
-      if (currentValue is String && currentValue.endsWith('%')) {
-        final percentageString = currentValue.replaceAll('%', '');
-        final percentage = double.tryParse(percentageString);
-        if (percentage != null) {
-          initialPercentage = percentage.round().toString();
-        }
-      } else {
-        // Try to convert absolute value back to percentage
-        final percentage = _calculatePercentageFromValue(currentValue);
-        if (percentage > 0) {
-          initialPercentage = percentage.round().toString();
-        }
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text('${field.label}:'),
-          ),
-          Expanded(
-            child: canShowPercentage ?
-              // Percentage input for fields that support percentage calculation
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  // Use shorter suffix text on narrow screens
-                  final suffixText = constraints.maxWidth < 150 ? '%' : '% FTP';
-                  return TextFormField(
-                    initialValue: initialPercentage,
-                    decoration: InputDecoration(
-                      hintText: '%',
-                      suffixText: suffixText,
-                      isDense: true,
-                      border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      final percentage = double.tryParse(value);
-                      final newTargets = Map<String, dynamic>.from(interval.targets ?? {});
-                      if (percentage != null) {
-                        // Store percentage string (e.g., "85%") for serialization
-                        newTargets[field.name] = '${percentage.round()}%';
-                      } else {
-                        newTargets.remove(field.name);
-                      }
-
-                      onUpdate(UnitTrainingInterval(
-                        title: interval.title,
-                        duration: interval.duration,
-                        distance: interval.distance,
-                        targets: newTargets,
-                        resistanceLevel: interval.resistanceLevel,
-                        repeat: interval.repeat,
-                      ));
-                    },
-                  );
-                },
-              ) :
-              // Absolute value input for fields that don't support percentage calculation
-              TextFormField(
-                initialValue: currentValue?.toString() ?? '',
-                decoration: InputDecoration(
-                  hintText: 'Target ${field.label.toLowerCase()}',
-                  suffixText: field.unit,
-                  isDense: true,
-                  border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  final numValue = double.tryParse(value);
-                  final newTargets = Map<String, dynamic>.from(interval.targets ?? {});
-                  if (numValue != null) {
-                    newTargets[field.name] = numValue;
-                  } else {
-                    newTargets.remove(field.name);
-                  }
-
-                  onUpdate(UnitTrainingInterval(
-                    title: interval.title,
-                    duration: interval.duration,
-                    distance: interval.distance,
-                    targets: newTargets,
-                    resistanceLevel: interval.resistanceLevel,
-                    repeat: interval.repeat,
-                  ));
-                },
-              ),
-          ),
-          // Show calculated absolute value for percentage inputs
-          if (canShowPercentage && currentValue != null)
-            SizedBox(
-              width: 120,
-              child: Text(
-                _formatAbsoluteValueFromPercentage(field, currentValue),
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildGroupIntervalEditor(String key, GroupTrainingInterval interval) {
     return Padding(
@@ -1104,34 +977,5 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     });
   }
 
-  String _formatAbsoluteValueFromPercentage(LiveDataFieldConfig field, dynamic value) {
-    if (value == null) return '';
-    
-    // Extract percentage from string (e.g., "85%" -> 85)
-    double percentage = 0;
-    if (value is String && value.endsWith('%')) {
-      final percentageString = value.replaceAll('%', '');
-      percentage = double.tryParse(percentageString) ?? 0;
-    } else if (value is num) {
-      // If it's already a number, treat it as a percentage
-      percentage = value.toDouble();
-    }
-    
-    if (percentage <= 0) return '';
-    
-    // Calculate absolute value using the strategy
-    final absoluteValue = _calculateValueFromPercentage(percentage);
-    
-    // Apply formatter if available
-    if (field.formatter != null) {
-      final strategy = LiveDataFieldFormatter.getStrategy(field.formatter!);
-      if (strategy != null) {
-        final formattedValue = strategy.format(field: field, paramValue: absoluteValue);
-        return '≈ $formattedValue';
-      }
-    }
-    
-    // Default formatting with unit
-    return '≈ ${absoluteValue.round()} ${field.unit}';
-  }
+
 }

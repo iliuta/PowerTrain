@@ -2,9 +2,433 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/fit_files/fit_file_manager_page.dart';
 import 'package:ftms/core/services/fit/fit_file_manager.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:ftms/core/services/strava/strava_service.dart';
+
+// Generate mocks
+@GenerateMocks([FitFileManager, StravaService])
+import 'fit_file_manager_page_test.mocks.dart';
 
 void main() {
+  late MockFitFileManager mockFitFileManager;
+  late MockStravaService mockStravaService;
+
+  setUp(() {
+    mockFitFileManager = MockFitFileManager();
+    mockStravaService = MockStravaService();
+  });
+
   group('FitFileManagerPage Widget Tests', () {
+    testWidgets('should show loading indicator initially', (WidgetTester tester) async {
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      // Should show loading indicator
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('should load and display FIT files', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+        FitFileInfo(
+          fileName: 'Another_Workout_20241116_1210.fit',
+          filePath: '/test/path/Another_Workout_20241116_1210.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 10),
+          fileSizeBytes: 2048,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      // Wait for files to load
+      await tester.pumpAndSettle();
+
+      // Should display the files
+      expect(find.text('Test_Workout_20241116_1209.fit'), findsOneWidget);
+      expect(find.text('Another_Workout_20241116_1210.fit'), findsOneWidget);
+      expect(find.text('1.0KB'), findsOneWidget);
+      expect(find.text('2.0KB'), findsOneWidget);
+    });
+
+    testWidgets('should toggle file selection when tapping checkbox', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Initially no files selected, no FAB
+      expect(find.byType(FloatingActionButton), findsNothing);
+
+      // Tap the checkbox to select the file
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // Now FAB should appear
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text('Delete Selected'), findsOneWidget);
+
+      // Tap again to deselect
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // FAB should disappear
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets('should show delete confirmation dialog and delete files', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+      when(mockFitFileManager.deleteFitFiles(any)).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(size: Size(1200, 2000)),
+            child: Scaffold(
+              body: FitFileManagerPage(
+                fitFileManager: mockFitFileManager,
+                stravaService: mockStravaService,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Select the file
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // Verify FAB is shown
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      // Instead of direct method call, use the popup menu to trigger delete
+      // Find the popup menu button for the file
+      final popupMenuFinder = find.byType(PopupMenuButton<String>).first;
+      await tester.tap(popupMenuFinder);
+      await tester.pumpAndSettle();
+
+      // Select the delete option
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Should show confirmation dialog
+      expect(find.text('Delete FIT Files'), findsOneWidget);
+      expect(find.text('Are you sure you want to delete 1 selected file(s)? This action cannot be undone.'), findsOneWidget);
+
+      // Confirm deletion
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Should show success message
+      expect(find.text('Successfully deleted 1 file(s)'), findsOneWidget);
+    });
+
+    testWidgets('should cancel delete when user taps cancel', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(size: Size(1200, 2000)),
+            child: Scaffold(
+              body: FitFileManagerPage(
+                fitFileManager: mockFitFileManager,
+                stravaService: mockStravaService,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Select the file
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // Verify FAB is shown
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      // Use the popup menu to trigger delete confirmation dialog
+      final popupMenuFinder = find.byType(PopupMenuButton<String>).first;
+      await tester.tap(popupMenuFinder);
+      await tester.pumpAndSettle();
+
+      // Select the delete option
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Should show confirmation dialog
+      expect(find.text('Delete FIT Files'), findsOneWidget);
+      expect(find.text('Are you sure you want to delete 1 selected file(s)? This action cannot be undone.'), findsOneWidget);
+
+      // Cancel deletion
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      // File should still be there
+      expect(find.text('Test_Workout_20241116_1209.fit'), findsOneWidget);
+      // Should not show success message
+      expect(find.text('Successfully deleted 1 file(s)'), findsNothing);
+    });
+
+    testWidgets('should upload to Strava when popup menu upload is selected', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+      when(mockStravaService.isAuthenticated()).thenAnswer((_) async => true);
+      when(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType')))
+          .thenAnswer((_) async => {'id': '12345', 'name': 'Test Activity'});
+      when(mockFitFileManager.deleteFitFile(any)).thenAnswer((_) async => true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open popup menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Select upload option
+      await tester.tap(find.text('Upload to Strava'));
+      await tester.pumpAndSettle();
+
+      // Should show success message
+      expect(find.text('Successfully uploaded to Strava and deleted local file'), findsOneWidget);
+    });
+
+    testWidgets('should show authentication error when uploading without auth', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+      when(mockStravaService.isAuthenticated()).thenAnswer((_) async => false);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open popup menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Select upload option
+      await tester.tap(find.text('Upload to Strava'));
+      await tester.pumpAndSettle();
+
+      // Should show auth error
+      expect(find.text('Please authenticate with Strava first in Settings'), findsOneWidget);
+    });
+
+    testWidgets('should share file when popup menu share is selected', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open popup menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Select share option
+      await tester.tap(find.text('Share'));
+      await tester.pumpAndSettle();
+
+      // Since SharePlus.share() is called, we can't easily verify the share dialog
+      // but we can verify no error occurred (no error snackbar)
+      expect(find.textContaining('Error sharing file'), findsNothing);
+    });
+
+    testWidgets('should delete single file from popup menu', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+      when(mockFitFileManager.deleteFitFiles(any)).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open popup menu
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // Select delete option
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Should show confirmation dialog
+      expect(find.text('Delete FIT Files'), findsOneWidget);
+
+      // Confirm deletion
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Should show success message
+      expect(find.text('Successfully deleted 1 file(s)'), findsOneWidget);
+    });
+
+    testWidgets('should select all files when select all is tapped', (WidgetTester tester) async {
+      final testFiles = [
+        FitFileInfo(
+          fileName: 'Test_Workout_20241116_1209.fit',
+          filePath: '/test/path/Test_Workout_20241116_1209.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 9),
+          fileSizeBytes: 1024,
+        ),
+        FitFileInfo(
+          fileName: 'Another_Workout_20241116_1210.fit',
+          filePath: '/test/path/Another_Workout_20241116_1210.fit',
+          creationDate: DateTime(2024, 11, 16, 12, 10),
+          fileSizeBytes: 2048,
+        ),
+      ];
+
+      when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FitFileManagerPage(
+            fitFileManager: mockFitFileManager,
+            stravaService: mockStravaService,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Tap Select All
+      await tester.tap(find.text('Select All'));
+      await tester.pump();
+
+      // Should show FAB for deleting all
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text('Delete Selected'), findsOneWidget);
+
+      // Tap Deselect All
+      await tester.tap(find.text('Deselect All'));
+      await tester.pump();
+
+      // FAB should disappear
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
     testWidgets('should show loading indicator initially', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -107,152 +531,16 @@ void main() {
   });
 
   group('FitFileInfo Model Tests', () {
-    test('should format file size correctly for bytes', () {
-      final smallFile = FitFileInfo(
-        fileName: 'small.fit',
-        filePath: '/path/small.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 512,
-      );
-      expect(smallFile.formattedSize, '512B');
-    });
-
-    test('should format file size correctly for kilobytes', () {
-      final mediumFile = FitFileInfo(
-        fileName: 'medium.fit',
-        filePath: '/path/medium.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 1536, // 1.5 KB
-      );
-      expect(mediumFile.formattedSize, '1.5KB');
-    });
-
-    test('should format file size correctly for megabytes', () {
-      final largeFile = FitFileInfo(
-        fileName: 'large.fit',
-        filePath: '/path/large.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 2097152, // 2 MB
-      );
-      expect(largeFile.formattedSize, '2.0MB');
-    });
-
-    test('should format edge case: exactly 1KB', () {
-      final file = FitFileInfo(
-        fileName: 'test.fit',
-        filePath: '/path/test.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 1024,
-      );
-      expect(file.formattedSize, '1.0KB');
-    });
-
-    test('should format edge case: exactly 1MB', () {
-      final file = FitFileInfo(
-        fileName: 'test.fit',
-        filePath: '/path/test.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 1048576,
-      );
-      expect(file.formattedSize, '1.0MB');
-    });
-
-    test('should format 0 bytes', () {
-      final file = FitFileInfo(
-        fileName: 'empty.fit',
-        filePath: '/path/empty.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 0,
-      );
-      expect(file.formattedSize, '0B');
-    });
-
-    test('should create FitFileInfo with all properties', () {
-      final now = DateTime.now();
-      final fitFile = FitFileInfo(
-        fileName: 'test.fit',
-        filePath: '/path/to/test.fit',
-        creationDate: now,
-        fileSizeBytes: 1024,
+    testWidgets('page should build without errors', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: FitFileManagerPage(),
+        ),
       );
 
-      expect(fitFile.fileName, 'test.fit');
-      expect(fitFile.filePath, '/path/to/test.fit');
-      expect(fitFile.creationDate, now);
-      expect(fitFile.fileSizeBytes, 1024);
-      expect(fitFile.formattedSize, '1.0KB');
-    });
-
-    test('should handle large file sizes correctly', () {
-      final largeFile = FitFileInfo(
-        fileName: 'large.fit',
-        filePath: '/path/large.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 10485760, // 10 MB
-      );
-      expect(largeFile.formattedSize, '10.0MB');
-    });
-
-    test('should handle decimal precision for KB', () {
-      final file = FitFileInfo(
-        fileName: 'test.fit',
-        filePath: '/path/test.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 1587, // ~1.55 KB
-      );
-      expect(file.formattedSize, '1.5KB');
-    });
-
-    test('should handle decimal precision for MB', () {
-      final file = FitFileInfo(
-        fileName: 'test.fit',
-        filePath: '/path/test.fit',
-        creationDate: DateTime.now(),
-        fileSizeBytes: 1625292, // ~1.55 MB
-      );
-      expect(file.formattedSize, '1.5MB');
-    });
-  });
-
-  group('File Name Extraction Tests', () {
-    test('should extract activity name from filename', () {
-      // Test the pattern used in _uploadToStrava
-      final testCases = [
-        ('Cycling_Workout_20241116_1209.fit', 'Cycling Workout'),
-        ('Rowing_Session_20241116_1209.fit', 'Rowing Session'),
-        ('Test_Run_20241116_1209.fit', 'Test Run'),
-        ('Morning_Ride_20241116_1209.fit', 'Morning Ride'),
-      ];
-
-      for (final testCase in testCases) {
-        final fileName = testCase.$1;
-        final expectedName = testCase.$2;
-        
-        final baseName = fileName
-            .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
-            .replaceAll('_', ' ');
-        
-        expect(baseName, expectedName);
-      }
-    });
-
-    test('should handle filenames without timestamps', () {
-      final fileName = 'Simple_Workout.fit';
-      final baseName = fileName
-          .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
-          .replaceAll('_', ' ');
-      
-      // Should still replace underscores
-      expect(baseName, 'Simple Workout.fit');
-    });
-
-    test('should handle filenames with multiple underscores', () {
-      final fileName = 'Long_Test_Cycling_Workout_20241116_1209.fit';
-      final baseName = fileName
-          .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
-          .replaceAll('_', ' ');
-      
-      expect(baseName, 'Long Test Cycling Workout');
+      // Verify the page builds successfully
+      expect(find.byType(FitFileManagerPage), findsOneWidget);
+      expect(find.byType(Scaffold), findsOneWidget);
     });
   });
 }

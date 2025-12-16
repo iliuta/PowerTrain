@@ -39,22 +39,28 @@ class MockLiveDataDisplayConfig extends _i1.Mock
   }
 
   @override
-  _i3.DeviceType get deviceType => (super.noSuchMethod(
-        Invocation.getter(#deviceType),
-        returnValue: _i3.DeviceType.indoorBike,
-      ) as _i3.DeviceType);
+  _i3.DeviceType get deviceType =>
+      (super.noSuchMethod(
+            Invocation.getter(#deviceType),
+            returnValue: _i3.DeviceType.indoorBike,
+          )
+          as _i3.DeviceType);
 
   @override
-  List<_i4.LiveDataFieldConfig> get fields => (super.noSuchMethod(
-        Invocation.getter(#fields),
-        returnValue: <_i4.LiveDataFieldConfig>[],
-      ) as List<_i4.LiveDataFieldConfig>);
+  List<_i4.LiveDataFieldConfig> get fields =>
+      (super.noSuchMethod(
+            Invocation.getter(#fields),
+            returnValue: <_i4.LiveDataFieldConfig>[],
+          )
+          as List<_i4.LiveDataFieldConfig>);
 
   @override
-  bool get availableInDeveloperModeOnly => (super.noSuchMethod(
-        Invocation.getter(#availableInDeveloperModeOnly),
-        returnValue: false,
-      ) as bool);
+  bool get availableInDeveloperModeOnly =>
+      (super.noSuchMethod(
+            Invocation.getter(#availableInDeveloperModeOnly),
+            returnValue: false,
+          )
+          as bool);
 }
 
 /// A class which mocks [TrainingSessionStorageService].
@@ -68,53 +74,44 @@ class MockTrainingSessionStorageService extends _i1.Mock
 
   @override
   Map<_i3.DeviceType, List<_i6.TrainingSessionDefinition>>
-      get githubSessionsCache => (super.noSuchMethod(
+  get githubSessionsCache =>
+      (super.noSuchMethod(
             Invocation.getter(#githubSessionsCache),
-            returnValue: <_i3.DeviceType,
-                List<_i6.TrainingSessionDefinition>>{},
-          ) as Map<_i3.DeviceType, List<_i6.TrainingSessionDefinition>>);
+            returnValue:
+                <_i3.DeviceType, List<_i6.TrainingSessionDefinition>>{},
+          )
+          as Map<_i3.DeviceType, List<_i6.TrainingSessionDefinition>>);
 
   @override
   _i7.Future<String> saveSession(_i6.TrainingSessionDefinition? session) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveSession,
-          [session],
-        ),
-        returnValue: _i7.Future<String>.value(_i8.dummyValue<String>(
-          this,
-          Invocation.method(
-            #saveSession,
-            [session],
-          ),
-        )),
-      ) as _i7.Future<String>);
+            Invocation.method(#saveSession, [session]),
+            returnValue: _i7.Future<String>.value(
+              _i8.dummyValue<String>(
+                this,
+                Invocation.method(#saveSession, [session]),
+              ),
+            ),
+          )
+          as _i7.Future<String>);
 
   @override
-  _i7.Future<bool> deleteSession(
-    String? title,
-    String? machineType,
-  ) =>
+  _i7.Future<bool> deleteSession(String? title, String? machineType) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #deleteSession,
-          [
-            title,
-            machineType,
-          ],
-        ),
-        returnValue: _i7.Future<bool>.value(false),
-      ) as _i7.Future<bool>);
+            Invocation.method(#deleteSession, [title, machineType]),
+            returnValue: _i7.Future<bool>.value(false),
+          )
+          as _i7.Future<bool>);
 
   @override
   _i7.Future<List<_i6.TrainingSessionDefinition>> loadTrainingSessions(
-          _i3.DeviceType? machineType) =>
+    _i3.DeviceType? machineType,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #loadTrainingSessions,
-          [machineType],
-        ),
-        returnValue: _i7.Future<List<_i6.TrainingSessionDefinition>>.value(
-            <_i6.TrainingSessionDefinition>[]),
-      ) as _i7.Future<List<_i6.TrainingSessionDefinition>>);
+            Invocation.method(#loadTrainingSessions, [machineType]),
+            returnValue: _i7.Future<List<_i6.TrainingSessionDefinition>>.value(
+              <_i6.TrainingSessionDefinition>[],
+            ),
+          )
+          as _i7.Future<List<_i6.TrainingSessionDefinition>>);
 }

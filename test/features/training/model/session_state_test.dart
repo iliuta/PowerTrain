@@ -59,6 +59,7 @@ class MockSessionEffectHandler implements SessionEffectHandler {
 void main() {
   group('SessionTiming', () {
     late ExpandedTrainingSessionDefinition testSession;
+    late ExpandedTrainingSessionDefinition distanceTestSession;
 
     setUp(() {
       final warmupOriginal = UnitTrainingInterval(title: 'Warmup', duration: 60, resistanceLevel: 5);
@@ -85,6 +86,36 @@ void main() {
             duration: 60,
             resistanceLevel: 3,
             originalInterval: cooldownOriginal,
+          ),
+        ],
+      );
+
+      // Distance-based session setup
+      final warmupDistanceOriginal = UnitTrainingInterval(title: 'Warmup', distance: 500, resistanceLevel: 5);
+      final workDistanceOriginal = UnitTrainingInterval(title: 'Work', distance: 2000, resistanceLevel: 10);
+      final cooldownDistanceOriginal = UnitTrainingInterval(title: 'Cooldown', distance: 500, resistanceLevel: 3);
+      distanceTestSession = ExpandedTrainingSessionDefinition(
+        title: 'Distance Test Session',
+        ftmsMachineType: DeviceType.rower,
+        isDistanceBased: true,
+        intervals: [
+          ExpandedUnitTrainingInterval(
+            title: 'Warmup',
+            distance: 500,
+            resistanceLevel: 5,
+            originalInterval: warmupDistanceOriginal,
+          ),
+          ExpandedUnitTrainingInterval(
+            title: 'Work',
+            distance: 2000,
+            resistanceLevel: 10,
+            originalInterval: workDistanceOriginal,
+          ),
+          ExpandedUnitTrainingInterval(
+            title: 'Cooldown',
+            distance: 500,
+            resistanceLevel: 3,
+            originalInterval: cooldownDistanceOriginal,
           ),
         ],
       );
@@ -133,6 +164,60 @@ void main() {
       final timing = SessionTiming.fromSession(testSession);
 
       expect(timing.remainingIntervals.length, 3);
+    });
+
+    group('distance-based sessions', () {
+      test('fromSession calculates correct total distance', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+
+        expect(timing.totalDistance, 3000); // 500 + 2000 + 500
+      });
+
+      test('fromSession calculates correct interval start distances', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+
+        expect(timing.intervalStartDistances, [0, 500, 2500]);
+      });
+
+      test('currentInterval returns first interval at start', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+
+        expect(timing.currentInterval.distance, 500);
+        expect(timing.currentInterval.title, 'Warmup');
+      });
+
+      test('remainingIntervals returns all intervals at start', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+
+        expect(timing.remainingIntervals.length, 3);
+      });
+
+      test('updateDistance advances to next interval', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+        final newTiming = timing.updateDistance(500, distanceTestSession);
+
+        expect(newTiming.currentIntervalIndex, 1);
+        expect(newTiming.currentInterval.distance, 2000);
+        expect(newTiming.currentInterval.title, 'Work');
+      });
+
+      test('updateDistance completes session when total distance reached', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+        final newTiming = timing.updateDistance(3000, distanceTestSession);
+
+        expect(newTiming.currentIntervalIndex, 2);
+        expect(newTiming.isDistanceReached, true);
+      });
+
+      test('updateDistance handles partial distance within interval', () {
+        final timing = SessionTiming.fromSession(distanceTestSession);
+        final newTiming = timing.updateDistance(250, distanceTestSession);
+
+        expect(newTiming.currentIntervalIndex, 0);
+        expect(newTiming.currentInterval.distance, 500);
+        expect(newTiming.currentInterval.title, 'Warmup');
+        expect(newTiming.elapsedDistance, 250);
+      });
     });
 
     group('tick', () {
@@ -293,6 +378,8 @@ void main() {
 
   group('TrainingSessionState', () {
     late ExpandedTrainingSessionDefinition testSession;
+    late ExpandedTrainingSessionDefinition distanceTestSession;
+    late MockSessionEffectHandler mockHandler;
 
     setUp(() {
       final warmupOriginal = UnitTrainingInterval(title: 'Warmup', duration: 60, resistanceLevel: 5);
@@ -315,6 +402,31 @@ void main() {
           ),
         ],
       );
+
+      // Distance-based session setup
+      final warmupDistanceOriginal = UnitTrainingInterval(title: 'Warmup', distance: 500, resistanceLevel: 5);
+      final workDistanceOriginal = UnitTrainingInterval(title: 'Work', distance: 2000, resistanceLevel: 10);
+      distanceTestSession = ExpandedTrainingSessionDefinition(
+        title: 'Distance Test Session',
+        ftmsMachineType: DeviceType.rower,
+        isDistanceBased: true,
+        intervals: [
+          ExpandedUnitTrainingInterval(
+            title: 'Warmup',
+            distance: 500,
+            resistanceLevel: 5,
+            originalInterval: warmupDistanceOriginal,
+          ),
+          ExpandedUnitTrainingInterval(
+            title: 'Work',
+            distance: 2000,
+            resistanceLevel: 10,
+            originalInterval: workDistanceOriginal,
+          ),
+        ],
+      );
+
+      mockHandler = MockSessionEffectHandler();
     });
 
     group('initial state', () {
@@ -747,6 +859,80 @@ void main() {
 
         // Session completed
         expect(state.status, SessionStatus.completed);
+      });
+    });
+
+    group('onDistanceUpdate', () {
+      test('ignores updates when session is not distance-based', () {
+        final state = TrainingSessionState.initial(testSession, handler: mockHandler);
+        state.onDataChanged();
+        mockHandler.reset();
+
+        state.onDistanceUpdate(100.0);
+
+        expect(state.elapsedDistance, 0);
+        expect(mockHandler.calls, isEmpty);
+      });
+
+      test('ignores updates when session is not running', () {
+        final state = TrainingSessionState.initial(distanceTestSession, handler: mockHandler);
+
+        state.onDistanceUpdate(100.0);
+
+        expect(state.elapsedDistance, 0);
+        expect(mockHandler.calls, isEmpty);
+      });
+
+      test('updates distance and advances interval', () {
+        final state = TrainingSessionState.initial(distanceTestSession, handler: mockHandler);
+        state.onDataChanged();
+
+        mockHandler.reset();
+        state.onDistanceUpdate(500.0);
+
+        expect(state.elapsedDistance, 500.0);
+        expect(state.currentIntervalIndex, 1);
+        expect(state.currentInterval.title, 'Work');
+        expect(mockHandler.intervalChangedCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
+      });
+
+      test('plays warning sound when approaching interval end', () {
+        final state = TrainingSessionState.initial(distanceTestSession, handler: mockHandler);
+        state.onDataChanged();
+
+        mockHandler.reset();
+        state.onDistanceUpdate(490.0); // 10 meters from end of 500m interval
+
+        expect(mockHandler.playWarningSoundCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
+      });
+
+      test('completes session when total distance reached', () {
+        final state = TrainingSessionState.initial(distanceTestSession, handler: mockHandler);
+        state.onDataChanged();
+
+        mockHandler.reset();
+        state.onDistanceUpdate(2500.0); // Total distance of session
+
+        expect(state.status, SessionStatus.completed);
+        expect(mockHandler.sessionCompletedCalled, true);
+        expect(mockHandler.stopTimerCalled, true);
+        expect(mockHandler.notifyListenersCalled, true);
+      });
+
+      test('handles partial distance updates within interval', () {
+        final state = TrainingSessionState.initial(distanceTestSession, handler: mockHandler);
+        state.onDataChanged();
+
+        mockHandler.reset();
+        state.onDistanceUpdate(250.0);
+
+        expect(state.elapsedDistance, 250.0);
+        expect(state.currentIntervalIndex, 0);
+        expect(state.currentInterval.title, 'Warmup');
+        expect(mockHandler.intervalChangedCalled, false);
+        expect(mockHandler.notifyListenersCalled, true);
       });
     });
   });

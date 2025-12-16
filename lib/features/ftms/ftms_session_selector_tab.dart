@@ -1,5 +1,6 @@
 // This file contains the session selector tab for FTMS devices
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/models/device_types.dart';
 import '../../core/bloc/ftms_bloc.dart';
@@ -9,8 +10,11 @@ import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
 import '../training/model/training_session.dart';
+import '../training/widgets/edit_target_fields_widget.dart';
 import 'ftms_machine_features_tab.dart';
 import 'ftms_device_data_features_tab.dart';
+import '../../core/models/supported_resistance_level_range.dart';
+import '../../core/services/ftms_service.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -34,13 +38,18 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   int _freeRideDurationMinutes = 20;
   bool _isFreeRideDistanceBased = false;
   int _freeRideDistanceMeters = 5000; // 5km default
+  final Map<String, dynamic> _freeRideTargets = {};
+  int? _freeRideResistanceLevel;
+  TextEditingController? _resistanceController;
+  bool _isResistanceLevelValid = true;
   UserSettings? _userSettings;
-  Map<DeviceType, LiveDataDisplayConfig?>? _configs;
+  Map<DeviceType, LiveDataDisplayConfig?> _configs = {};
   bool _isLoadingSettings = true;
   bool _isDeviceAvailable = true;
   DeviceDataType? _deviceDataType;
   List<TrainingSessionDefinition>? _trainingSessions;
   bool _isLoadingTrainingSessions = false;
+  SupportedResistanceLevelRange? _supportedResistanceLevelRange;
 
   int get _freeRideDistanceIncrement {
     if (_deviceDataType == null) return 1000; // default to 1km
@@ -48,11 +57,24 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     return deviceType == DeviceType.rower ? 250 : 1000; // 250m for rowers, 1km for bikes
   }
 
+  void _updateResistanceController() {
+    if (_resistanceController != null) {
+      _resistanceController!.text = _freeRideResistanceLevel?.toString() ?? '';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadUserSettings();
     _startFTMS();
+    _resistanceController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _resistanceController?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserSettings() async {
@@ -75,6 +97,27 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       _deviceDataType = ftmsMachineType;
     });
     _checkDeviceAvailability(config);
+    _loadSupportedResistanceLevelRange();
+  }
+
+  Future<void> _loadSupportedResistanceLevelRange() async {
+    if (_deviceDataType == null) return;
+
+    try {
+      final ftmsService = FTMSService(widget.ftmsDevice);
+      final range = await ftmsService.readSupportedResistanceLevelRange();
+      setState(() {
+        _supportedResistanceLevelRange = range;
+        _isResistanceLevelValid = true;
+        _updateResistanceController();
+      });
+    } catch (e) {
+      setState(() {
+        _supportedResistanceLevelRange = null;
+        _isResistanceLevelValid = true;
+        _updateResistanceController();
+      });
+    }
   }
 
   void _checkDeviceAvailability(LiveDataDisplayConfig? config) {
@@ -336,8 +379,129 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   ],
                                 ),
                               const SizedBox(height: 16),
+                              const Text('Targets:', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              if (_deviceDataType != null && _userSettings != null && _configs[DeviceType.fromFtms(_deviceDataType!)] != null)
+                                EditTargetFieldsWidget(
+                                  machineType: DeviceType.fromFtms(_deviceDataType!),
+                                  userSettings: _userSettings!,
+                                  config: _configs[DeviceType.fromFtms(_deviceDataType!)]!,
+                                  targets: _freeRideTargets,
+                                  onTargetChanged: (name, value) {
+                                    setState(() {
+                                      if (value == null) {
+                                        _freeRideTargets.remove(name);
+                                      } else {
+                                        _freeRideTargets[name] = value;
+                                      }
+                                    });
+                                  },
+                                ),
+                              const SizedBox(height: 16),
+                              // Resistance Level Field (only for rowing and indoor bike if supported)
+                              if (_deviceDataType != null && 
+                                  (DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower || 
+                                   DeviceType.fromFtms(_deviceDataType!) == DeviceType.indoorBike) && 
+                                  _supportedResistanceLevelRange != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 80,
+                                        child: Text('Resistance:'),
+                                      ),
+                                      Expanded(
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.remove),
+                                              onPressed: () {
+                                                setState(() {
+                                                  if (_freeRideResistanceLevel == null) {
+                                                    _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
+                                                  } else if (_freeRideResistanceLevel! > _supportedResistanceLevelRange!.minResistanceLevel) {
+                                                    _freeRideResistanceLevel = _freeRideResistanceLevel! - _supportedResistanceLevelRange!.minIncrement;
+                                                    if (_freeRideResistanceLevel! < _supportedResistanceLevelRange!.minResistanceLevel) {
+                                                      _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
+                                                    }
+                                                  }
+                                                  _isResistanceLevelValid = true;
+                                                  _updateResistanceController();
+                                                });
+                                              },
+                                            ),
+                                            SizedBox(
+                                              width: 100,
+                                              child: TextFormField(
+                                                controller: _resistanceController,
+                                                decoration: InputDecoration(
+                                                  hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
+                                                  hintStyle: const TextStyle(fontSize: 12.0),
+                                                  border: const OutlineInputBorder(),
+                                                  errorBorder: const OutlineInputBorder(
+                                                    borderSide: BorderSide(color: Colors.red),
+                                                  ),
+                                                  focusedErrorBorder: const OutlineInputBorder(
+                                                    borderSide: BorderSide(color: Colors.red, width: 2),
+                                                  ),
+                                                  isDense: true,
+                                                  errorText: !_isResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                ),
+                                                keyboardType: TextInputType.number,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter.digitsOnly,
+                                                  LengthLimitingTextInputFormatter(4), // Max 4 digits for resistance
+                                                ],
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    if (value.isEmpty) {
+                                                      _freeRideResistanceLevel = null;
+                                                      _isResistanceLevelValid = true;
+                                                    } else {
+                                                      final intValue = int.tryParse(value);
+                                                      if (intValue != null && 
+                                                          intValue >= _supportedResistanceLevelRange!.minResistanceLevel && 
+                                                          intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
+                                                          (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
+                                                        _freeRideResistanceLevel = intValue;
+                                                        _isResistanceLevelValid = true;
+                                                      } else {
+                                                        _isResistanceLevelValid = false;
+                                                      }
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.add),
+                                              onPressed: () {
+                                                setState(() {
+                                                  if (_freeRideResistanceLevel == null) {
+                                                    _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
+                                                  } else if (_freeRideResistanceLevel! < _supportedResistanceLevelRange!.maxResistanceLevel) {
+                                                    _freeRideResistanceLevel = _freeRideResistanceLevel! + _supportedResistanceLevelRange!.minIncrement;
+                                                    if (_freeRideResistanceLevel! > _supportedResistanceLevelRange!.maxResistanceLevel) {
+                                                      _freeRideResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
+                                                    }
+                                                  }
+                                                  _isResistanceLevelValid = true;
+                                                  _updateResistanceController();
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 16),
                               ElevatedButton(
-                                onPressed: () {
+                                onPressed: !_isResistanceLevelValid ? null : () {
                                   if (_deviceDataType != null) {
                                     final workoutValue = _isFreeRideDistanceBased
                                         ? _freeRideDistanceMeters
@@ -346,6 +510,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       DeviceType.fromFtms(_deviceDataType!),
                                       isDistanceBased: _isFreeRideDistanceBased,
                                       workoutValue: workoutValue,
+                                      targets: _freeRideTargets,
+                                      resistanceLevel: _freeRideResistanceLevel,
                                     );
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
