@@ -45,5 +45,16 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app uses Bluetooth to connect to fitness equipment (rowing machines, bike trainers)</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>This app uses Bluetooth to connect to fitness equipment (rowing machines, bike trainers)</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app uses local network to communicate with fitness equipment</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ftms._tcp</string>
+		<string>_http._tcp</string>
+	</array>
 </dict>
 </plist>
