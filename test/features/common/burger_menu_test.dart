@@ -25,7 +25,7 @@ void main() {
 
       // Should show all menu items
       expect(find.text('Training Sessions'), findsOneWidget);
-      expect(find.text('FIT Files'), findsOneWidget);
+      expect(find.text('Unsynchronized activities'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
 
       // Should show appropriate icons
@@ -50,10 +50,10 @@ void main() {
       await tester.pump();
 
       // Should show FIT Files menu item
-      expect(find.text('FIT Files'), findsOneWidget);
+      expect(find.text('Unsynchronized activities'), findsOneWidget);
       
       // Verify the menu item can be found and is tappable
-      final fitFilesItem = find.text('FIT Files');
+      final fitFilesItem = find.text('Unsynchronized activities');
       expect(fitFilesItem, findsOneWidget);
       
       // Verify it's actually a menu item (inside PopupMenuItem)

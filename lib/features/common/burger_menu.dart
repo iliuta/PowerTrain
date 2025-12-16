@@ -36,7 +36,7 @@ class BurgerMenu extends StatelessWidget {
           value: 'fit_files',
           child: ListTile(
             leading: Icon(Icons.folder),
-            title: Text('FIT Files'),
+            title: Text('Unsynchronized activities'),
             dense: true,
           ),
         ),

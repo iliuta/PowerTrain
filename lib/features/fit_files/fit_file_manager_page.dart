@@ -7,15 +7,24 @@ import '../../core/utils/logger.dart';
 
 /// Screen for managing unsynchronized FIT files
 class FitFileManagerPage extends StatefulWidget {
-  const FitFileManagerPage({super.key});
+  const FitFileManagerPage({
+    super.key,
+    FitFileManager? fitFileManager,
+    StravaService? stravaService,
+  }) : 
+    _fitFileManager = fitFileManager,
+    _stravaService = stravaService;
+
+  final FitFileManager? _fitFileManager;
+  final StravaService? _stravaService;
 
   @override
   State<FitFileManagerPage> createState() => _FitFileManagerPageState();
 }
 
 class _FitFileManagerPageState extends State<FitFileManagerPage> {
-  final FitFileManager _fitFileManager = FitFileManager();
-  final StravaService _stravaService = StravaService();
+  late final FitFileManager _fitFileManager;
+  late final StravaService _stravaService;
   
   List<FitFileInfo> _fitFiles = [];
   bool _isLoading = true;
@@ -26,6 +35,8 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
   @override
   void initState() {
     super.initState();
+    _fitFileManager = widget._fitFileManager ?? FitFileManager();
+    _stravaService = widget._stravaService ?? StravaService();
     _loadFitFiles();
   }
 

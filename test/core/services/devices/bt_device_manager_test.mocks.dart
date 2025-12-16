@@ -34,23 +34,13 @@ import 'package:mockito/src/dummies.dart' as _i7;
 
 class _FakeDeviceIdentifier_0 extends _i1.SmartFake
     implements _i2.DeviceIdentifier {
-  _FakeDeviceIdentifier_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeDeviceIdentifier_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeGuid_1 extends _i1.SmartFake implements _i2.Guid {
-  _FakeGuid_1(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeGuid_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [FlutterBluePlusFacade].
@@ -59,19 +49,23 @@ class _FakeGuid_1 extends _i1.SmartFake implements _i2.Guid {
 class MockFlutterBluePlusFacade extends _i1.Mock
     implements _i3.FlutterBluePlusFacade {
   @override
-  _i4.Stream<_i2.BluetoothAdapterState> get adapterState => (super.noSuchMethod(
-        Invocation.getter(#adapterState),
-        returnValue: _i4.Stream<_i2.BluetoothAdapterState>.empty(),
-        returnValueForMissingStub:
-            _i4.Stream<_i2.BluetoothAdapterState>.empty(),
-      ) as _i4.Stream<_i2.BluetoothAdapterState>);
+  _i4.Stream<_i2.BluetoothAdapterState> get adapterState =>
+      (super.noSuchMethod(
+            Invocation.getter(#adapterState),
+            returnValue: _i4.Stream<_i2.BluetoothAdapterState>.empty(),
+            returnValueForMissingStub:
+                _i4.Stream<_i2.BluetoothAdapterState>.empty(),
+          )
+          as _i4.Stream<_i2.BluetoothAdapterState>);
 
   @override
-  List<_i2.BluetoothDevice> get connectedDevices => (super.noSuchMethod(
-        Invocation.getter(#connectedDevices),
-        returnValue: <_i2.BluetoothDevice>[],
-        returnValueForMissingStub: <_i2.BluetoothDevice>[],
-      ) as List<_i2.BluetoothDevice>);
+  List<_i2.BluetoothDevice> get connectedDevices =>
+      (super.noSuchMethod(
+            Invocation.getter(#connectedDevices),
+            returnValue: <_i2.BluetoothDevice>[],
+            returnValueForMissingStub: <_i2.BluetoothDevice>[],
+          )
+          as List<_i2.BluetoothDevice>);
 }
 
 /// A class which mocks [FtmsFacade].
@@ -81,13 +75,11 @@ class MockFtmsFacade extends _i1.Mock implements _i5.FtmsFacade {
   @override
   _i4.Future<bool> isBluetoothDeviceFTMSDevice(_i2.BluetoothDevice? device) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #isBluetoothDeviceFTMSDevice,
-          [device],
-        ),
-        returnValue: _i4.Future<bool>.value(false),
-        returnValueForMissingStub: _i4.Future<bool>.value(false),
-      ) as _i4.Future<bool>);
+            Invocation.method(#isBluetoothDeviceFTMSDevice, [device]),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
 }
 
 /// A class which mocks [BTDevice].
@@ -95,73 +87,79 @@ class MockFtmsFacade extends _i1.Mock implements _i5.FtmsFacade {
 /// See the documentation for Mockito's code generation for more information.
 class MockBTDevice extends _i1.Mock implements _i6.BTDevice {
   @override
-  String get deviceTypeName => (super.noSuchMethod(
-        Invocation.getter(#deviceTypeName),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#deviceTypeName),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#deviceTypeName),
-        ),
-      ) as String);
+  String get deviceTypeName =>
+      (super.noSuchMethod(
+            Invocation.getter(#deviceTypeName),
+            returnValue: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#deviceTypeName),
+            ),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#deviceTypeName),
+            ),
+          )
+          as String);
 
   @override
-  int get listPriority => (super.noSuchMethod(
-        Invocation.getter(#listPriority),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
+  int get listPriority =>
+      (super.noSuchMethod(
+            Invocation.getter(#listPriority),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
 
   @override
-  _i2.BluetoothConnectionState get connectionState => (super.noSuchMethod(
-        Invocation.getter(#connectionState),
-        returnValue: _i2.BluetoothConnectionState.disconnected,
-        returnValueForMissingStub: _i2.BluetoothConnectionState.disconnected,
-      ) as _i2.BluetoothConnectionState);
+  _i2.BluetoothConnectionState get connectionState =>
+      (super.noSuchMethod(
+            Invocation.getter(#connectionState),
+            returnValue: _i2.BluetoothConnectionState.disconnected,
+            returnValueForMissingStub:
+                _i2.BluetoothConnectionState.disconnected,
+          )
+          as _i2.BluetoothConnectionState);
 
   @override
-  String get name => (super.noSuchMethod(
-        Invocation.getter(#name),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#name),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#name),
-        ),
-      ) as String);
+  String get name =>
+      (super.noSuchMethod(
+            Invocation.getter(#name),
+            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#name),
+            ),
+          )
+          as String);
 
   @override
-  String get id => (super.noSuchMethod(
-        Invocation.getter(#id),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#id),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#id),
-        ),
-      ) as String);
+  String get id =>
+      (super.noSuchMethod(
+            Invocation.getter(#id),
+            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#id)),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#id),
+            ),
+          )
+          as String);
 
   @override
-  bool get isConnected => (super.noSuchMethod(
-        Invocation.getter(#isConnected),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isConnected =>
+      (super.noSuchMethod(
+            Invocation.getter(#isConnected),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  _i8.Widget? getDeviceIcon(_i8.BuildContext? context) => (super.noSuchMethod(
-        Invocation.method(
-          #getDeviceIcon,
-          [context],
-        ),
-        returnValueForMissingStub: null,
-      ) as _i8.Widget?);
+  _i8.Widget? getDeviceIcon(_i8.BuildContext? context) =>
+      (super.noSuchMethod(
+            Invocation.method(#getDeviceIcon, [context]),
+            returnValueForMissingStub: null,
+          )
+          as _i8.Widget?);
 
   @override
   bool isDeviceOfThisType(
@@ -169,88 +167,68 @@ class MockBTDevice extends _i1.Mock implements _i6.BTDevice {
     List<_i2.ScanResult>? scanResults,
   ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #isDeviceOfThisType,
-          [
-            device,
-            scanResults,
-          ],
-        ),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+            Invocation.method(#isDeviceOfThisType, [device, scanResults]),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
   _i4.Future<bool> connectToDevice(_i2.BluetoothDevice? device) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #connectToDevice,
-          [device],
-        ),
-        returnValue: _i4.Future<bool>.value(false),
-        returnValueForMissingStub: _i4.Future<bool>.value(false),
-      ) as _i4.Future<bool>);
+            Invocation.method(#connectToDevice, [device]),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
 
   @override
   _i4.Future<void> disconnectFromDevice(_i2.BluetoothDevice? device) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #disconnectFromDevice,
-          [device],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#disconnectFromDevice, [device]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<bool> performConnection(_i2.BluetoothDevice? device) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #performConnection,
-          [device],
-        ),
-        returnValue: _i4.Future<bool>.value(false),
-        returnValueForMissingStub: _i4.Future<bool>.value(false),
-      ) as _i4.Future<bool>);
+            Invocation.method(#performConnection, [device]),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
 
   @override
   _i4.Future<void> performDisconnection(_i2.BluetoothDevice? device) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #performDisconnection,
-          [device],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#performDisconnection, [device]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   void setDeviceManager(_i9.SupportedBTDeviceManager? deviceManager) =>
       super.noSuchMethod(
-        Invocation.method(
-          #setDeviceManager,
-          [deviceManager],
-        ),
+        Invocation.method(#setDeviceManager, [deviceManager]),
         returnValueForMissingStub: null,
       );
 
   @override
   void updateDeviceType(_i10.DeviceType? deviceType) => super.noSuchMethod(
-        Invocation.method(
-          #updateDeviceType,
-          [deviceType],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#updateDeviceType, [deviceType]),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  _i8.Widget? getDevicePage(_i2.BluetoothDevice? device) => (super.noSuchMethod(
-        Invocation.method(
-          #getDevicePage,
-          [device],
-        ),
-        returnValueForMissingStub: null,
-      ) as _i8.Widget?);
+  _i8.Widget? getDevicePage(_i2.BluetoothDevice? device) =>
+      (super.noSuchMethod(
+            Invocation.method(#getDevicePage, [device]),
+            returnValueForMissingStub: null,
+          )
+          as _i8.Widget?);
 
   @override
   List<_i8.Widget> getConnectedActions(
@@ -258,16 +236,11 @@ class MockBTDevice extends _i1.Mock implements _i6.BTDevice {
     _i8.BuildContext? context,
   ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getConnectedActions,
-          [
-            device,
-            context,
-          ],
-        ),
-        returnValue: <_i8.Widget>[],
-        returnValueForMissingStub: <_i8.Widget>[],
-      ) as List<_i8.Widget>);
+            Invocation.method(#getConnectedActions, [device, context]),
+            returnValue: <_i8.Widget>[],
+            returnValueForMissingStub: <_i8.Widget>[],
+          )
+          as List<_i8.Widget>);
 }
 
 /// A class which mocks [BluetoothDevice].
@@ -275,197 +248,224 @@ class MockBTDevice extends _i1.Mock implements _i6.BTDevice {
 /// See the documentation for Mockito's code generation for more information.
 class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
   @override
-  _i2.DeviceIdentifier get remoteId => (super.noSuchMethod(
-        Invocation.getter(#remoteId),
-        returnValue: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#remoteId),
-        ),
-        returnValueForMissingStub: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#remoteId),
-        ),
-      ) as _i2.DeviceIdentifier);
+  _i2.DeviceIdentifier get remoteId =>
+      (super.noSuchMethod(
+            Invocation.getter(#remoteId),
+            returnValue: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#remoteId),
+            ),
+            returnValueForMissingStub: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#remoteId),
+            ),
+          )
+          as _i2.DeviceIdentifier);
 
   @override
-  String get platformName => (super.noSuchMethod(
-        Invocation.getter(#platformName),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#platformName),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#platformName),
-        ),
-      ) as String);
+  String get platformName =>
+      (super.noSuchMethod(
+            Invocation.getter(#platformName),
+            returnValue: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#platformName),
+            ),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#platformName),
+            ),
+          )
+          as String);
 
   @override
-  String get advName => (super.noSuchMethod(
-        Invocation.getter(#advName),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#advName),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#advName),
-        ),
-      ) as String);
+  String get advName =>
+      (super.noSuchMethod(
+            Invocation.getter(#advName),
+            returnValue: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#advName),
+            ),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#advName),
+            ),
+          )
+          as String);
 
   @override
-  List<_i2.BluetoothService> get servicesList => (super.noSuchMethod(
-        Invocation.getter(#servicesList),
-        returnValue: <_i2.BluetoothService>[],
-        returnValueForMissingStub: <_i2.BluetoothService>[],
-      ) as List<_i2.BluetoothService>);
+  List<_i2.BluetoothService> get servicesList =>
+      (super.noSuchMethod(
+            Invocation.getter(#servicesList),
+            returnValue: <_i2.BluetoothService>[],
+            returnValueForMissingStub: <_i2.BluetoothService>[],
+          )
+          as List<_i2.BluetoothService>);
 
   @override
-  bool get isAutoConnectEnabled => (super.noSuchMethod(
-        Invocation.getter(#isAutoConnectEnabled),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isAutoConnectEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#isAutoConnectEnabled),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  bool get isConnected => (super.noSuchMethod(
-        Invocation.getter(#isConnected),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isConnected =>
+      (super.noSuchMethod(
+            Invocation.getter(#isConnected),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  bool get isDisconnected => (super.noSuchMethod(
-        Invocation.getter(#isDisconnected),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isDisconnected =>
+      (super.noSuchMethod(
+            Invocation.getter(#isDisconnected),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
   _i4.Stream<_i2.BluetoothConnectionState> get connectionState =>
       (super.noSuchMethod(
-        Invocation.getter(#connectionState),
-        returnValue: _i4.Stream<_i2.BluetoothConnectionState>.empty(),
-        returnValueForMissingStub:
-            _i4.Stream<_i2.BluetoothConnectionState>.empty(),
-      ) as _i4.Stream<_i2.BluetoothConnectionState>);
+            Invocation.getter(#connectionState),
+            returnValue: _i4.Stream<_i2.BluetoothConnectionState>.empty(),
+            returnValueForMissingStub:
+                _i4.Stream<_i2.BluetoothConnectionState>.empty(),
+          )
+          as _i4.Stream<_i2.BluetoothConnectionState>);
 
   @override
-  int get mtuNow => (super.noSuchMethod(
-        Invocation.getter(#mtuNow),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
+  int get mtuNow =>
+      (super.noSuchMethod(
+            Invocation.getter(#mtuNow),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
 
   @override
-  _i4.Stream<int> get mtu => (super.noSuchMethod(
-        Invocation.getter(#mtu),
-        returnValue: _i4.Stream<int>.empty(),
-        returnValueForMissingStub: _i4.Stream<int>.empty(),
-      ) as _i4.Stream<int>);
+  _i4.Stream<int> get mtu =>
+      (super.noSuchMethod(
+            Invocation.getter(#mtu),
+            returnValue: _i4.Stream<int>.empty(),
+            returnValueForMissingStub: _i4.Stream<int>.empty(),
+          )
+          as _i4.Stream<int>);
 
   @override
-  _i4.Stream<void> get onServicesReset => (super.noSuchMethod(
-        Invocation.getter(#onServicesReset),
-        returnValue: _i4.Stream<void>.empty(),
-        returnValueForMissingStub: _i4.Stream<void>.empty(),
-      ) as _i4.Stream<void>);
+  _i4.Stream<void> get onServicesReset =>
+      (super.noSuchMethod(
+            Invocation.getter(#onServicesReset),
+            returnValue: _i4.Stream<void>.empty(),
+            returnValueForMissingStub: _i4.Stream<void>.empty(),
+          )
+          as _i4.Stream<void>);
 
   @override
-  _i4.Stream<_i2.BluetoothBondState> get bondState => (super.noSuchMethod(
-        Invocation.getter(#bondState),
-        returnValue: _i4.Stream<_i2.BluetoothBondState>.empty(),
-        returnValueForMissingStub: _i4.Stream<_i2.BluetoothBondState>.empty(),
-      ) as _i4.Stream<_i2.BluetoothBondState>);
+  _i4.Stream<_i2.BluetoothBondState> get bondState =>
+      (super.noSuchMethod(
+            Invocation.getter(#bondState),
+            returnValue: _i4.Stream<_i2.BluetoothBondState>.empty(),
+            returnValueForMissingStub:
+                _i4.Stream<_i2.BluetoothBondState>.empty(),
+          )
+          as _i4.Stream<_i2.BluetoothBondState>);
 
   @override
-  _i4.Stream<bool> get isDiscoveringServices => (super.noSuchMethod(
-        Invocation.getter(#isDiscoveringServices),
-        returnValue: _i4.Stream<bool>.empty(),
-        returnValueForMissingStub: _i4.Stream<bool>.empty(),
-      ) as _i4.Stream<bool>);
+  _i4.Stream<bool> get isDiscoveringServices =>
+      (super.noSuchMethod(
+            Invocation.getter(#isDiscoveringServices),
+            returnValue: _i4.Stream<bool>.empty(),
+            returnValueForMissingStub: _i4.Stream<bool>.empty(),
+          )
+          as _i4.Stream<bool>);
 
   @override
-  _i2.DeviceIdentifier get id => (super.noSuchMethod(
-        Invocation.getter(#id),
-        returnValue: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#id),
-        ),
-        returnValueForMissingStub: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#id),
-        ),
-      ) as _i2.DeviceIdentifier);
+  _i2.DeviceIdentifier get id =>
+      (super.noSuchMethod(
+            Invocation.getter(#id),
+            returnValue: _FakeDeviceIdentifier_0(this, Invocation.getter(#id)),
+            returnValueForMissingStub: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#id),
+            ),
+          )
+          as _i2.DeviceIdentifier);
 
   @override
-  String get localName => (super.noSuchMethod(
-        Invocation.getter(#localName),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#localName),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#localName),
-        ),
-      ) as String);
+  String get localName =>
+      (super.noSuchMethod(
+            Invocation.getter(#localName),
+            returnValue: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#localName),
+            ),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#localName),
+            ),
+          )
+          as String);
 
   @override
-  String get name => (super.noSuchMethod(
-        Invocation.getter(#name),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#name),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.getter(#name),
-        ),
-      ) as String);
+  String get name =>
+      (super.noSuchMethod(
+            Invocation.getter(#name),
+            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.getter(#name),
+            ),
+          )
+          as String);
 
   @override
-  _i4.Stream<_i2.BluetoothConnectionState> get state => (super.noSuchMethod(
-        Invocation.getter(#state),
-        returnValue: _i4.Stream<_i2.BluetoothConnectionState>.empty(),
-        returnValueForMissingStub:
-            _i4.Stream<_i2.BluetoothConnectionState>.empty(),
-      ) as _i4.Stream<_i2.BluetoothConnectionState>);
+  _i4.Stream<_i2.BluetoothConnectionState> get state =>
+      (super.noSuchMethod(
+            Invocation.getter(#state),
+            returnValue: _i4.Stream<_i2.BluetoothConnectionState>.empty(),
+            returnValueForMissingStub:
+                _i4.Stream<_i2.BluetoothConnectionState>.empty(),
+          )
+          as _i4.Stream<_i2.BluetoothConnectionState>);
 
   @override
   _i4.Stream<List<_i2.BluetoothService>> get servicesStream =>
       (super.noSuchMethod(
-        Invocation.getter(#servicesStream),
-        returnValue: _i4.Stream<List<_i2.BluetoothService>>.empty(),
-        returnValueForMissingStub:
-            _i4.Stream<List<_i2.BluetoothService>>.empty(),
-      ) as _i4.Stream<List<_i2.BluetoothService>>);
+            Invocation.getter(#servicesStream),
+            returnValue: _i4.Stream<List<_i2.BluetoothService>>.empty(),
+            returnValueForMissingStub:
+                _i4.Stream<List<_i2.BluetoothService>>.empty(),
+          )
+          as _i4.Stream<List<_i2.BluetoothService>>);
 
   @override
-  _i4.Stream<List<_i2.BluetoothService>> get services => (super.noSuchMethod(
-        Invocation.getter(#services),
-        returnValue: _i4.Stream<List<_i2.BluetoothService>>.empty(),
-        returnValueForMissingStub:
-            _i4.Stream<List<_i2.BluetoothService>>.empty(),
-      ) as _i4.Stream<List<_i2.BluetoothService>>);
+  _i4.Stream<List<_i2.BluetoothService>> get services =>
+      (super.noSuchMethod(
+            Invocation.getter(#services),
+            returnValue: _i4.Stream<List<_i2.BluetoothService>>.empty(),
+            returnValueForMissingStub:
+                _i4.Stream<List<_i2.BluetoothService>>.empty(),
+          )
+          as _i4.Stream<List<_i2.BluetoothService>>);
 
   @override
   void cancelWhenDisconnected(
     _i4.StreamSubscription<dynamic>? subscription, {
     bool? next = false,
     bool? delayed = false,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #cancelWhenDisconnected,
-          [subscription],
-          {
-            #next: next,
-            #delayed: delayed,
-          },
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #cancelWhenDisconnected,
+      [subscription],
+      {#next: next, #delayed: delayed},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   _i4.Future<void> connect({
@@ -475,19 +475,16 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
     bool? autoConnect = false,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #connect,
-          [],
-          {
-            #license: license,
-            #timeout: timeout,
-            #mtu: mtu,
-            #autoConnect: autoConnect,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#connect, [], {
+              #license: license,
+              #timeout: timeout,
+              #mtu: mtu,
+              #autoConnect: autoConnect,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> disconnect({
@@ -496,18 +493,15 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
     int? androidDelay = 2000,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #disconnect,
-          [],
-          {
-            #timeout: timeout,
-            #queue: queue,
-            #androidDelay: androidDelay,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#disconnect, [], {
+              #timeout: timeout,
+              #queue: queue,
+              #androidDelay: androidDelay,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<List<_i2.BluetoothService>> discoverServices({
@@ -515,30 +509,28 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
     int? timeout = 15,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #discoverServices,
-          [],
-          {
-            #subscribeToServicesChanged: subscribeToServicesChanged,
-            #timeout: timeout,
-          },
-        ),
-        returnValue: _i4.Future<List<_i2.BluetoothService>>.value(
-            <_i2.BluetoothService>[]),
-        returnValueForMissingStub: _i4.Future<List<_i2.BluetoothService>>.value(
-            <_i2.BluetoothService>[]),
-      ) as _i4.Future<List<_i2.BluetoothService>>);
+            Invocation.method(#discoverServices, [], {
+              #subscribeToServicesChanged: subscribeToServicesChanged,
+              #timeout: timeout,
+            }),
+            returnValue: _i4.Future<List<_i2.BluetoothService>>.value(
+              <_i2.BluetoothService>[],
+            ),
+            returnValueForMissingStub:
+                _i4.Future<List<_i2.BluetoothService>>.value(
+                  <_i2.BluetoothService>[],
+                ),
+          )
+          as _i4.Future<List<_i2.BluetoothService>>);
 
   @override
-  _i4.Future<int> readRssi({int? timeout = 15}) => (super.noSuchMethod(
-        Invocation.method(
-          #readRssi,
-          [],
-          {#timeout: timeout},
-        ),
-        returnValue: _i4.Future<int>.value(0),
-        returnValueForMissingStub: _i4.Future<int>.value(0),
-      ) as _i4.Future<int>);
+  _i4.Future<int> readRssi({int? timeout = 15}) =>
+      (super.noSuchMethod(
+            Invocation.method(#readRssi, [], {#timeout: timeout}),
+            returnValue: _i4.Future<int>.value(0),
+            returnValueForMissingStub: _i4.Future<int>.value(0),
+          )
+          as _i4.Future<int>);
 
   @override
   _i4.Future<int> requestMtu(
@@ -547,30 +539,28 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
     int? timeout = 15,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #requestMtu,
-          [desiredMtu],
-          {
-            #predelay: predelay,
-            #timeout: timeout,
-          },
-        ),
-        returnValue: _i4.Future<int>.value(0),
-        returnValueForMissingStub: _i4.Future<int>.value(0),
-      ) as _i4.Future<int>);
+            Invocation.method(
+              #requestMtu,
+              [desiredMtu],
+              {#predelay: predelay, #timeout: timeout},
+            ),
+            returnValue: _i4.Future<int>.value(0),
+            returnValueForMissingStub: _i4.Future<int>.value(0),
+          )
+          as _i4.Future<int>);
 
   @override
-  _i4.Future<void> requestConnectionPriority(
-          {required _i2.ConnectionPriority? connectionPriorityRequest}) =>
+  _i4.Future<void> requestConnectionPriority({
+    required _i2.ConnectionPriority? connectionPriorityRequest,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #requestConnectionPriority,
-          [],
-          {#connectionPriorityRequest: connectionPriorityRequest},
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#requestConnectionPriority, [], {
+              #connectionPriorityRequest: connectionPriorityRequest,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> setPreferredPhy({
@@ -579,67 +569,51 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
     required _i2.PhyCoding? option,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setPreferredPhy,
-          [],
-          {
-            #txPhy: txPhy,
-            #rxPhy: rxPhy,
-            #option: option,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#setPreferredPhy, [], {
+              #txPhy: txPhy,
+              #rxPhy: rxPhy,
+              #option: option,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> createBond({
-    int? timeout = 90,
-    _i11.Uint8List? pin,
-  }) =>
+  _i4.Future<void> createBond({int? timeout = 90, _i11.Uint8List? pin}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #createBond,
-          [],
-          {
-            #timeout: timeout,
-            #pin: pin,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#createBond, [], {#timeout: timeout, #pin: pin}),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> removeBond({int? timeout = 30}) => (super.noSuchMethod(
-        Invocation.method(
-          #removeBond,
-          [],
-          {#timeout: timeout},
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> removeBond({int? timeout = 30}) =>
+      (super.noSuchMethod(
+            Invocation.method(#removeBond, [], {#timeout: timeout}),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> clearGattCache() => (super.noSuchMethod(
-        Invocation.method(
-          #clearGattCache,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> clearGattCache() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearGattCache, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> pair() => (super.noSuchMethod(
-        Invocation.method(
-          #pair,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> pair() =>
+      (super.noSuchMethod(
+            Invocation.method(#pair, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }
 
 /// A class which mocks [BluetoothService].
@@ -647,82 +621,92 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
 /// See the documentation for Mockito's code generation for more information.
 class MockBluetoothService extends _i1.Mock implements _i2.BluetoothService {
   @override
-  _i2.DeviceIdentifier get remoteId => (super.noSuchMethod(
-        Invocation.getter(#remoteId),
-        returnValue: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#remoteId),
-        ),
-        returnValueForMissingStub: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#remoteId),
-        ),
-      ) as _i2.DeviceIdentifier);
+  _i2.DeviceIdentifier get remoteId =>
+      (super.noSuchMethod(
+            Invocation.getter(#remoteId),
+            returnValue: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#remoteId),
+            ),
+            returnValueForMissingStub: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#remoteId),
+            ),
+          )
+          as _i2.DeviceIdentifier);
 
   @override
-  _i2.Guid get serviceUuid => (super.noSuchMethod(
-        Invocation.getter(#serviceUuid),
-        returnValue: _FakeGuid_1(
-          this,
-          Invocation.getter(#serviceUuid),
-        ),
-        returnValueForMissingStub: _FakeGuid_1(
-          this,
-          Invocation.getter(#serviceUuid),
-        ),
-      ) as _i2.Guid);
+  _i2.Guid get serviceUuid =>
+      (super.noSuchMethod(
+            Invocation.getter(#serviceUuid),
+            returnValue: _FakeGuid_1(this, Invocation.getter(#serviceUuid)),
+            returnValueForMissingStub: _FakeGuid_1(
+              this,
+              Invocation.getter(#serviceUuid),
+            ),
+          )
+          as _i2.Guid);
 
   @override
-  List<_i2.BluetoothCharacteristic> get characteristics => (super.noSuchMethod(
-        Invocation.getter(#characteristics),
-        returnValue: <_i2.BluetoothCharacteristic>[],
-        returnValueForMissingStub: <_i2.BluetoothCharacteristic>[],
-      ) as List<_i2.BluetoothCharacteristic>);
+  List<_i2.BluetoothCharacteristic> get characteristics =>
+      (super.noSuchMethod(
+            Invocation.getter(#characteristics),
+            returnValue: <_i2.BluetoothCharacteristic>[],
+            returnValueForMissingStub: <_i2.BluetoothCharacteristic>[],
+          )
+          as List<_i2.BluetoothCharacteristic>);
 
   @override
-  _i2.Guid get uuid => (super.noSuchMethod(
-        Invocation.getter(#uuid),
-        returnValue: _FakeGuid_1(
-          this,
-          Invocation.getter(#uuid),
-        ),
-        returnValueForMissingStub: _FakeGuid_1(
-          this,
-          Invocation.getter(#uuid),
-        ),
-      ) as _i2.Guid);
+  _i2.Guid get uuid =>
+      (super.noSuchMethod(
+            Invocation.getter(#uuid),
+            returnValue: _FakeGuid_1(this, Invocation.getter(#uuid)),
+            returnValueForMissingStub: _FakeGuid_1(
+              this,
+              Invocation.getter(#uuid),
+            ),
+          )
+          as _i2.Guid);
 
   @override
-  bool get isPrimary => (super.noSuchMethod(
-        Invocation.getter(#isPrimary),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isPrimary =>
+      (super.noSuchMethod(
+            Invocation.getter(#isPrimary),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  bool get isSecondary => (super.noSuchMethod(
-        Invocation.getter(#isSecondary),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isSecondary =>
+      (super.noSuchMethod(
+            Invocation.getter(#isSecondary),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  List<_i2.BluetoothService> get includedServices => (super.noSuchMethod(
-        Invocation.getter(#includedServices),
-        returnValue: <_i2.BluetoothService>[],
-        returnValueForMissingStub: <_i2.BluetoothService>[],
-      ) as List<_i2.BluetoothService>);
+  List<_i2.BluetoothService> get includedServices =>
+      (super.noSuchMethod(
+            Invocation.getter(#includedServices),
+            returnValue: <_i2.BluetoothService>[],
+            returnValueForMissingStub: <_i2.BluetoothService>[],
+          )
+          as List<_i2.BluetoothService>);
 
   @override
-  _i2.DeviceIdentifier get deviceId => (super.noSuchMethod(
-        Invocation.getter(#deviceId),
-        returnValue: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#deviceId),
-        ),
-        returnValueForMissingStub: _FakeDeviceIdentifier_0(
-          this,
-          Invocation.getter(#deviceId),
-        ),
-      ) as _i2.DeviceIdentifier);
+  _i2.DeviceIdentifier get deviceId =>
+      (super.noSuchMethod(
+            Invocation.getter(#deviceId),
+            returnValue: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#deviceId),
+            ),
+            returnValueForMissingStub: _FakeDeviceIdentifier_0(
+              this,
+              Invocation.getter(#deviceId),
+            ),
+          )
+          as _i2.DeviceIdentifier);
 }

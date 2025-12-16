@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'model/user_settings.dart';
 import '../../core/utils/logger.dart';
 import 'widgets/settings_section.dart';
@@ -17,11 +18,24 @@ class _SettingsPageState extends State<SettingsPage> {
   UserSettings? _userSettings;
   bool _isLoading = true;
   bool _hasChanges = false;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      setState(() {
+        _appVersion = packageInfo.version;
+      });
+    } catch (e) {
+      logger.e('Failed to load app version: $e');
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -178,7 +192,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('PowerTrain 1.2.1'),
+                  title: Text(_appVersion.isNotEmpty ? 'PowerTrain $_appVersion' : 'PowerTrain'),
                   subtitle: const Text('Indoor Rowing and Cycling with your FTMS compatible fitness equipment.'),
                 ),
               ],
