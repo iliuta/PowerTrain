@@ -4,6 +4,7 @@ import '../../../core/config/live_data_display_config.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../training_session_controller.dart';
 import '../managers/session_snackbar_manager.dart';
+import 'route_map_background.dart';
 import 'training_session_app_bar.dart';
 import 'training_session_body.dart';
 
@@ -96,19 +97,29 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
           _showStopConfirmationDialog();
         }
       },
-      child: Scaffold(
-        appBar: TrainingSessionAppBar(
-          session: widget.session,
-          controller: widget.controller,
-          onBackPressed: _onBackPressed,
-          onStopPressed: _onStopPressed,
-        ),
-        body: TrainingSessionBody(
-          session: widget.session,
-          controller: widget.controller,
-          config: widget.config,
-          ftmsDevice: widget.ftmsDevice,
-        ),
+      child: Stack(
+        children: [
+          // Main scaffold with all UI
+          Scaffold(
+            appBar: TrainingSessionAppBar(
+              session: widget.session,
+              controller: widget.controller,
+              onBackPressed: _onBackPressed,
+              onStopPressed: _onStopPressed,
+            ),
+            body: TrainingSessionBody(
+              session: widget.session,
+              controller: widget.controller,
+              config: widget.config,
+              ftmsDevice: widget.ftmsDevice,
+            ),
+          ),
+          // Route map overlay (non-interactive)
+          RouteMapBackground(
+            gpxTracker: widget.controller.gpxRouteTracker,
+            child: const SizedBox.expand(),
+          ),
+        ],
       ),
     );
   }

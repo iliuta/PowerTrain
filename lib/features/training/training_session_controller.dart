@@ -44,6 +44,10 @@ class TrainingSessionController extends ChangeNotifier
   // Session state machine
   late TrainingSessionState _state;
 
+  // GPX route tracker for map display
+  GpxRouteTracker? _gpxRouteTracker;
+  final String? _gpxFilePath;
+
   // For detecting activity to trigger session auto-start and auto-pause
   double? _lastActivityValue;
   int _inactivityCounter = 0;
@@ -64,7 +68,9 @@ class TrainingSessionController extends ChangeNotifier
     TrainingDataRecorder? dataRecorder,
     bool enableFitFileGeneration = true, // Allow disabling for tests
     AudioPlayer? audioPlayer, // Allow injection for testing
-  }) : _enableFitFileGeneration = enableFitFileGeneration {
+    String? gpxFilePath, // Optional GPX file path for route display
+  })  : _enableFitFileGeneration = enableFitFileGeneration,
+        _gpxFilePath = gpxFilePath {
     _ftmsService = ftmsService ?? FTMSService(ftmsDevice);
     _stravaService = stravaService ?? StravaService();
 
@@ -114,6 +120,9 @@ class TrainingSessionController extends ChangeNotifier
   /// e.g., controller.state.isPaused, controller.state.elapsedSeconds, etc.
   TrainingSessionState get state => _state;
 
+  /// GPX route tracker for displaying current position on map
+  GpxRouteTracker? get gpxRouteTracker => _gpxRouteTracker;
+
   // ============ Initialization ============
 
   void _initFTMS() {
@@ -151,26 +160,29 @@ class TrainingSessionController extends ChangeNotifier
       }
 
       // Initialize GPX route tracker for GPS coordinates
-      GpxRouteTracker? gpxTracker;
-      try {
-        gpxTracker = GpxRouteTracker();
-        await gpxTracker.loadFromAsset('lib/config/map.gpx');
-        if (!gpxTracker.isLoaded) {
-          gpxTracker = null;
-          debugPrint('GPX route not available - recording without GPS coordinates');
-        } else {
-          debugPrint('GPX route loaded: ${gpxTracker.pointCount} points, ${gpxTracker.totalRouteDistance.toStringAsFixed(0)}m');
+      if (_gpxFilePath != null) {
+        try {
+          _gpxRouteTracker = GpxRouteTracker();
+          await _gpxRouteTracker!.loadFromAsset(_gpxFilePath);
+          if (!_gpxRouteTracker!.isLoaded) {
+            _gpxRouteTracker = null;
+            debugPrint('GPX route not available - recording without GPS coordinates');
+          } else {
+            debugPrint('GPX route loaded from $_gpxFilePath: ${_gpxRouteTracker!.pointCount} points, ${_gpxRouteTracker!.totalRouteDistance.toStringAsFixed(0)}m');
+          }
+        } catch (e) {
+          debugPrint('Failed to load GPX route from $_gpxFilePath: $e');
+          _gpxRouteTracker = null;
         }
-      } catch (e) {
-        debugPrint('Failed to load GPX route: $e');
-        gpxTracker = null;
+      } else {
+        debugPrint('No GPX file path provided - skipping route display');
       }
 
       // Initialize data recorder only if not injected for testing
       _dataRecorder ??= TrainingDataRecorder(
         sessionName: session.title,
         deviceType: deviceType,
-        gpxRouteTracker: gpxTracker,
+        gpxRouteTracker: _gpxRouteTracker,
       );
       _dataRecorder!.startRecording();
     } catch (e) {

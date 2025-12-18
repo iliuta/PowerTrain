@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/config/live_data_display_config.dart';
+import '../../core/services/gpx/gpx_file_provider.dart';
 import '../settings/model/user_settings.dart';
 import 'model/training_session.dart';
 import 'model/expanded_training_session_definition.dart';
@@ -26,6 +27,7 @@ class TrainingSessionProgressScreen extends StatefulWidget {
 
 class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressScreen> {
   UserSettings? _userSettings;
+  String? _gpxFilePath;
 
   @override
   void initState() {
@@ -36,12 +38,20 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
       DeviceOrientation.landscapeRight,
     ]);
     _loadUserSettings();
+    _loadGpxFile();
   }
 
   Future<void> _loadUserSettings() async {
     final settings = await UserSettings.loadDefault();
     setState(() {
       _userSettings = settings;
+    });
+  }
+
+  Future<void> _loadGpxFile() async {
+    final gpxFile = await GpxFileProvider.getRandomGpxFile();
+    setState(() {
+      _gpxFilePath = gpxFile;
     });
   }
 
@@ -88,6 +98,7 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
               create: (_) => TrainingSessionController(
                 session: expandedSession,
                 ftmsDevice: widget.ftmsDevice,
+                gpxFilePath: _gpxFilePath,
               ),
               child: Consumer<TrainingSessionController>(
                 builder: (context, controller, _) {
