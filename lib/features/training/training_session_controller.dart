@@ -120,6 +120,7 @@ class TrainingSessionController extends ChangeNotifier
     // Request control after a short delay, then start session and set initial resistance if needed
     Future.delayed(const Duration(seconds: 2), () async {
       if (_disposed) return;
+      await resetWithControl();
       await startOrResumeWithControl();
       final firstInterval =
           _state.intervals.isNotEmpty ? _state.intervals[0] : null;
@@ -284,15 +285,22 @@ class TrainingSessionController extends ChangeNotifier
 
   /// Detects if the user has started exercising based on the activity value.
   /// Detection logic varies by parameter type:
-  /// - Pace: value decreases when moving faster (rowing)
-  /// - Speed/Power: value increases when moving/pedaling
+  /// - Pace: value is in active range (non-zero and below threshold)
+  /// - Speed/Power: value increases above threshold
   bool _detectActivity(double currentValue, String paramName) {
     final lastValue = _lastActivityValue!;
 
-    // Pace-based detection (rower): pace decreases when rowing faster
+    // Pace-based detection (rower): pace is in active range
+    // When inactive, pace is 0 or very high (>300 = 5:00/500m)
+    // When active, pace is between ~60 (1:00/500m) and 300 (5:00/500m)
     if (paramName == 'Instantaneous Pace') {
-      return currentValue < lastValue * 0.9 ||
-             (lastValue > 200 && currentValue < 200);
+      final wasInactive = lastValue == 0 || lastValue > 300;
+      final isNowActive = currentValue > 0 && currentValue <= 300;
+      // Activity detected if:
+      // - Was inactive (0 or high pace) and now in active range, OR
+      // - Pace decreased significantly while already in active range
+      return (wasInactive && isNowActive) ||
+             (lastValue > 0 && currentValue < lastValue * 0.9 && isNowActive);
     }
 
     // Speed-based detection: speed increases above threshold
@@ -315,7 +323,7 @@ class TrainingSessionController extends ChangeNotifier
     // Pace-based detection (rower): very high pace value means not rowing
     // When stopped, pace typically goes to max value (e.g., 999 or very high)
     if (paramName == 'Instantaneous Pace') {
-      return currentValue > 300; // More than 5:00/500m is considered stopped
+      return currentValue == 0 || currentValue > 300; // More than 5:00/500m is considered stopped
     }
 
     // Speed-based detection: speed below threshold means not moving
@@ -577,7 +585,7 @@ class TrainingSessionController extends ChangeNotifier
 
       logger.i('Attempting automatic Strava upload...');
 
-      final activityName = '${session.title} - FTMS Training';
+      final activityName = '${session.title} - PowerTrain';
       final deviceType = session.ftmsMachineType;
       final activityType = StravaActivityTypes.fromFtmsMachineType(deviceType);
 
@@ -605,6 +613,13 @@ class TrainingSessionController extends ChangeNotifier
   }
 
   // ============ Public session control methods ============
+
+  /// Manually start the session (when user doesn't want to wait for auto-start)
+  void startSession() {
+    if (_state.status != SessionStatus.created) return;
+    logger.i('▶️ Manually starting training session');
+    _state.onDataChanged(); // This transitions from created to running
+  }
 
   /// Pause the current training session
   void pauseSession() {
