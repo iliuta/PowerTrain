@@ -634,11 +634,11 @@ void main() {
         expect(controller.state.isRunning, false);
 
         // Start session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -802,6 +802,9 @@ void main() {
           enableFitFileGeneration: false,
         );
 
+        // Wait for any pending data from previous tests to be processed
+        await Future.delayed(const Duration(milliseconds: 100));
+
         // Initial state
         expect(controller.state.currentIntervalIndex, 0);
         expect(controller.state.elapsedSeconds, 0);
@@ -880,11 +883,11 @@ void main() {
         expect(controller.state.hasEnded, false);
 
         // Start the session with FTMS data changes
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -935,11 +938,11 @@ void main() {
         );
 
         // Start the session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1000,12 +1003,12 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Start the session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        // Start the session (rower uses Instantaneous Pace as primary activity indicator)
+        final initialData = MockDeviceData([MockParameter('Instantaneous Pace', 240)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Pace', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1062,11 +1065,11 @@ void main() {
         );
 
         // Start the session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 

@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/session_state.dart';
@@ -42,8 +43,8 @@ class TrainingSessionController extends ChangeNotifier
   // Session state machine
   late TrainingSessionState _state;
 
-  // For detecting data changes
-  List<dynamic>? _lastFtmsParams;
+  // For detecting activity to trigger session auto-start
+  double? _lastActivityValue;
 
   // Strava upload tracking
   String? lastGeneratedFitFile;
@@ -161,9 +162,9 @@ class TrainingSessionController extends ChangeNotifier
   void _onFtmsData(DeviceData? data) {
     if (data == null) return;
 
+    final paramValueMap = _dataProcessor.processDeviceData(data);
     // For distance-based sessions, update distance from FTMS data
     if (session.isDistanceBased && _state.isRunning) {
-      final paramValueMap = _dataProcessor.processDeviceData(data);
       final totalDistanceParam = paramValueMap['Total Distance'];
       if (totalDistanceParam != null) {
         final distance = totalDistanceParam.getScaledValue().toDouble();
@@ -173,7 +174,7 @@ class TrainingSessionController extends ChangeNotifier
 
     // Record data if session is running
     if (_state.isRunning) {
-      _recordDataPoint(data);
+      _recordDataPoint(paramValueMap);
       return;
     }
 
@@ -182,34 +183,96 @@ class TrainingSessionController extends ChangeNotifier
       return;
     }
 
-    // Check if data changed to trigger session start
-    final params = data.getDeviceDataParameterValues();
-    if (_lastFtmsParams != null && _state.status == SessionStatus.created) {
-      bool changed = false;
-      for (int i = 0; i < params.length; i++) {
-        final prev = _lastFtmsParams![i];
-        final curr = params[i].value;
-        if (prev != curr) {
-          changed = true;
-          break;
-        }
-      }
-      if (changed) {
-        _state.onDataChanged();
-        _recordDataPoint(data);
-      }
-    }
-    // Store current values for next comparison
-    _lastFtmsParams = params.map((p) => p.value).toList();
+    // Check if user started exercising to trigger session auto-start
+    _checkForActivityStart(paramValueMap);
   }
 
-  void _recordDataPoint(DeviceData data) {
+  /// Returns the list of parameter names used to detect user activity, in priority order.
+  /// Primary indicators are device-specific, with "Instantaneous Power" as universal fallback.
+  /// - Rower: "Instantaneous Pace" (seconds/500m - lower is faster)
+  /// - Indoor Bike: "Instantaneous Speed" (km/h - higher is faster)
+  List<String> get _activityIndicatorParamNames {
+    return switch (session.ftmsMachineType) {
+      DeviceType.rower => ['Instantaneous Pace', 'Instantaneous Power'],
+      DeviceType.indoorBike => ['Instantaneous Speed', 'Instantaneous Power'],
+    };
+  }
+
+  /// Checks if the user has started exercising by monitoring meaningful activity data.
+  /// This uses processed data (speed/pace/power) rather than raw params to reliably detect
+  /// when the user starts moving on both rowers and indoor bikes.
+  void _checkForActivityStart(Map<String, LiveDataFieldValue> data) {
+    if (_state.status != SessionStatus.created) return;
+
+    // Find the first available activity indicator
+    LiveDataFieldValue? activityParam;
+    String? usedParamName;
+    for (final paramName in _activityIndicatorParamNames) {
+      if (data.containsKey(paramName)) {
+        activityParam = data[paramName];
+        usedParamName = paramName;
+        break;
+      }
+    }
+
+    if (activityParam == null) {
+      debugPrint('⚠️ No activity indicator found in data. Tried: $_activityIndicatorParamNames');
+      return;
+    }
+
+    final currentValue = activityParam.getScaledValue().toDouble();
+
+    // First reading: store the baseline
+    if (_lastActivityValue == null) {
+      _lastActivityValue = currentValue;
+      return;
+    }
+
+    // Detect if user started exercising based on the parameter type
+    final bool activityDetected = _detectActivity(currentValue, usedParamName!);
+
+    if (activityDetected) {
+      debugPrint('🚀 Activity detected! Starting session ($usedParamName: $currentValue)');
+      _state.onDataChanged();
+      _recordDataPoint(data);
+    }
+
+    _lastActivityValue = currentValue;
+  }
+
+  /// Detects if the user has started exercising based on the activity value.
+  /// Detection logic varies by parameter type:
+  /// - Pace: value decreases when moving faster (rowing)
+  /// - Speed/Power: value increases when moving/pedaling
+  bool _detectActivity(double currentValue, String paramName) {
+    final lastValue = _lastActivityValue!;
+
+    // Pace-based detection (rower): pace decreases when rowing faster
+    if (paramName == 'Instantaneous Pace') {
+      return currentValue < lastValue * 0.9 ||
+             (lastValue > 200 && currentValue < 200);
+    }
+
+    // Speed-based detection: speed increases above threshold
+    if (paramName == 'Instantaneous Speed') {
+      return currentValue > 5.0 && currentValue > lastValue;
+    }
+
+    // Power-based detection (universal fallback): power increases above threshold
+    if (paramName == 'Instantaneous Power') {
+      return currentValue > 10.0 && currentValue > lastValue;
+    }
+
+    // Unknown parameter - use simple change detection
+    return currentValue != lastValue;
+  }
+
+  void _recordDataPoint(Map<String, LiveDataFieldValue> data) {
     if (_dataRecorder == null || !_isRecordingConfigured || !_state.isRunning) {
       return;
     }
     try {
-      final paramValueMap = _dataProcessor.processDeviceData(data);
-      _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
+      _dataRecorder!.recordDataPoint(ftmsParams: data);
     } catch (e) {
       debugPrint('Failed to record data point: $e');
     }
