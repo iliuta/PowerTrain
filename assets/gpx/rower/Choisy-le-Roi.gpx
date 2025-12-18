@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx creator="StravaGPX" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+ <metadata>
+  <name>Choisy le Roi</name>
+  <author>
+   <name>Adrian P.</name>
+   <link href="https://www.strava.com/athletes/1321007"/>
+  </author>
+  <copyright author="OpenStreetMap contributors">
+   <year>2020</year>
+   <license>https://www.openstreetmap.org/copyright</license>
+  </copyright>
+  <link href="https://www.strava.com/routes/3436839020124985500"/>
+ </metadata>
+ <trk>
+  <name>Choisy le Roi</name>
+  <link href="https://www.strava.com/routes/3436839020124985500"/>
+  <type>Rowing</type>
+  <trkseg>
+   <trkpt lat="48.77004" lon="2.42767">
+    <ele>27.290000000000003</ele>
+   </trkpt>
+   <trkpt lat="48.769194546450656" lon="2.4278218437431245">
+    <ele>28.080000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.76834909270185" lon="2.427973682373054">
+    <ele>28.07</ele>
+   </trkpt>
+   <trkpt lat="48.76750363875359" lon="2.428125515890113">
+    <ele>28.1</ele>
+   </trkpt>
+   <trkpt lat="48.766658184605916" lon="2.4282773442946235">
+    <ele>28.080000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.765812730258794" lon="2.428429167586908">
+    <ele>28.1</ele>
+   </trkpt>
+   <trkpt lat="48.76496727571228" lon="2.428580985767291">
+    <ele>28.1</ele>
+   </trkpt>
+   <trkpt lat="48.76412182096635" lon="2.4287327988360947">
+    <ele>28.1</ele>
+   </trkpt>
+   <trkpt lat="48.76327636602105" lon="2.4288846067936425">
+    <ele>28.17</ele>
+   </trkpt>
+   <trkpt lat="48.76243091087639" lon="2.4290364096402577">
+    <ele>28.090000000000003</ele>
+   </trkpt>
+   <trkpt lat="48.76158545553236" lon="2.4291882073762627">
+    <ele>28.3</ele>
+   </trkpt>
+   <trkpt lat="48.760740000000006" lon="2.4293400000000003">
+    <ele>28.16</ele>
+   </trkpt>
+   <trkpt lat="48.75992400009288" lon="2.4294200052002264">
+    <ele>28.16</ele>
+   </trkpt>
+   <trkpt lat="48.75910800013038" lon="2.4295000078010562">
+    <ele>28.080000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.758292000112505" lon="2.4295800078026493">
+    <ele>28.1</ele>
+   </trkpt>
+   <trkpt lat="48.757476000039254" lon="2.429660005205164">
+    <ele>28.090000000000003</ele>
+   </trkpt>
+   <trkpt lat="48.756660000000004" lon="2.4297400000000002">
+    <ele>28.090000000000003</ele>
+   </trkpt>
+   <trkpt lat="48.755810000000004" lon="2.42966">
+    <ele>27.650000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.75578" lon="2.42931">
+    <ele>27.83</ele>
+   </trkpt>
+   <trkpt lat="48.756550000000004" lon="2.4289400000000003">
+    <ele>29.67</ele>
+   </trkpt>
+   <trkpt lat="48.757372500211225" lon="2.428810006386947">
+    <ele>27.91</ele>
+   </trkpt>
+   <trkpt lat="48.75819500027625" lon="2.428680008516956">
+    <ele>28.020000000000003</ele>
+   </trkpt>
+   <trkpt lat="48.759017500195064" lon="2.4285500063897656">
+    <ele>27.580000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.759840000000004" lon="2.42842">
+    <ele>28.21</ele>
+   </trkpt>
+   <trkpt lat="48.7607333337173" lon="2.4283155704160797">
+    <ele>28.1</ele>
+   </trkpt>
+   <trkpt lat="48.76162666734026" lon="2.428211137117419">
+    <ele>28.080000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.76252000086885" lon="2.428106700103768">
+    <ele>28.16</ele>
+   </trkpt>
+   <trkpt lat="48.76341333430308" lon="2.428002259374879">
+    <ele>27.76</ele>
+   </trkpt>
+   <trkpt lat="48.764306667642934" lon="2.4278978149305033">
+    <ele>28.220000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.765200000888406" lon="2.4277933667703926">
+    <ele>29.370000000000005</ele>
+   </trkpt>
+   <trkpt lat="48.766093334039496" lon="2.427688914894298">
+    <ele>27.720000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.76698666709619" lon="2.4275844593019698">
+    <ele>28.690000000000005</ele>
+   </trkpt>
+   <trkpt lat="48.767880000000005" lon="2.42748">
+    <ele>27.6</ele>
+   </trkpt>
+   <trkpt lat="48.768513333389244" lon="2.4274233347602507">
+    <ele>27.66</ele>
+   </trkpt>
+   <trkpt lat="48.7691466667507" lon="2.4273666680910897">
+    <ele>27.970000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.769780000000004" lon="2.4273100000000003">
+    <ele>27.69</ele>
+   </trkpt>
+   <trkpt lat="48.770050000000005" lon="2.42734">
+    <ele>27.580000000000002</ele>
+   </trkpt>
+   <trkpt lat="48.77004" lon="2.42767">
+    <ele>27.290000000000003</ele>
+   </trkpt>
+  </trkseg>
+ </trk>
+</gpx>

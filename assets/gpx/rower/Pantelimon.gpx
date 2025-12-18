@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx creator="StravaGPX" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+ <metadata>
+  <name>Pantelimon</name>
+  <author>
+   <name>Adrian P.</name>
+   <link href="https://www.strava.com/athletes/1321007"/>
+  </author>
+  <copyright author="OpenStreetMap contributors">
+   <year>2020</year>
+   <license>https://www.openstreetmap.org/copyright</license>
+  </copyright>
+  <link href="https://www.strava.com/routes/3436838998217537986"/>
+ </metadata>
+ <trk>
+  <name>Pantelimon</name>
+  <link href="https://www.strava.com/routes/3436838998217537986"/>
+  <type>Rowing</type>
+  <trkseg>
+   <trkpt lat="44.438500000000005" lon="26.205440000000003">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43870500190931" lon="26.206094997822355">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43891000000001" lon="26.206750000000003">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43895000184862" lon="26.20739999964373">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.438990000000004" lon="26.208050000000004">
+    <ele>60.010000000000005</ele>
+   </trkpt>
+   <trkpt lat="44.43862000226245" lon="26.20876000437451">
+    <ele>59.89000000000001</ele>
+   </trkpt>
+   <trkpt lat="44.438250000000004" lon="26.209470000000003">
+    <ele>59.97</ele>
+   </trkpt>
+   <trkpt lat="44.43818562499422" lon="26.210698025739244">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.438121236830796" lon="26.21192604877229">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.4380568355098" lon="26.213154069098607">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43799242103128" lon="26.214382086717652">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43792799339531" lon="26.21561010162888">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43786355260193" lon="26.216838113831756">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.4377990986512" lon="26.21806612332573">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437734631543215" lon="26.21929413011027">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437670151277985" lon="26.22052213418483">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437605657855585" lon="26.221750135548877">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437541151276086" lon="26.222978134201856">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43747663153954" lon="26.22420613014324">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437412098646014" lon="26.225434123372477">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43734755259553" lon="26.226662113889034">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43728299338819" lon="26.227890101692363">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43721842102403" lon="26.22911808678193">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437153835503125" lon="26.230346069157196">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43708923682551" lon="26.231574048817613">
+    <ele>59.940000000000005</ele>
+   </trkpt>
+   <trkpt lat="44.43702462499126" lon="26.232802025762634">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.436960000000006" lon="26.23403">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.4369" lon="26.2344">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.436690000000006" lon="26.234350000000003">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.436460000000004" lon="26.234350000000003">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43632" lon="26.234040000000004">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43639012950925" lon="26.232790028467985">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.436460245386336" lon="26.231540053935955">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43653034763119" lon="26.23029007640449">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43660043624378" lon="26.22904009587416">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43667051122397" lon="26.22779011234553">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43674057257177" lon="26.226540125819174">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43681062028708" lon="26.22529013629566">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43688065436983" lon="26.22404014377555">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.436950674819954" lon="26.222790148259413">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437020681637414" lon="26.221540149747828">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.4370906748221" lon="26.22029014824135">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43716065437398" lon="26.21904014374056">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437230620292965" lon="26.217790136246027">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437300572579" lon="26.216540125758307">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43737051123203" lon="26.215290112277977">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437440436251975" lon="26.214040095805604">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43751034763878" lon="26.21279007634176">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437580245392354" lon="26.211540053887013">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43765012951266" lon="26.21029002844194">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.437720000000006" lon="26.20904">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43793000142942" lon="26.20846500210194">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.438140000000004" lon="26.207890000000003">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43845" lon="26.207150000000002">
+    <ele>60.0</ele>
+   </trkpt>
+   <trkpt lat="44.43836500213752" lon="26.206444998719448">
+    <ele>59.99</ele>
+   </trkpt>
+   <trkpt lat="44.438280000000006" lon="26.205740000000002">
+    <ele>59.99</ele>
+   </trkpt>
+   <trkpt lat="44.438500000000005" lon="26.205440000000003">
+    <ele>60.0</ele>
+   </trkpt>
+  </trkseg>
+ </trk>
+</gpx>
