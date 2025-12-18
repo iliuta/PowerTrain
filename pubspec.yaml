@@ -58,6 +58,8 @@ dependencies:
   package_info_plus: ^9.0.0
   meta: ^1.16.0
   webview_flutter: ^4.8.0
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.0
 
 dev_dependencies:
   flutter_test:
