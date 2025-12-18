@@ -49,7 +49,7 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
   }
 
   Future<void> _loadGpxFile() async {
-    final gpxFile = await GpxFileProvider.getRandomGpxFile();
+    final gpxFile = await GpxFileProvider.getRandomGpxFile(widget.session.ftmsMachineType);
     setState(() {
       _gpxFilePath = gpxFile;
     });

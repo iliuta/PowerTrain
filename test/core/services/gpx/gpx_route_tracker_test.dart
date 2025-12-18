@@ -507,7 +507,7 @@ void main() {
         final tracker = GpxRouteTracker();
 
         // This tests the actual asset loading
-        await tracker.loadFromAsset('assets/gpx/vaires.gpx');
+        await tracker.loadFromAsset('assets/gpx/rower/vaires.gpx');
 
         expect(tracker.isLoaded, true);
         expect(tracker.pointCount, greaterThan(0));

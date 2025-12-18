@@ -92,6 +92,8 @@ flutter:
     - lib/config/
     - assets/sounds/
     - assets/gpx/
+    - assets/gpx/rower/
+    - assets/gpx/indoorBike/
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
