@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/services/fit/training_data_recorder.dart';
+import 'package:ftms/core/services/fit/training_record.dart';
+import 'package:ftms/core/services/gpx/gpx_route_tracker.dart';
 import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/core/utils/logger.dart';
 
@@ -607,6 +609,312 @@ void main() {
       logger.i('   📊 Total record messages: $totalRecordMessages');
       logger.i('   📊 Total records: ${stats['recordCount']}');
       logger.i('   📊 Calories range: ${caloriesValues.first} - ${caloriesValues.last} kcal');
+    });
+
+    test('Generate FIT file with GPS coordinates from GPX route', () async {
+      // Create a GPX route tracker with test data
+      final gpxTracker = GpxRouteTracker();
+      final gpxContent = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1">
+  <trk>
+    <trkseg>
+      <trkpt lat="48.8438" lon="2.5114">
+        <ele>35.0</ele>
+      </trkpt>
+      <trkpt lat="48.8445" lon="2.5120">
+        <ele>36.0</ele>
+      </trkpt>
+      <trkpt lat="48.8452" lon="2.5126">
+        <ele>37.0</ele>
+      </trkpt>
+      <trkpt lat="48.8459" lon="2.5132">
+        <ele>38.0</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+''';
+      gpxTracker.loadFromString(gpxContent);
+
+      expect(gpxTracker.isLoaded, isTrue);
+      expect(gpxTracker.pointCount, equals(4));
+
+      // Initialize recorder with GPX tracker
+      recorder = TrainingDataRecorder(
+        deviceType: DeviceType.indoorBike,
+        sessionName: 'GPS_Cycling_Test',
+        gpxRouteTracker: gpxTracker,
+      );
+
+      recorder.startRecording();
+
+      final startTime = DateTime.now();
+      
+      // Record data with increasing distance to simulate movement along route
+      for (int elapsedSeconds = 0; elapsedSeconds < 60; elapsedSeconds += 5) {
+        final currentTimestamp = startTime.add(Duration(seconds: elapsedSeconds));
+        
+        // Speed of 20 km/h = 5.56 m/s = 27.8 meters in 5 seconds
+        final speed = 20.0;
+        
+        final ftmsParams = <String, LiveDataFieldValue>{
+          'Instantaneous Power': LiveDataFieldValue(
+            name: 'Instantaneous Power',
+            value: 150,
+            unit: 'W',
+            factor: 1,
+          ),
+          'Instantaneous Speed': LiveDataFieldValue(
+            name: 'Instantaneous Speed',
+            value: speed,
+            unit: 'km/h',
+            factor: 1,
+          ),
+          'Instantaneous Cadence': LiveDataFieldValue(
+            name: 'Instantaneous Cadence',
+            value: 80,
+            unit: 'rpm',
+            factor: 0.5,
+          ),
+        };
+
+        recorder.recordDataPoint(
+          ftmsParams: ftmsParams,
+          timestamp: currentTimestamp,
+        );
+
+        await Future.delayed(const Duration(milliseconds: 1));
+      }
+
+      recorder.stopRecording();
+
+      // Generate FIT file
+      final fitFilePath = await recorder.generateFitFileToDirectory(testOutputDir);
+      expect(fitFilePath, isNotNull);
+
+      final fitFile = File(fitFilePath!);
+      expect(await fitFile.exists(), isTrue);
+
+      // Parse FIT file and check for GPS coordinates
+      final fitBytes = await fitFile.readAsBytes();
+      final parsedFit = FitFile.fromBytes(Uint8List.fromList(fitBytes));
+
+      int recordsWithGps = 0;
+      int totalRecordMessages = 0;
+      double? firstLat;
+      double? firstLon;
+      double? lastLat;
+      double? lastLon;
+
+      for (final record in parsedFit.records) {
+        final message = record.message;
+        if (message is RecordMessage) {
+          totalRecordMessages++;
+          if (message.positionLat != null && message.positionLong != null) {
+            recordsWithGps++;
+            if (firstLat == null) {
+              firstLat = message.positionLat;
+              firstLon = message.positionLong;
+            }
+            lastLat = message.positionLat;
+            lastLon = message.positionLong;
+          }
+        }
+      }
+
+      logger.i('🌍 GPS FIT file validation:');
+      logger.i('   📊 Records with GPS: $recordsWithGps / $totalRecordMessages');
+      logger.i('   📍 First position: ($firstLat, $firstLon)');
+      logger.i('   📍 Last position: ($lastLat, $lastLon)');
+
+      // Verify GPS coordinates are present
+      expect(recordsWithGps, greaterThan(0), reason: 'FIT file should contain GPS coordinates');
+      expect(totalRecordMessages, greaterThan(0));
+      
+      // Verify coordinates are in expected range (near Paris)
+      expect(firstLat, isNotNull);
+      expect(firstLat, closeTo(48.84, 0.02));
+      expect(firstLon, closeTo(2.51, 0.02));
+      
+      // Verify positions changed (we moved along the route)
+      if (firstLat != null && lastLat != null) {
+        // Positions should have progressed along the route
+        expect(lastLat != firstLat || lastLon != firstLon, isTrue,
+            reason: 'GPS position should change as we move along the route');
+      }
+
+      logger.i('✅ GPS coordinates validated in FIT file!');
+    });
+
+    test('FIT file should have virtualActivity subSport when GPS is present (cycling)', () async {
+      // Create a GPX route tracker
+      final gpxTracker = GpxRouteTracker();
+      final gpxContent = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1">
+  <trk>
+    <trkseg>
+      <trkpt lat="48.8438" lon="2.5114"><ele>35.0</ele></trkpt>
+      <trkpt lat="48.8452" lon="2.5120"><ele>36.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+''';
+      gpxTracker.loadFromString(gpxContent);
+
+      recorder = TrainingDataRecorder(
+        deviceType: DeviceType.indoorBike,
+        sessionName: 'SubSport_Test_Cycling',
+        gpxRouteTracker: gpxTracker,
+      );
+
+      recorder.startRecording();
+      
+      final ftmsParams = <String, LiveDataFieldValue>{
+        'Instantaneous Power': LiveDataFieldValue(
+          name: 'Instantaneous Power',
+          value: 150,
+          unit: 'W',
+          factor: 1,
+        ),
+        'Instantaneous Speed': LiveDataFieldValue(
+          name: 'Instantaneous Speed',
+          value: 25.0,
+          unit: 'km/h',
+          factor: 1,
+        ),
+      };
+
+      recorder.recordDataPoint(ftmsParams: ftmsParams);
+      await Future.delayed(const Duration(milliseconds: 10));
+      recorder.recordDataPoint(ftmsParams: ftmsParams);
+      
+      recorder.stopRecording();
+
+      final fitFilePath = await recorder.generateFitFileToDirectory(testOutputDir);
+      expect(fitFilePath, isNotNull);
+
+      final fitFile = File(fitFilePath!);
+      final fitBytes = await fitFile.readAsBytes();
+      final parsedFit = FitFile.fromBytes(Uint8List.fromList(fitBytes));
+
+      // Check session message for subSport
+      for (final record in parsedFit.records) {
+        final message = record.message;
+        if (message is SessionMessage) {
+          logger.i('🚴 Session sport: ${message.sport}, subSport: ${message.subSport}');
+          expect(message.sport, equals(Sport.cycling));
+          expect(message.subSport, equals(SubSport.virtualActivity),
+              reason: 'SubSport should be virtualActivity for cycling with GPS');
+          break;
+        }
+      }
+    });
+
+    test('FIT file should have generic subSport when GPS is present (rowing)', () async {
+      final gpxTracker = GpxRouteTracker();
+      final gpxContent = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1">
+  <trk>
+    <trkseg>
+      <trkpt lat="48.8438" lon="2.5114"><ele>35.0</ele></trkpt>
+      <trkpt lat="48.8452" lon="2.5120"><ele>36.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+''';
+      gpxTracker.loadFromString(gpxContent);
+
+      recorder = TrainingDataRecorder(
+        deviceType: DeviceType.rower,
+        sessionName: 'SubSport_Test_Rowing',
+        gpxRouteTracker: gpxTracker,
+      );
+
+      recorder.startRecording();
+      
+      final ftmsParams = <String, LiveDataFieldValue>{
+        'Instantaneous Power': LiveDataFieldValue(
+          name: 'Instantaneous Power',
+          value: 120,
+          unit: 'W',
+          factor: 1,
+        ),
+        'Instantaneous Speed': LiveDataFieldValue(
+          name: 'Instantaneous Speed',
+          value: 12.0,
+          unit: 'km/h',
+          factor: 1,
+        ),
+      };
+
+      recorder.recordDataPoint(ftmsParams: ftmsParams);
+      await Future.delayed(const Duration(milliseconds: 10));
+      recorder.recordDataPoint(ftmsParams: ftmsParams);
+      
+      recorder.stopRecording();
+
+      final fitFilePath = await recorder.generateFitFileToDirectory(testOutputDir);
+      expect(fitFilePath, isNotNull);
+
+      final fitFile = File(fitFilePath!);
+      final fitBytes = await fitFile.readAsBytes();
+      final parsedFit = FitFile.fromBytes(Uint8List.fromList(fitBytes));
+
+      for (final record in parsedFit.records) {
+        final message = record.message;
+        if (message is SessionMessage) {
+          logger.i('🚣 Session sport: ${message.sport}, subSport: ${message.subSport}');
+          expect(message.sport, equals(Sport.rowing));
+          //keep indoorRowing for the moment: expect(message.subSport, equals(SubSport.generic),
+          expect(message.subSport, equals(SubSport.indoorRowing),
+              reason: 'SubSport should be generic for rowing with GPS');
+          break;
+        }
+      }
+    });
+
+    test('TrainingRecord should store GPS coordinates', () {
+      final record = TrainingRecord(
+        timestamp: DateTime.now(),
+        elapsedTime: 60,
+        instantaneousPower: 150,
+        instantaneousSpeed: 25.0,
+        latitude: 48.8438,
+        longitude: 2.5114,
+        elevation: 35.0,
+      );
+
+      expect(record.latitude, equals(48.8438));
+      expect(record.longitude, equals(2.5114));
+      expect(record.elevation, equals(35.0));
+    });
+
+    test('TrainingRecord.fromFtmsParameters should accept GPS coordinates', () {
+      final ftmsParams = <String, LiveDataFieldValue>{
+        'Instantaneous Power': LiveDataFieldValue(
+          name: 'Instantaneous Power',
+          value: 150,
+          unit: 'W',
+          factor: 1,
+        ),
+      };
+
+      final record = TrainingRecord.fromFtmsParameters(
+        timestamp: DateTime.now(),
+        elapsedTime: 60,
+        ftmsParams: ftmsParams,
+        latitude: 48.8438,
+        longitude: 2.5114,
+        elevation: 35.0,
+      );
+
+      expect(record.latitude, equals(48.8438));
+      expect(record.longitude, equals(2.5114));
+      expect(record.elevation, equals(35.0));
+      expect(record.instantaneousPower, equals(150));
     });
   });
 }

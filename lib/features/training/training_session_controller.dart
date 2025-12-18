@@ -16,6 +16,7 @@ import '../../core/config/live_data_display_config.dart';
 import '../../core/services/fit/training_data_recorder.dart';
 import '../../core/services/ftms_data_processor.dart';
 import '../../core/services/ftms_service.dart';
+import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
@@ -148,10 +149,27 @@ class TrainingSessionController extends ChangeNotifier
         _isRecordingConfigured = true;
       }
 
+      // Initialize GPX route tracker for GPS coordinates
+      GpxRouteTracker? gpxTracker;
+      try {
+        gpxTracker = GpxRouteTracker();
+        await gpxTracker.loadFromAsset('lib/config/map.gpx');
+        if (!gpxTracker.isLoaded) {
+          gpxTracker = null;
+          debugPrint('GPX route not available - recording without GPS coordinates');
+        } else {
+          debugPrint('GPX route loaded: ${gpxTracker.pointCount} points, ${gpxTracker.totalRouteDistance.toStringAsFixed(0)}m');
+        }
+      } catch (e) {
+        debugPrint('Failed to load GPX route: $e');
+        gpxTracker = null;
+      }
+
       // Initialize data recorder only if not injected for testing
       _dataRecorder ??= TrainingDataRecorder(
         sessionName: session.title,
         deviceType: deviceType,
+        gpxRouteTracker: gpxTracker,
       );
       _dataRecorder!.startRecording();
     } catch (e) {

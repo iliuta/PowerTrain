@@ -6,6 +6,7 @@ import 'package:fit_tool/fit_tool.dart';
 import 'training_record.dart';
 import '../../models/live_data_field_value.dart';
 import 'distance_calculation_strategy.dart';
+import '../gpx/gpx_route_tracker.dart';
 import '../../utils/logger.dart';
 
 /// Service for recording training session data and generating FIT files
@@ -14,6 +15,9 @@ class TrainingDataRecorder {
   final DistanceCalculationStrategy _distanceStrategy;
   final String _sessionName;
   final DeviceType _deviceType;
+  
+  /// GPX route tracker for adding GPS coordinates to records
+  final GpxRouteTracker? _gpxRouteTracker;
 
   DateTime? _sessionStartTime;
   DateTime? _lastRecordTime;
@@ -22,11 +26,13 @@ class TrainingDataRecorder {
   TrainingDataRecorder({
     required DeviceType deviceType,
     String? sessionName,
+    GpxRouteTracker? gpxRouteTracker,
   })  : _deviceType = deviceType,
         _sessionName =
             sessionName ?? 'Training_${DateTime.now().millisecondsSinceEpoch}',
         _distanceStrategy =
-            DistanceCalculationStrategyFactory.createStrategy(deviceType);
+            DistanceCalculationStrategyFactory.createStrategy(deviceType),
+        _gpxRouteTracker = gpxRouteTracker;
 
   /// Start recording training data
   void startRecording() {
@@ -37,6 +43,7 @@ class TrainingDataRecorder {
     _isRecording = true;
     _records.clear();
     _distanceStrategy.reset();
+    _gpxRouteTracker?.reset();
 
     logger.i('Started recording training session: $_sessionName');
   }
@@ -66,11 +73,25 @@ class TrainingDataRecorder {
     final previousData =
         _records.isNotEmpty ? _convertRecordToMap(_records.last) : null;
 
-    _distanceStrategy.calculateDistanceIncrement(
+    final distanceIncrement = _distanceStrategy.calculateDistanceIncrement(
       currentData: ftmsParams,
       previousData: previousData,
       timeDeltaSeconds: timeDelta,
     );
+
+    // Update GPX position based on distance traveled
+    double? latitude;
+    double? longitude;
+    double? elevation;
+    
+    if (_gpxRouteTracker != null && _gpxRouteTracker.isLoaded) {
+      final position = _gpxRouteTracker.updatePosition(distanceIncrement);
+      if (position != null) {
+        latitude = position.latitude;
+        longitude = position.longitude;
+        elevation = position.elevation;
+      }
+    }
 
     // Create training record
     final record = TrainingRecord.fromFtmsParameters(
@@ -79,6 +100,9 @@ class TrainingDataRecorder {
       ftmsParams: ftmsParams,
       calculatedDistance: _distanceStrategy.totalDistance,
       resistanceLevel: resistanceLevel,
+      latitude: latitude,
+      longitude: longitude,
+      elevation: elevation,
     );
 
     _records.add(record);
@@ -87,8 +111,9 @@ class TrainingDataRecorder {
     // Log occasionally to track progress
     if (_records.length % 60 == 0) {
       // Every 60 records (roughly 1 minute)
+      final posInfo = latitude != null ? ', pos: ($latitude, $longitude)' : '';
       logger.i(
-          'Recorded ${_records.length} data points, distance: ${_distanceStrategy.totalDistance.toStringAsFixed(1)}m');
+          'Recorded ${_records.length} data points, distance: ${_distanceStrategy.totalDistance.toStringAsFixed(1)}m$posInfo');
     }
   }
 
@@ -196,66 +221,45 @@ class TrainingDataRecorder {
   }
 
   Future<List<int>> _createFitFile() async {
-    final builder = FitFileBuilder();
+    // Use autoDefine: true so the builder creates Definition Messages automatically
+    final builder = FitFileBuilder(autoDefine: true, minStringSize: 50);
 
-    // Create File ID message
+    final startTimestamp = _sessionStartTime!.millisecondsSinceEpoch;
+    final endTimestamp = _records.last.timestamp.millisecondsSinceEpoch;
+    // Elapsed time in seconds (FIT expects seconds, not milliseconds)
+    final elapsedTimeSeconds = (endTimestamp - startTimestamp) / 1000.0;
+
+    // 1. File ID message (must be first)
     final fileIdMessage = FileIdMessage()
       ..type = FileType.activity
-      ..timeCreated = _sessionStartTime!.millisecondsSinceEpoch
-      ..manufacturer = Manufacturer.development.value;
-
-    // Create Activity message
-    final activityMessage = ActivityMessage()
-      ..timestamp = _records.last.timestamp.millisecondsSinceEpoch
-      ..totalTimerTime = _records.last.elapsedTime.toDouble()
-      ..numSessions = 1;
-
-    // Create Session message
-    final sessionMessage = SessionMessage()
-      ..timestamp = _records.last.timestamp.millisecondsSinceEpoch
-      ..sport = _getSport()
-      ..subSport = _getSubSport()
-      ..startTime = _sessionStartTime!.millisecondsSinceEpoch
-      ..totalElapsedTime = _records.last.elapsedTime.toDouble()
-      ..totalTimerTime = (_records.last.elapsedTime - _records.first.elapsedTime).toDouble()
-      ..totalDistance = _getTotalDistance()?.toDouble()
-      ..avgPower = _getAveragePower()
-      ..maxPower = _getMaximumPower()
-      ..avgSpeed = _getAverageSpeed()
-      ..maxSpeed = _getMaximumSpeed()
-      ..avgHeartRate = _getAverageHeartRate()
-      ..maxHeartRate = _getMaximumHeartRate()
-      ..avgCadence = _getAverageCadence()
-      ..maxCadence = _getMaximumCadence()
-      ..totalCalories = _getTotalCalories(); // Add total calories to session
-
-    // Create Lap message (one lap for the entire session)
-    final lapMessage = LapMessage()
-      ..timestamp = _records.last.timestamp.millisecondsSinceEpoch
-      ..startTime = _sessionStartTime!.millisecondsSinceEpoch
-      ..totalElapsedTime = _records.last.elapsedTime.toDouble()
-      ..totalTimerTime = (_records.last.elapsedTime - _records.first.elapsedTime).toDouble()
-      ..totalDistance = _getTotalDistance()?.toDouble()
-      ..avgPower = _getAveragePower()
-      ..maxPower = _getMaximumPower()
-      ..avgSpeed = _getAverageSpeed()
-      ..maxSpeed = _getMaximumSpeed()
-      ..avgHeartRate = _getAverageHeartRate()
-      ..maxHeartRate = _getMaximumHeartRate()
-      ..avgCadence = _getAverageCadence()
-      ..maxCadence = _getMaximumCadence()
-      ..totalCalories = _getTotalCalories(); // Add total calories to lap
-
-    // Add all messages to builder
+      ..timeCreated = startTimestamp
+      ..manufacturer = Manufacturer.development.value
+      ..product = 1 
+      ..productName = 'PowerTrain mobile application' 
+      ..serialNumber = 0x12345678;
     builder.add(fileIdMessage);
-    builder.add(activityMessage);
-    builder.add(sessionMessage);
-    builder.add(lapMessage);
 
-    // Create Record messages for each data point (sample to reduce file size)
-    final sampleRate = _calculateSampleRate();
-    for (int i = 0; i < _records.length; i += sampleRate) {
+    // 2. Timer start event (best practice for FIT activity files)
+    final startEventMessage = EventMessage()
+      ..event = Event.timer
+      ..eventType = EventType.start
+      ..timestamp = startTimestamp;
+    builder.add(startEventMessage);
+
+    // 3. Record messages for each data point
+    // Skip records with duplicate second-level timestamps to avoid FIT file issues
+    final recordMessages = <RecordMessage>[];
+    int? lastTimestampSeconds;
+    
+    for (int i = 0; i < _records.length; i++) {
       final record = _records[i];
+      final timestampSeconds = record.timestamp.millisecondsSinceEpoch ~/ 1000;
+      
+      // Skip if this record has the same second-level timestamp as the previous one
+      if (lastTimestampSeconds != null && timestampSeconds == lastTimestampSeconds) {
+        continue;
+      }
+      lastTimestampSeconds = timestampSeconds;
       
       // For rowing, use stroke rate as cadence; for cycling, use instantaneous cadence
       int? cadenceValue;
@@ -276,20 +280,84 @@ class TrainingDataRecorder {
         ..distance = (record.totalDistance != null)
             ? (record.totalDistance!).toDouble()
             : null
-        ..calories = record.calories?.round(); // Add calories from Total Energy
+        ..calories = record.calories?.round()
+        ..positionLat = record.latitude
+        ..positionLong = record.longitude
+        ..altitude = record.elevation?.toDouble();
 
-      builder.add(recordMessage);
+      recordMessages.add(recordMessage);
     }
+    builder.addAll(recordMessages);
+
+    // 4. Timer stop event
+    final stopEventMessage = EventMessage()
+      ..event = Event.timer
+      ..eventType = EventType.stop
+      ..timestamp = endTimestamp;
+    builder.add(stopEventMessage);
+
+    // Get start and end positions for session/lap
+    final startPosition = _getStartPosition();
+    final endPosition = _getEndPosition();
+
+    // 5. Lap message (every FIT activity file MUST contain at least one Lap)
+    final lapMessage = LapMessage()
+      ..timestamp = endTimestamp
+      ..startTime = startTimestamp
+      ..totalElapsedTime = elapsedTimeSeconds
+      ..totalTimerTime = elapsedTimeSeconds
+      ..totalDistance = _getTotalDistance()?.toDouble()
+      ..avgPower = _getAveragePower()
+      ..maxPower = _getMaximumPower()
+      ..avgSpeed = _getAverageSpeed()
+      ..maxSpeed = _getMaximumSpeed()
+      ..avgHeartRate = _getAverageHeartRate()
+      ..maxHeartRate = _getMaximumHeartRate()
+      ..avgCadence = _getAverageCadence()
+      ..maxCadence = _getMaximumCadence()
+      ..totalCalories = _getTotalCalories()
+      ..startPositionLat = startPosition?.$1
+      ..startPositionLong = startPosition?.$2
+      ..endPositionLat = endPosition?.$1
+      ..endPositionLong = endPosition?.$2;
+    builder.add(lapMessage);
+
+    // 6. Session message (every FIT activity file MUST contain at least one Session)
+    final sessionMessage = SessionMessage()
+      ..timestamp = endTimestamp
+      ..sport = _getSport()
+      ..subSport = _getSubSport()
+      ..startTime = startTimestamp
+      ..totalElapsedTime = elapsedTimeSeconds
+      ..totalTimerTime = elapsedTimeSeconds
+      ..totalDistance = _getTotalDistance()?.toDouble()
+      ..avgPower = _getAveragePower()
+      ..maxPower = _getMaximumPower()
+      ..avgSpeed = _getAverageSpeed()
+      ..maxSpeed = _getMaximumSpeed()
+      ..avgHeartRate = _getAverageHeartRate()
+      ..maxHeartRate = _getMaximumHeartRate()
+      ..avgCadence = _getAverageCadence()
+      ..maxCadence = _getMaximumCadence()
+      ..totalCalories = _getTotalCalories()
+      ..startPositionLat = startPosition?.$1
+      ..startPositionLong = startPosition?.$2
+      ..firstLapIndex = 0
+      ..numLaps = 1;
+    builder.add(sessionMessage);
+
+    // 7. Activity message (summary of the activity)
+    final activityMessage = ActivityMessage()
+      ..timestamp = endTimestamp
+      ..totalTimerTime = elapsedTimeSeconds
+      ..numSessions = 1
+      ..type = Activity.manual
+      ..event = Event.activity
+      ..eventType = EventType.stop;
+    builder.add(activityMessage);
 
     final fitFile = builder.build();
     return fitFile.toBytes();
-  }
-
-  int _calculateSampleRate() {
-    // Sample every 2-5 seconds depending on session length
-    if (_records.length < 300) return 2; // < 5 minutes: every 2 seconds
-    if (_records.length < 1800) return 3; // < 30 minutes: every 3 seconds
-    return 5; // 30+ minutes: every 5 seconds
   }
 
   Sport _getSport() {
@@ -302,12 +370,32 @@ class TrainingDataRecorder {
   }
 
   SubSport _getSubSport() {
+    // Use virtual/outdoor subsports when GPS data is available to show map on Strava
+    // Indoor subsports cause Strava to ignore GPS coordinates
+    final hasGpsData = _records.any((r) => r.latitude != null && r.longitude != null);
+    
     switch (_deviceType) {
       case DeviceType.indoorBike:
-        return SubSport.indoorCycling;
+        return hasGpsData ? SubSport.virtualActivity : SubSport.indoorCycling;
       case DeviceType.rower:
+        // For rowing with GPS, use generic subsport (outdoor rowing simulation)
+        // return hasGpsData ? SubSport.generic : SubSport.indoorRowing;
         return SubSport.indoorRowing;
     }
+  }
+
+  /// Get the start position (first record with GPS data) in degrees
+  (double, double)? _getStartPosition() {
+    final firstWithGps = _records.where((r) => r.latitude != null && r.longitude != null).firstOrNull;
+    if (firstWithGps == null) return null;
+    return (firstWithGps.latitude!, firstWithGps.longitude!);
+  }
+
+  /// Get the end position (last record with GPS data) in degrees
+  (double, double)? _getEndPosition() {
+    final lastWithGps = _records.where((r) => r.latitude != null && r.longitude != null).lastOrNull;
+    if (lastWithGps == null) return null;
+    return (lastWithGps.latitude!, lastWithGps.longitude!);
   }
 
   int? _getTotalDistance() {
