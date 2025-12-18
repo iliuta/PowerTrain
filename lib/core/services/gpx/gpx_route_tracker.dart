@@ -42,6 +42,9 @@ class GpxRouteTracker {
   /// Number of points in the route
   int get pointCount => _points.length;
 
+  /// Get all route points (read-only)
+  List<GpxPoint> get points => List.unmodifiable(_points);
+
   /// Load the GPX route from an asset file
   Future<void> loadFromAsset(String assetPath) async {
     try {

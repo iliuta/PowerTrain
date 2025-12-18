@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="StravaGPX" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
  <metadata>
-  <name>aviron perreux</name>
+  <name>SNP</name>
   <author>
    <name>Adrian P.</name>
    <link href="https://www.strava.com/athletes/1321007"/>
@@ -13,7 +13,7 @@
   <link href="https://www.strava.com/routes/3436630268300985268"/>
  </metadata>
  <trk>
-  <name>aviron perreux</name>
+  <name>SNP</name>
   <link href="https://www.strava.com/routes/3436630268300985268"/>
   <type>Rowing</type>
   <trkseg>
