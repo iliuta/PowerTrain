@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,8 +13,10 @@ import 'core/services/devices/bt_device_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Enable edge-to-edge display
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // Note: Edge-to-edge is automatically enabled on Android 15+ (Flutter 3.27+)
+  // We do NOT call SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)
+  // to avoid triggering deprecated Android APIs (setStatusBarColor, etc.)
+  // See: https://docs.flutter.dev/release/breaking-changes/default-systemuimode-edge-to-edge
   
   // Set log level for production
   FlutterBluePlus.setLogLevel(LogLevel.warning);
