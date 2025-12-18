@@ -30,6 +30,9 @@ enum SessionStatus {
   /// Session has been paused automatically due to device disconnection
   pausedByDisconnection,
 
+  /// Session has been paused automatically due to inactivity (user stopped exercising)
+  pausedByInactivity,
+
   /// Session has been completed successfully
   completed,
 
@@ -278,13 +281,19 @@ class TrainingSessionState {
   /// Whether the session is currently running
   bool get isRunning => status == SessionStatus.running;
 
-  /// Whether the session is paused (by user or disconnection)
+  /// Whether the session is paused (by user, disconnection, or inactivity)
   bool get isPaused =>
       status == SessionStatus.pausedByUser ||
-      status == SessionStatus.pausedByDisconnection;
+      status == SessionStatus.pausedByDisconnection ||
+      status == SessionStatus.pausedByInactivity;
 
-  /// Whether the session was auto-paused due to disconnection
-  bool get wasAutoPaused => status == SessionStatus.pausedByDisconnection;
+  /// Whether the session was auto-paused (due to disconnection or inactivity)
+  bool get wasAutoPaused =>
+      status == SessionStatus.pausedByDisconnection ||
+      status == SessionStatus.pausedByInactivity;
+
+  /// Whether the session was auto-paused due to inactivity
+  bool get wasInactivityPaused => status == SessionStatus.pausedByInactivity;
 
   /// Whether the session has ended (completed or stopped)
   bool get hasEnded =>
@@ -378,6 +387,26 @@ class TrainingSessionState {
     }
 
     isDeviceConnected = true;
+    _handler?.onNotifyListeners();
+  }
+
+  /// Handles inactivity detected event (user stopped exercising)
+  void onInactivityDetected() {
+    if (status != SessionStatus.running) return;
+
+    status = SessionStatus.pausedByInactivity;
+    _handler?.onStopTimer();
+    _handler?.onSendFtmsPause();
+    _handler?.onNotifyListeners();
+  }
+
+  /// Handles activity resumed event (user started exercising again after inactivity pause)
+  void onActivityResumed() {
+    if (status != SessionStatus.pausedByInactivity) return;
+
+    status = SessionStatus.running;
+    _handler?.onStartTimer();
+    _handler?.onSendFtmsResume();
     _handler?.onNotifyListeners();
   }
 

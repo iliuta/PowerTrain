@@ -618,6 +618,216 @@ void main() {
       });
     });
 
+    group('Auto-Pause by Inactivity', () {
+      late TrainingSessionController controller;
+
+      setUp(() async {
+        // Wait for any pending data from previous tests to be processed
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        controller = TrainingSessionController(
+          session: session,
+          ftmsDevice: mockDevice,
+          ftmsService: mockFtmsService,
+          audioPlayer: mockAudioPlayer,
+          enableFitFileGeneration: false,
+        );
+        
+        // Wait for controller initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+      });
+
+      tearDown(() {
+        controller.dispose();
+      });
+
+      Future<void> startSession() async {
+        // Start session with active power
+        final initialData = MockDeviceData([
+          MockParameter('Instantaneous Power', 50),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 100),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+      }
+
+      test('auto-pauses when power drops below threshold for 5 data points', () async {
+        await startSession();
+
+        // Send low power data (< 5W) repeatedly to trigger inactivity
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+        expect(controller.state.isPaused, true);
+        expect(controller.state.wasAutoPaused, true);
+        expect(controller.state.wasInactivityPaused, true);
+        expect(controller.state.shouldTimerBeActive, false);
+      });
+
+      test('does not auto-pause if activity resumes before threshold', () async {
+        await startSession();
+
+        // Send low power data but not enough times
+        for (int i = 0; i < 3; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.running);
+
+        // Resume activity
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 100),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.isPaused, false);
+      });
+
+      test('auto-resumes when activity detected after inactivity pause', () async {
+        await startSession();
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+
+        // Resume activity with power above threshold
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 50),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.isPaused, false);
+        expect(controller.state.shouldTimerBeActive, true);
+      });
+
+      test('auto-pauses when speed drops below threshold', () async {
+        // Start with speed-based session
+        final initialData = MockDeviceData([
+          MockParameter('Instantaneous Speed', 5),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Speed', 25),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+
+        // Send low speed data (< 3 km/h) repeatedly
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Speed', 1),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+      });
+
+      test('user can manually resume from inactivity pause', () async {
+        await startSession();
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+
+        // User manually resumes
+        controller.resumeSession();
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.isPaused, false);
+      });
+
+      test('sends FTMS pause command when auto-pausing', () async {
+        await startSession();
+
+        // Clear interactions from session start
+        clearInteractions(mockFtmsService);
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
+      });
+
+      test('sends FTMS resume command when auto-resuming', () async {
+        await startSession();
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+
+        // Clear interactions
+        clearInteractions(mockFtmsService);
+
+        // Resume with activity
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 50),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.startOrResume)).called(1);
+      });
+    });
+
     group('State Machine Integration', () {
       test('state transitions correctly through session lifecycle', () async {
         final controller = TrainingSessionController(
