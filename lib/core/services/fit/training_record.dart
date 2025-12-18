@@ -14,6 +14,8 @@ class TrainingRecord {
   final double? strokeRate; // for rower, strokes/min
   final double? totalStrokeCount; // for rower
   final double? calories; // burned calories (from Total Energy)
+  final double? latitude; // GPS latitude from GPX route
+  final double? longitude; // GPS longitude from GPX route
   
   const TrainingRecord({
     required this.timestamp,
@@ -28,6 +30,8 @@ class TrainingRecord {
     this.strokeRate,
     this.totalStrokeCount,
     this.calories,
+    this.latitude,
+    this.longitude,
   });
   
   /// Create from FTMS parameter map (with proper types) and calculated distance
@@ -37,6 +41,9 @@ class TrainingRecord {
     required Map<String, LiveDataFieldValue> ftmsParams,
     double? calculatedDistance,
     double? resistanceLevel,
+    double? latitude,
+    double? longitude,
+    double? elevation,
   }) {
     return TrainingRecord(
       timestamp: timestamp,
@@ -50,6 +57,9 @@ class TrainingRecord {
       strokeRate: _getParameterValue(ftmsParams, 'Stroke Rate'),
       totalStrokeCount: _getParameterValue(ftmsParams, 'Total Stroke Count'),
       calories: _getParameterValue(ftmsParams, 'Total Energy'),
+      latitude: latitude,
+      longitude: longitude,
+      elevation: elevation,
     );
   }
   
@@ -62,6 +72,7 @@ class TrainingRecord {
   @override
   String toString() {
     return 'TrainingRecord(time: ${elapsedTime}s, power: ${instantaneousPower}W, '
-        'speed: ${instantaneousSpeed}km/h, distance: ${totalDistance}m, calories: ${calories}kcal)';
+        'speed: ${instantaneousSpeed}km/h, distance: ${totalDistance}m, calories: ${calories}kcal, '
+        'lat: $latitude, lon: $longitude)';
   }
 }

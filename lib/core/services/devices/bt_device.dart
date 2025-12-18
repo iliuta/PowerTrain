@@ -71,7 +71,8 @@ abstract class BTDevice {
     try {
       await performDisconnection(device);
     } finally {
-      await _setDisconnected();
+      // User explicitly disconnected, so don't keep subscription for reconnection
+      await _setDisconnected(keepSubscription: false);
     }
   }
 
@@ -125,15 +126,19 @@ abstract class BTDevice {
   }
 
   /// Internal method to mark device as disconnected
-  Future<void> _setDisconnected() async {
+  /// When [keepSubscription] is true, we keep the connection subscription
+  /// to detect reconnection (used for auto-reconnect scenarios)
+  Future<void> _setDisconnected({bool keepSubscription = false}) async {
     final deviceId = _connectedDevice?.remoteId.str;
     
-    _connectionSubscription?.cancel();
-    _connectionSubscription = null;
-    _connectedDevice = null;
+    if (!keepSubscription) {
+      _connectionSubscription?.cancel();
+      _connectionSubscription = null;
+      _connectedDevice = null;
+    }
     _connectedAt = null;
     _connectionState = BluetoothConnectionState.disconnected;
-    _deviceType = null;
+    // Note: We don't clear _deviceType on temporary disconnect to preserve it for reconnection
     
     // Remove from global registry via manager
     if (deviceId != null && _deviceManager != null) {
@@ -141,11 +146,34 @@ abstract class BTDevice {
     }
   }
 
+  /// Internal method to restore device as connected (for reconnection)
+  Future<void> _setReconnected() async {
+    if (_connectedDevice == null) return;
+    
+    logger.i('📱 Restoring device as connected: ${_connectedDevice!.platformName} (${_connectedDevice!.remoteId})');
+    _connectedAt = DateTime.now();
+    _connectionState = BluetoothConnectionState.connected;
+    
+    // Re-add to global registry via manager
+    if (_deviceManager != null) {
+      _deviceManager?.addConnectedDevice(_connectedDevice!.remoteId.str, this);
+    }
+    
+    _notifyDevicesChanged();
+  }
+
   /// Update connection state
   void _updateConnectionState(BluetoothConnectionState state) {
+    final previousState = _connectionState;
     _connectionState = state;
+    
     if (state == BluetoothConnectionState.disconnected) {
-      _setDisconnected();
+      // Keep subscription to detect reconnection (auto-reconnect scenario)
+      _setDisconnected(keepSubscription: true);
+    } else if (state == BluetoothConnectionState.connected && 
+               previousState == BluetoothConnectionState.disconnected) {
+      // Device reconnected
+      _setReconnected();
     } else {
       _notifyDevicesChanged();
     }

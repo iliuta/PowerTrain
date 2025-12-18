@@ -164,7 +164,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       final baseName = fitFile.fileName
           .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
           .replaceAll('_', ' ');
-      final activityName = '$baseName - FTMS Training';
+      final activityName = '$baseName - PowerTrain';
 
       // For now, default to cycling - in the future this could be determined from the file
       const activityType = 'ride';

@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/session_state.dart';
@@ -15,6 +16,7 @@ import '../../core/config/live_data_display_config.dart';
 import '../../core/services/fit/training_data_recorder.dart';
 import '../../core/services/ftms_data_processor.dart';
 import '../../core/services/ftms_service.dart';
+import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
@@ -42,8 +44,10 @@ class TrainingSessionController extends ChangeNotifier
   // Session state machine
   late TrainingSessionState _state;
 
-  // For detecting data changes
-  List<dynamic>? _lastFtmsParams;
+  // For detecting activity to trigger session auto-start and auto-pause
+  double? _lastActivityValue;
+  int _inactivityCounter = 0;
+  static const int _inactivityThresholdSeconds = 5; // seconds of inactivity before auto-pause
 
   // Strava upload tracking
   String? lastGeneratedFitFile;
@@ -116,6 +120,7 @@ class TrainingSessionController extends ChangeNotifier
     // Request control after a short delay, then start session and set initial resistance if needed
     Future.delayed(const Duration(seconds: 2), () async {
       if (_disposed) return;
+      await resetWithControl();
       await startOrResumeWithControl();
       final firstInterval =
           _state.intervals.isNotEmpty ? _state.intervals[0] : null;
@@ -145,10 +150,27 @@ class TrainingSessionController extends ChangeNotifier
         _isRecordingConfigured = true;
       }
 
+      // Initialize GPX route tracker for GPS coordinates
+      GpxRouteTracker? gpxTracker;
+      try {
+        gpxTracker = GpxRouteTracker();
+        await gpxTracker.loadFromAsset('lib/config/map.gpx');
+        if (!gpxTracker.isLoaded) {
+          gpxTracker = null;
+          debugPrint('GPX route not available - recording without GPS coordinates');
+        } else {
+          debugPrint('GPX route loaded: ${gpxTracker.pointCount} points, ${gpxTracker.totalRouteDistance.toStringAsFixed(0)}m');
+        }
+      } catch (e) {
+        debugPrint('Failed to load GPX route: $e');
+        gpxTracker = null;
+      }
+
       // Initialize data recorder only if not injected for testing
       _dataRecorder ??= TrainingDataRecorder(
         sessionName: session.title,
         deviceType: deviceType,
+        gpxRouteTracker: gpxTracker,
       );
       _dataRecorder!.startRecording();
     } catch (e) {
@@ -161,9 +183,14 @@ class TrainingSessionController extends ChangeNotifier
   void _onFtmsData(DeviceData? data) {
     if (data == null) return;
 
+    final paramValueMap = _dataProcessor.processDeviceData(data);
+    
+    // Create raw param value map for activity detection (no averaging)
+    // This ensures immediate response to activity/inactivity changes
+    final rawParamValueMap = _createRawParamValueMap(data);
+    
     // For distance-based sessions, update distance from FTMS data
     if (session.isDistanceBased && _state.isRunning) {
-      final paramValueMap = _dataProcessor.processDeviceData(data);
       final totalDistanceParam = paramValueMap['Total Distance'];
       if (totalDistanceParam != null) {
         final distance = totalDistanceParam.getScaledValue().toDouble();
@@ -171,45 +198,214 @@ class TrainingSessionController extends ChangeNotifier
       }
     }
 
-    // Record data if session is running
+    // Record data if session is running and check for inactivity
     if (_state.isRunning) {
-      _recordDataPoint(data);
+      _recordDataPoint(paramValueMap);
+      _checkForInactivity(rawParamValueMap);
       return;
     }
 
-    // If paused, still record but don't check for changes
+    // If paused by inactivity, check if activity resumed
+    if (_state.wasInactivityPaused) {
+      _checkForActivityResume(rawParamValueMap);
+      return;
+    }
+
+    // If paused by user or disconnection, don't check for activity changes
     if (_state.isPaused) {
       return;
     }
 
-    // Check if data changed to trigger session start
-    final params = data.getDeviceDataParameterValues();
-    if (_lastFtmsParams != null && _state.status == SessionStatus.created) {
-      bool changed = false;
-      for (int i = 0; i < params.length; i++) {
-        final prev = _lastFtmsParams![i];
-        final curr = params[i].value;
-        if (prev != curr) {
-          changed = true;
-          break;
-        }
-      }
-      if (changed) {
-        _state.onDataChanged();
-        _recordDataPoint(data);
-      }
-    }
-    // Store current values for next comparison
-    _lastFtmsParams = params.map((p) => p.value).toList();
+    // Check if user started exercising to trigger session auto-start
+    _checkForActivityStart(rawParamValueMap);
+  }
+  
+  /// Creates a raw param value map from device data without any averaging.
+  /// Used for activity detection where immediate response is needed.
+  Map<String, LiveDataFieldValue> _createRawParamValueMap(DeviceData deviceData) {
+    final parameterValues = deviceData.getDeviceDataParameterValues();
+    return {
+      for (final p in parameterValues)
+        p.name.name: LiveDataFieldValue.fromDeviceDataParameterValue(p)
+    };
   }
 
-  void _recordDataPoint(DeviceData data) {
+  /// Returns the list of parameter names used to detect user activity, in priority order.
+  /// Primary indicators are device-specific, with "Instantaneous Power" as universal fallback.
+  /// - Rower: "Instantaneous Pace" (seconds/500m - lower is faster)
+  /// - Indoor Bike: "Instantaneous Speed" (km/h - higher is faster)
+  List<String> get _activityIndicatorParamNames {
+    return switch (session.ftmsMachineType) {
+      DeviceType.rower => ['Instantaneous Pace', 'Instantaneous Power'],
+      DeviceType.indoorBike => ['Instantaneous Speed', 'Instantaneous Power'],
+    };
+  }
+
+  /// Checks if the user has started exercising by monitoring meaningful activity data.
+  /// This uses processed data (speed/pace/power) rather than raw params to reliably detect
+  /// when the user starts moving on both rowers and indoor bikes.
+  void _checkForActivityStart(Map<String, LiveDataFieldValue> data) {
+    if (_state.status != SessionStatus.created) return;
+
+    // Find the first available activity indicator
+    LiveDataFieldValue? activityParam;
+    String? usedParamName;
+    for (final paramName in _activityIndicatorParamNames) {
+      if (data.containsKey(paramName)) {
+        activityParam = data[paramName];
+        usedParamName = paramName;
+        break;
+      }
+    }
+
+    if (activityParam == null) {
+      debugPrint('⚠️ No activity indicator found in data. Tried: $_activityIndicatorParamNames');
+      return;
+    }
+
+    final currentValue = activityParam.getScaledValue().toDouble();
+
+    // First reading: store the baseline
+    if (_lastActivityValue == null) {
+      _lastActivityValue = currentValue;
+      return;
+    }
+
+    // Detect if user started exercising based on the parameter type
+    final bool activityDetected = _detectActivity(currentValue, usedParamName!);
+
+    if (activityDetected) {
+      debugPrint('🚀 Activity detected! Starting session ($usedParamName: $currentValue)');
+      _state.onDataChanged();
+      _recordDataPoint(data);
+    }
+
+    _lastActivityValue = currentValue;
+  }
+
+  /// Detects if the user has started exercising based on the activity value.
+  /// Detection logic varies by parameter type:
+  /// - Pace: value is in active range (non-zero and below threshold)
+  /// - Speed/Power: value increases above threshold
+  bool _detectActivity(double currentValue, String paramName) {
+    final lastValue = _lastActivityValue!;
+
+    // Pace-based detection (rower): pace is in active range
+    // When inactive, pace is 0 or very high (>300 = 5:00/500m)
+    // When active, pace is between ~60 (1:00/500m) and 300 (5:00/500m)
+    if (paramName == 'Instantaneous Pace') {
+      final wasInactive = lastValue == 0 || lastValue > 300;
+      final isNowActive = currentValue > 0 && currentValue <= 300;
+      // Activity detected if:
+      // - Was inactive (0 or high pace) and now in active range, OR
+      // - Pace decreased significantly while already in active range
+      return (wasInactive && isNowActive) ||
+             (lastValue > 0 && currentValue < lastValue * 0.9 && isNowActive);
+    }
+
+    // Speed-based detection: speed increases above threshold
+    if (paramName == 'Instantaneous Speed') {
+      return currentValue > 5.0 && currentValue > lastValue;
+    }
+
+    // Power-based detection (universal fallback): power increases above threshold
+    if (paramName == 'Instantaneous Power') {
+      return currentValue > 10.0 && currentValue > lastValue;
+    }
+
+    // Unknown parameter - use simple change detection
+    return currentValue != lastValue;
+  }
+
+  /// Detects if the user has stopped exercising based on the activity value.
+  /// This is used to trigger auto-pause when running.
+  bool _detectInactivity(double currentValue, String paramName) {
+    // Pace-based detection (rower): very high pace value means not rowing
+    // When stopped, pace typically goes to max value (e.g., 999 or very high)
+    if (paramName == 'Instantaneous Pace') {
+      return currentValue == 0 || currentValue > 300; // More than 5:00/500m is considered stopped
+    }
+
+    // Speed-based detection: speed below threshold means not moving
+    if (paramName == 'Instantaneous Speed') {
+      return currentValue < 3.0; // Less than 3 km/h is considered stopped
+    }
+
+    // Power-based detection: power below threshold means not exercising
+    if (paramName == 'Instantaneous Power') {
+      return currentValue < 5.0; // Less than 5W is considered stopped
+    }
+
+    // Unknown parameter - assume active
+    return false;
+  }
+
+  /// Checks if user has become inactive while session is running
+  void _checkForInactivity(Map<String, LiveDataFieldValue> data) {
+    // Find the first available activity indicator
+    LiveDataFieldValue? activityParam;
+    String? usedParamName;
+    for (final paramName in _activityIndicatorParamNames) {
+      if (data.containsKey(paramName)) {
+        activityParam = data[paramName];
+        usedParamName = paramName;
+        break;
+      }
+    }
+
+    if (activityParam == null) return;
+
+    final currentValue = activityParam.getScaledValue().toDouble();
+    final isInactive = _detectInactivity(currentValue, usedParamName!);
+
+    if (isInactive) {
+      _inactivityCounter++;
+      if (_inactivityCounter >= _inactivityThresholdSeconds) {
+        debugPrint('⏸️ Inactivity detected! Auto-pausing session ($usedParamName: $currentValue)');
+        _state.onInactivityDetected();
+        _inactivityCounter = 0;
+      }
+    } else {
+      // Reset counter when activity is detected
+      _inactivityCounter = 0;
+    }
+
+    _lastActivityValue = currentValue;
+  }
+
+  /// Checks if user has resumed activity while paused by inactivity
+  void _checkForActivityResume(Map<String, LiveDataFieldValue> data) {
+    // Find the first available activity indicator
+    LiveDataFieldValue? activityParam;
+    String? usedParamName;
+    for (final paramName in _activityIndicatorParamNames) {
+      if (data.containsKey(paramName)) {
+        activityParam = data[paramName];
+        usedParamName = paramName;
+        break;
+      }
+    }
+
+    if (activityParam == null) return;
+
+    final currentValue = activityParam.getScaledValue().toDouble();
+    final isActive = !_detectInactivity(currentValue, usedParamName!);
+
+    if (isActive) {
+      debugPrint('▶️ Activity resumed! Auto-resuming session ($usedParamName: $currentValue)');
+      _inactivityCounter = 0;
+      _state.onActivityResumed();
+    }
+
+    _lastActivityValue = currentValue;
+  }
+
+  void _recordDataPoint(Map<String, LiveDataFieldValue> data) {
     if (_dataRecorder == null || !_isRecordingConfigured || !_state.isRunning) {
       return;
     }
     try {
-      final paramValueMap = _dataProcessor.processDeviceData(data);
-      _dataRecorder!.recordDataPoint(ftmsParams: paramValueMap);
+      _dataRecorder!.recordDataPoint(ftmsParams: data);
     } catch (e) {
       debugPrint('Failed to record data point: $e');
     }
@@ -389,7 +585,7 @@ class TrainingSessionController extends ChangeNotifier
 
       logger.i('Attempting automatic Strava upload...');
 
-      final activityName = '${session.title} - FTMS Training';
+      final activityName = '${session.title} - PowerTrain';
       final deviceType = session.ftmsMachineType;
       final activityType = StravaActivityTypes.fromFtmsMachineType(deviceType);
 
@@ -417,6 +613,13 @@ class TrainingSessionController extends ChangeNotifier
   }
 
   // ============ Public session control methods ============
+
+  /// Manually start the session (when user doesn't want to wait for auto-start)
+  void startSession() {
+    if (_state.status != SessionStatus.created) return;
+    logger.i('▶️ Manually starting training session');
+    _state.onDataChanged(); // This transitions from created to running
+  }
 
   /// Pause the current training session
   void pauseSession() {

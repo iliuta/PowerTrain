@@ -461,6 +461,39 @@ void main() {
         await Future.delayed(Duration(milliseconds: 100));
         verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl));
       });
+
+      test('startSession manually starts session from created state', () async {
+        // Session should start in created state
+        expect(controller.state.status, SessionStatus.created);
+        expect(controller.state.shouldTimerBeActive, false);
+
+        // Manually start the session
+        controller.startSession();
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.shouldTimerBeActive, true);
+      });
+
+      test('startSession does nothing if already running', () async {
+        await startSession();
+        expect(controller.state.status, SessionStatus.running);
+
+        // Try to start again - should do nothing
+        controller.startSession();
+
+        expect(controller.state.status, SessionStatus.running);
+      });
+
+      test('startSession does nothing if session has ended', () async {
+        await startSession();
+        controller.stopSession();
+        expect(controller.state.hasEnded, true);
+
+        // Try to start - should do nothing
+        controller.startSession();
+
+        expect(controller.state.hasEnded, true);
+      });
     });
 
     group('Timer and Progress', () {
@@ -618,6 +651,349 @@ void main() {
       });
     });
 
+    group('Auto-Pause by Inactivity', () {
+      late TrainingSessionController controller;
+
+      setUp(() async {
+        // Wait for any pending data from previous tests to be processed
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        controller = TrainingSessionController(
+          session: session,
+          ftmsDevice: mockDevice,
+          ftmsService: mockFtmsService,
+          audioPlayer: mockAudioPlayer,
+          enableFitFileGeneration: false,
+        );
+        
+        // Wait for controller initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+      });
+
+      tearDown(() {
+        controller.dispose();
+      });
+
+      Future<void> startSession() async {
+        // Start session with active power
+        final initialData = MockDeviceData([
+          MockParameter('Instantaneous Power', 50),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 100),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+      }
+
+      test('auto-pauses when power drops below threshold for 5 data points', () async {
+        await startSession();
+
+        // Send low power data (< 5W) repeatedly to trigger inactivity
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+        expect(controller.state.isPaused, true);
+        expect(controller.state.wasAutoPaused, true);
+        expect(controller.state.wasInactivityPaused, true);
+        expect(controller.state.shouldTimerBeActive, false);
+      });
+
+      test('does not auto-pause if activity resumes before threshold', () async {
+        await startSession();
+
+        // Send low power data but not enough times
+        for (int i = 0; i < 3; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.running);
+
+        // Resume activity
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 100),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.isPaused, false);
+      });
+
+      test('auto-resumes when activity detected after inactivity pause', () async {
+        await startSession();
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+
+        // Resume activity with power above threshold
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 50),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.isPaused, false);
+        expect(controller.state.shouldTimerBeActive, true);
+      });
+
+      test('auto-pauses when speed drops below threshold', () async {
+        // Start with speed-based session
+        final initialData = MockDeviceData([
+          MockParameter('Instantaneous Speed', 5),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Speed', 25),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+
+        // Send low speed data (< 3 km/h) repeatedly
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Speed', 1),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+      });
+
+      test('user can manually resume from inactivity pause', () async {
+        await startSession();
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+
+        // User manually resumes
+        controller.resumeSession();
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        expect(controller.state.status, SessionStatus.running);
+        expect(controller.state.isPaused, false);
+      });
+
+      test('sends FTMS pause command when auto-pausing', () async {
+        await startSession();
+
+        // Clear interactions from session start
+        clearInteractions(mockFtmsService);
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
+      });
+
+      test('sends FTMS resume command when auto-resuming', () async {
+        await startSession();
+
+        // Trigger inactivity pause
+        for (int i = 0; i < 5; i++) {
+          final inactiveData = MockDeviceData([
+            MockParameter('Instantaneous Power', 2),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        expect(controller.state.status, SessionStatus.pausedByInactivity);
+
+        // Clear interactions
+        clearInteractions(mockFtmsService);
+
+        // Resume with activity
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Power', 50),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.startOrResume)).called(1);
+      });
+    });
+
+    group('Rower Auto-Start Activity Detection', () {
+      late TrainingSessionController controller;
+
+      final quickInterval = UnitTrainingInterval(duration: 60, title: 'Quick', resistanceLevel: 1);
+
+      final rowerSession = ExpandedTrainingSessionDefinition(
+        title: 'Rower Test Session',
+        ftmsMachineType: DeviceType.rower,
+        intervals: <ExpandedUnitTrainingInterval>[
+          ExpandedUnitTrainingInterval(
+            duration: 60,
+            title: 'Quick',
+            resistanceLevel: 1,
+            originalInterval: quickInterval,
+          ),
+        ],
+      );
+
+      setUp(() async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        controller = TrainingSessionController(
+          session: rowerSession,
+          ftmsDevice: mockDevice,
+          ftmsService: mockFtmsService,
+          audioPlayer: mockAudioPlayer,
+          enableFitFileGeneration: false,
+        );
+        
+        await Future.delayed(const Duration(milliseconds: 100));
+      });
+
+      tearDown(() {
+        controller.dispose();
+      });
+
+      test('auto-starts when pace transitions from 0 (inactive) to active range', () async {
+        // This tests the bug fix: when baseline pace is 0, session should auto-start
+        // when user starts rowing and pace enters active range
+
+        expect(controller.state.status, SessionStatus.created);
+
+        // First reading: pace = 0 (user not rowing, machine reports 0)
+        final inactiveData = MockDeviceData([
+          MockParameter('Instantaneous Pace', 0),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should still be in created state (waiting for activity)
+        expect(controller.state.status, SessionStatus.created);
+
+        // User starts rowing: pace = 120 (2:00/500m - active rowing)
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Pace', 120),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should now be running
+        expect(controller.state.status, SessionStatus.running);
+      });
+
+      test('auto-starts when pace transitions from high value (inactive) to active range', () async {
+        expect(controller.state.status, SessionStatus.created);
+
+        // First reading: pace = 999 (very high, user not rowing effectively)
+        final inactiveData = MockDeviceData([
+          MockParameter('Instantaneous Pace', 999),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should still be in created state
+        expect(controller.state.status, SessionStatus.created);
+
+        // User starts rowing: pace = 150 (2:30/500m)
+        final activeData = MockDeviceData([
+          MockParameter('Instantaneous Pace', 150),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should now be running
+        expect(controller.state.status, SessionStatus.running);
+      });
+
+      test('auto-starts when pace decreases significantly in active range', () async {
+        expect(controller.state.status, SessionStatus.created);
+
+        // First reading: pace = 250 (slow but in active range)
+        final slowData = MockDeviceData([
+          MockParameter('Instantaneous Pace', 250),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(slowData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should still be in created state
+        expect(controller.state.status, SessionStatus.created);
+
+        // Pace drops significantly: 250 * 0.9 = 225, so 150 < 225
+        final fasterData = MockDeviceData([
+          MockParameter('Instantaneous Pace', 150),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(fasterData);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should now be running
+        expect(controller.state.status, SessionStatus.running);
+      });
+
+      test('does not auto-start when pace stays in inactive range', () async {
+        expect(controller.state.status, SessionStatus.created);
+
+        // First reading: pace = 0
+        final inactiveData1 = MockDeviceData([
+          MockParameter('Instantaneous Pace', 0),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData1);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Still inactive: pace = 0
+        final inactiveData2 = MockDeviceData([
+          MockParameter('Instantaneous Pace', 0),
+        ]);
+        ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData2);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Session should still be waiting
+        expect(controller.state.status, SessionStatus.created);
+      });
+    });
+
     group('State Machine Integration', () {
       test('state transitions correctly through session lifecycle', () async {
         final controller = TrainingSessionController(
@@ -634,11 +1010,11 @@ void main() {
         expect(controller.state.isRunning, false);
 
         // Start session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -802,6 +1178,9 @@ void main() {
           enableFitFileGeneration: false,
         );
 
+        // Wait for any pending data from previous tests to be processed
+        await Future.delayed(const Duration(milliseconds: 100));
+
         // Initial state
         expect(controller.state.currentIntervalIndex, 0);
         expect(controller.state.elapsedSeconds, 0);
@@ -880,11 +1259,11 @@ void main() {
         expect(controller.state.hasEnded, false);
 
         // Start the session with FTMS data changes
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -935,11 +1314,11 @@ void main() {
         );
 
         // Start the session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1000,12 +1379,12 @@ void main() {
           enableFitFileGeneration: true,
         );
 
-        // Start the session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        // Start the session (rower uses Instantaneous Pace as primary activity indicator)
+        final initialData = MockDeviceData([MockParameter('Instantaneous Pace', 240)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Pace', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1062,11 +1441,11 @@ void main() {
         );
 
         // Start the session
-        final initialData = MockDeviceData([MockParameter('Power', 100)]);
+        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Power', 150)]);
+        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1287,7 +1666,7 @@ void main() {
         verify(mockStravaService.isAuthenticated()).called(1);
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Test Session - FTMS Training',
+          'Test Session - PowerTrain',
           activityType: 'ride', // indoor bike -> ride
         )).called(1);
 
@@ -1371,7 +1750,7 @@ void main() {
         // Verify upload was attempted but failed
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Test Session - FTMS Training',
+          'Test Session - PowerTrain',
           activityType: 'ride',
         )).called(1);
 
@@ -1470,7 +1849,7 @@ void main() {
         // Verify correct activity type was used
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Rowing Test - FTMS Training',
+          'Rowing Test - PowerTrain',
           activityType: 'rowing', // rower -> rowing
         )).called(1);
 
@@ -1610,7 +1989,7 @@ void main() {
         verify(mockStravaService.isAuthenticated()).called(1);
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Test Session - FTMS Training',
+          'Test Session - PowerTrain',
           activityType: 'ride',
         )).called(1);
 
