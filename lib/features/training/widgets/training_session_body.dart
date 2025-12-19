@@ -27,11 +27,11 @@ class TrainingSessionBody extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, top: 0, right: 16, bottom: 16),
         child: Column(
           children: [
             SessionProgressBar(
-              progress: session.isDistanceBased 
+              progress: session.isDistanceBased
                 ? (controller.state.totalDistance > 0 ? controller.state.elapsedDistance / controller.state.totalDistance : 0.0)
                 : (controller.state.totalDuration > 0 ? controller.state.elapsedSeconds / controller.state.totalDuration : 0.0),
               timeLeft: session.isDistanceBased ? controller.state.sessionDistanceLeft : controller.state.sessionTimeLeft,
@@ -51,11 +51,11 @@ class TrainingSessionBody extends StatelessWidget {
                     child: TrainingIntervalList(
                       intervals: controller.state.intervals,
                       currentInterval: controller.state.currentIntervalIndex,
-                      intervalElapsed: session.isDistanceBased 
-                        ? controller.state.intervalElapsedDistance 
+                      intervalElapsed: session.isDistanceBased
+                        ? controller.state.intervalElapsedDistance
                         : controller.state.intervalElapsedSeconds,
-                      intervalTimeLeft: session.isDistanceBased 
-                        ? controller.state.intervalDistanceLeft 
+                      intervalTimeLeft: session.isDistanceBased
+                        ? controller.state.intervalDistanceLeft
                         : controller.state.intervalTimeLeft,
                       formatMMSS: _formatMMSS,
                       formatDistance: _formatDistance,
