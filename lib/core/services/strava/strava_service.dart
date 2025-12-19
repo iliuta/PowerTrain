@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'strava_token_manager.dart';
 import 'strava_oauth_handler.dart';
+import 'strava_webview_oauth_handler.dart';
 import 'strava_activity_uploader.dart';
 
 /// Main Strava service that orchestrates the various components
@@ -10,18 +12,38 @@ import 'strava_activity_uploader.dart';
 class StravaService {
   final StravaTokenManager _tokenManager;
   final StravaOAuthHandler _oauthHandler;
+  final StravaWebViewOAuthHandler? _webViewOAuthHandler;
   final StravaActivityUploader _activityUploader;
   
   StravaService({
     StravaTokenManager? tokenManager,
     StravaOAuthHandler? oauthHandler,
+    StravaWebViewOAuthHandler? webViewOAuthHandler,
     StravaActivityUploader? activityUploader,
   }) : _tokenManager = tokenManager ?? StravaTokenManager(),
        _oauthHandler = oauthHandler ?? StravaOAuthHandler(),
+       _webViewOAuthHandler = webViewOAuthHandler,
        _activityUploader = activityUploader ?? StravaActivityUploader();
   
-  // Authentication methods - delegates to OAuth handler
-  Future<bool> authenticate() => _oauthHandler.authenticate();
+  // Authentication methods - delegates to OAuth handler (with WebView support)
+  /// Authenticates with Strava using WebView if context is available, otherwise uses external browser
+  /// 
+  /// [context] - BuildContext required for WebView authentication. If null, falls back to external browser.
+  /// 
+  /// Returns true if authentication was successful, false otherwise.
+  Future<bool> authenticate({BuildContext? context}) async {
+    // Try WebView authentication if context is provided
+    if (context != null) {
+      final webViewHandler = StravaWebViewOAuthHandler(
+        tokenManager: _tokenManager,
+        context: context,
+      );
+      return await webViewHandler.authenticate();
+    }
+    
+    // Fall back to external browser
+    return await _oauthHandler.authenticate();
+  }
   
   // Token management methods - delegates to token manager
   Future<bool> isAuthenticated() => _tokenManager.isAuthenticated();
@@ -79,5 +101,6 @@ class StravaService {
   // Direct access to specialized components for advanced usage
   StravaTokenManager get tokenManager => _tokenManager;
   StravaOAuthHandler get oauthHandler => _oauthHandler;
+  StravaWebViewOAuthHandler? get webViewOAuthHandler => _webViewOAuthHandler;
   StravaActivityUploader get activityUploader => _activityUploader;
 }

@@ -5,6 +5,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i6;
 
+import 'package:flutter/material.dart' as _i8;
 import 'package:ftms/core/services/fit/fit_file_manager.dart' as _i5;
 import 'package:ftms/core/services/strava/strava_activity_uploader.dart' as _i4;
 import 'package:ftms/core/services/strava/strava_oauth_handler.dart' as _i3;
@@ -138,9 +139,9 @@ class MockStravaService extends _i1.Mock implements _i7.StravaService {
           as _i4.StravaActivityUploader);
 
   @override
-  _i6.Future<bool> authenticate() =>
+  _i6.Future<bool> authenticate({_i8.BuildContext? context}) =>
       (super.noSuchMethod(
-            Invocation.method(#authenticate, []),
+            Invocation.method(#authenticate, [], {#context: context}),
             returnValue: _i6.Future<bool>.value(false),
           )
           as _i6.Future<bool>);

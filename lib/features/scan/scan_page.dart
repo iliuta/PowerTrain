@@ -73,7 +73,7 @@ class _ScanPageState extends State<ScanPage> {
               children: [
                 Text('Opening Strava authorization...'),
                 SizedBox(height: 4),
-                Text('Complete the login in browser and authorize the app', 
+                Text('Sign in with your Strava account in the popup', 
                      style: TextStyle(fontSize: 12)),
               ],
             ),
@@ -82,7 +82,7 @@ class _ScanPageState extends State<ScanPage> {
         );
       }
       
-      final success = await _stravaService.authenticate();
+      final success = await _stravaService.authenticate(context: context);
       
       if (success) {
         await _checkStravaStatus();
@@ -104,7 +104,7 @@ class _ScanPageState extends State<ScanPage> {
                 children: [
                   Text('Strava authentication was not completed'),
                   SizedBox(height: 4),
-                  Text('Complete the login in the browser to connect to Strava', 
+                  Text('Please try again or check your Strava credentials', 
                        style: TextStyle(fontSize: 12)),
                 ],
               ),

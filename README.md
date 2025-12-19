@@ -98,6 +98,37 @@ Sometimes you'll need to kill the adb server:
 flutter run -d macos
 ```
 
+### iOS
+
+You will need an Apple developer account.
+You will need to set up code signing in Xcode for the iOS project located in `ios/Runner.xcworkspace`.
+
+#### Run on your iPhone
+
+You'll need to connect the phone with a cable on your Mac and enable developer mode on the phone.
+You can also enable Wireless sync for your iPhone so you don't need to connect it with a cable each time.
+
+Once you can see your iPhone in `flutter devices`, you can run:
+```zsh
+flutter run -d <device_id> --release
+```
+If it complains, go to Settings/VPN & Device Management on the iPhone and trust the developer certificate and try again.
+
+The app will expire after 7 days and you'll need to do that again.
+
+#### altStore server
+Install altStore server on your Mac and from the menu bar, install the altStrore on your iPhone.
+Connect with your Apple developer ID on both Mac and iPhone when prompted.
+
+Build an IPA file on your Mac:
+```zsh
+flutter build ipa --export-method=development
+```
+Share the IPA file with AirDrop to your iPhone and open it with altStore on the iPhone to install it.
+The altStore is supposed to renew the certificate automatically but your phone needs to be in the same network as your Mac.
+
+For more details, see [altStore](https://altstore.io/).
+
 ## Running Tests
 ```zsh
 flutter pub run build_runner build --delete-conflicting-outputs

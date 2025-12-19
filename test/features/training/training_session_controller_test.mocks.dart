@@ -8,6 +8,7 @@ import 'dart:io' as _i17;
 import 'dart:typed_data' as _i11;
 
 import 'package:audioplayers/audioplayers.dart' as _i7;
+import 'package:flutter/material.dart' as _i19;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as _i10;
 import 'package:flutter_blue_plus_platform_interface/flutter_blue_plus_platform_interface.dart'
     as _i2;
@@ -593,9 +594,9 @@ class MockStravaService extends _i1.Mock implements _i18.StravaService {
           as _i6.StravaActivityUploader);
 
   @override
-  _i8.Future<bool> authenticate() =>
+  _i8.Future<bool> authenticate({_i19.BuildContext? context}) =>
       (super.noSuchMethod(
-            Invocation.method(#authenticate, []),
+            Invocation.method(#authenticate, [], {#context: context}),
             returnValue: _i8.Future<bool>.value(false),
           )
           as _i8.Future<bool>);
