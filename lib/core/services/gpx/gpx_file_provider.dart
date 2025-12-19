@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'gpx_data.dart';
 
 /// Provides GPX files for route display
 class GpxFileProvider {
@@ -37,5 +38,44 @@ class GpxFileProvider {
     return files[index];
   }
 
+}
 
+/// Information about a GPX file
+class GpxFileInfo {
+  final String assetPath;
+  final String title;
+  final double distance;
+
+  const GpxFileInfo({
+    required this.assetPath,
+    required this.title,
+    required this.distance,
+  });
+
+  /// Load and return sorted list of GPX files with data for a device type
+  static Future<List<GpxFileInfo>> getSortedGpxFilesWithData(DeviceType deviceType) async {
+    //final files = await GpxFileProvider._loadGpxFileList(deviceType);
+    final files = await GpxFileProvider._loadGpxFileList(DeviceType.rower);
+    final infos = <GpxFileInfo>[];
+
+    for (final file in files) {
+      final data = await GpxData.loadFromAsset(file);
+      if (data != null) {
+        final title = _extractTitleFromPath(file);
+        infos.add(GpxFileInfo(
+          assetPath: file,
+          title: title,
+          distance: data.totalDistance,
+        ));
+      }
+    }
+
+    infos.sort((a, b) => a.distance.compareTo(b.distance));
+    return infos;
+  }
+
+  static String _extractTitleFromPath(String path) {
+    final filename = path.split('/').last;
+    return filename.replaceAll('.gpx', '').replaceAll('-', ' ');
+  }
 }

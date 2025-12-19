@@ -15,6 +15,8 @@ import 'ftms_machine_features_tab.dart';
 import 'ftms_device_data_features_tab.dart';
 import '../../core/models/supported_resistance_level_range.dart';
 import '../../core/services/ftms_service.dart';
+import 'widgets/gpx_map_preview_widget.dart';
+import '../../core/services/gpx/gpx_file_provider.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -50,6 +52,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   List<TrainingSessionDefinition>? _trainingSessions;
   bool _isLoadingTrainingSessions = false;
   SupportedResistanceLevelRange? _supportedResistanceLevelRange;
+  List<GpxFileInfo>? _gpxFiles;
+  String? _selectedGpxAssetPath;
 
   int get _freeRideDistanceIncrement {
     if (_deviceDataType == null) return 1000; // default to 1km
@@ -98,6 +102,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     });
     _checkDeviceAvailability(config);
     _loadSupportedResistanceLevelRange();
+    _loadGpxFiles();
   }
 
   Future<void> _loadSupportedResistanceLevelRange() async {
@@ -118,6 +123,15 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         _updateResistanceController();
       });
     }
+  }
+
+  Future<void> _loadGpxFiles() async {
+    if (_deviceDataType == null) return;
+
+    final files = await GpxFileInfo.getSortedGpxFilesWithData(DeviceType.fromFtms(_deviceDataType!));
+    setState(() {
+      _gpxFiles = files;
+    });
   }
 
   void _checkDeviceAvailability(LiveDataDisplayConfig? config) {
@@ -265,6 +279,31 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                // GPX Route Selection Row
+                if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
+                  SizedBox(
+                    height: 85,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _gpxFiles!.map((info) => GpxMapPreviewWidget(
+                          info: info,
+                          isSelected: _selectedGpxAssetPath == info.assetPath,
+                          onTap: () {
+                            setState(() {
+                              if (_selectedGpxAssetPath == info.assetPath) {
+                                _selectedGpxAssetPath = null;
+                              } else {
+                                _selectedGpxAssetPath = info.assetPath;
+                              }
+                            });
+                          },
+                        )).toList(),
+                      ),
+                    ),
+                  ),
+                if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
+                  const SizedBox(height: 16),
                 // Free Ride Section
                 Card(
                   child: Column(

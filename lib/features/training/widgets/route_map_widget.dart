@@ -7,11 +7,13 @@ import '../../../core/services/gpx/gpx_route_tracker.dart';
 class RouteMapWidget extends StatefulWidget {
   final GpxRouteTracker? gpxTracker;
   final double opacity;
+  final bool showMarkers;
 
   const RouteMapWidget({
     super.key,
     required this.gpxTracker,
     this.opacity = 0.2, // 20% opacity for high transparency
+    this.showMarkers = true,
   });
 
   @override
@@ -122,54 +124,55 @@ class _RouteMapWidgetState extends State<RouteMapWidget> {
               ],
             ),
             // Draw markers
-            MarkerLayer(
-              markers: [
-                // Start position marker
-                Marker(
-                  point: routePoints.first,
-                  width: 40,
-                  height: 40,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.green.withAlpha(200),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                // Current position marker (boat/kayak)
-                if (currentLatLng != null)
+            if (widget.showMarkers)
+              MarkerLayer(
+                markers: [
+                  // Start position marker
                   Marker(
-                    point: currentLatLng,
-                    width: 50,
-                    height: 50,
+                    point: routePoints.first,
+                    width: 40,
+                    height: 40,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.orange.withAlpha(220),
+                        color: Colors.green.withAlpha(200),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.orange.withAlpha(100),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          )
-                        ],
                       ),
                       child: const Icon(
-                        Icons.kayaking,
+                        Icons.play_arrow,
                         color: Colors.white,
                         size: 20,
                       ),
                     ),
                   ),
-              ],
-            ),
+                  // Current position marker (boat/kayak)
+                  if (currentLatLng != null)
+                    Marker(
+                      point: currentLatLng,
+                      width: 50,
+                      height: 50,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withAlpha(220),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withAlpha(100),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            )
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.kayaking,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
