@@ -552,10 +552,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                         },
                       ),
                       if (_isTrainingSessionExpanded)
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.5,
-                          child: _buildTrainingSessionsContent(),
-                        ),
+                        _buildTrainingSessionsContent(),
                     ],
                   ),
                 ),
