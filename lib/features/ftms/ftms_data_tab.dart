@@ -236,6 +236,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                                   TrainingSessionProgressScreen(
                                 session: selectedSession,
                                 ftmsDevice: widget.ftmsDevice,
+                                gpxAssetPath: null,
                               ),
                             ),
                           );

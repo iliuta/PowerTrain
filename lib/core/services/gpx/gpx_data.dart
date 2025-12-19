@@ -27,10 +27,14 @@ class GpxPoint {
 class GpxData {
   final List<GpxPoint> points;
   final double totalDistance;
+  final String? assetPath;
+  final String? title;
 
   const GpxData({
     required this.points,
     required this.totalDistance,
+    this.assetPath,
+    this.title,
   });
 
   /// Load GPX data from an asset file
@@ -39,10 +43,18 @@ class GpxData {
       final gpxContent = await rootBundle.loadString(assetPath);
       final data = _parseGpxString(gpxContent);
       if (data != null) {
+        final title = _extractTitleFromPath(assetPath);
+        final gpxData = GpxData(
+          points: data.points,
+          totalDistance: data.totalDistance,
+          assetPath: assetPath,
+          title: title,
+        );
         logger.i(
-            'GPX data loaded: ${data.points.length} points, ${data.totalDistance.toStringAsFixed(1)}m total distance');
+            'GPX data loaded: ${gpxData.points.length} points, ${gpxData.totalDistance.toStringAsFixed(1)}m total distance');
+        return gpxData;
       }
-      return data;
+      return null;
     } catch (e) {
       logger.e('Failed to load GPX data: $e');
       return null;
@@ -136,4 +148,9 @@ class GpxData {
   }
 
   static double _degreesToRadians(double degrees) => degrees * pi / 180;
+
+  static String _extractTitleFromPath(String path) {
+    final filename = path.split('/').last;
+    return filename.replaceAll('.gpx', '').replaceAll('-', ' ');
+  }
 }

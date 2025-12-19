@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/gpx/gpx_file_provider.dart';
+import '../../../core/services/gpx/gpx_data.dart';
 import '../../../core/services/gpx/gpx_route_tracker.dart';
 import '../../training/widgets/route_map_widget.dart';
 
 /// A preview widget for a GPX file showing a small map with title and distance
 class GpxMapPreviewWidget extends StatefulWidget {
-  final GpxFileInfo info;
+  final GpxData info;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -31,7 +31,7 @@ class _GpxMapPreviewWidgetState extends State<GpxMapPreviewWidget> {
 
   Future<void> _loadTracker() async {
     final tracker = GpxRouteTracker();
-    await tracker.loadFromAsset(widget.info.assetPath);
+    await tracker.loadFromAsset(widget.info.assetPath!);
     setState(() {
       _tracker = tracker;
     });
@@ -84,7 +84,7 @@ class _GpxMapPreviewWidgetState extends State<GpxMapPreviewWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        widget.info.title,
+                        widget.info.title!,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -94,7 +94,7 @@ class _GpxMapPreviewWidgetState extends State<GpxMapPreviewWidget> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${(widget.info.distance / 1000).toStringAsFixed(1)} km',
+                        '${(widget.info.totalDistance / 1000).toStringAsFixed(1)} km',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
