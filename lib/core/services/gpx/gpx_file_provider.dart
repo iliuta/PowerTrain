@@ -37,18 +37,5 @@ class GpxFileProvider {
     return files[index];
   }
 
-  /// Verify that a GPX file exists
-  static Future<bool> gpxFileExists(String path) async {
-    try {
-      await rootBundle.loadString(path);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
 
-  /// Get all available GPX file paths for a specific device type
-  static Future<List<String>> getAllGpxFiles(DeviceType deviceType) async {
-    return await _loadGpxFileList(deviceType);
-  }
 }
