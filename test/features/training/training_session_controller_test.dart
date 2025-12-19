@@ -1287,7 +1287,7 @@ void main() {
         controller.dispose();
       });
 
-      test('_handleSessionCompleted sends FTMS stop and reset commands', () async {
+      test('_handleSessionCompleted sends FTMS stop command only for natural completion', () async {
         // Create dummy original interval for testing
         final instantInterval = UnitTrainingInterval(duration: 1, title: 'Instant', resistanceLevel: 1);
 
@@ -1336,10 +1336,10 @@ void main() {
         // Wait for async FTMS commands to complete
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // Verify stop/pause and reset were called
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(greaterThanOrEqualTo(2));
+        // Verify only stop/pause was called (reset happens later when user confirms)
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(greaterThanOrEqualTo(1));
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(1);
+        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset));
 
         controller.dispose();
       });

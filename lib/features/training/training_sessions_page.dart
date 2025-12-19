@@ -152,6 +152,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
         builder: (context) => TrainingSessionProgressScreen(
           session: session,
           ftmsDevice: widget.connectedDevice!,
+          gpxAssetPath: null,
         ),
       ),
     );

@@ -15,6 +15,9 @@ import 'ftms_machine_features_tab.dart';
 import 'ftms_device_data_features_tab.dart';
 import '../../core/models/supported_resistance_level_range.dart';
 import '../../core/services/ftms_service.dart';
+import 'widgets/gpx_map_preview_widget.dart';
+import '../../core/services/gpx/gpx_file_provider.dart';
+import '../../core/services/gpx/gpx_data.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -50,6 +53,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   List<TrainingSessionDefinition>? _trainingSessions;
   bool _isLoadingTrainingSessions = false;
   SupportedResistanceLevelRange? _supportedResistanceLevelRange;
+  List<GpxData>? _gpxFiles;
+  String? _selectedGpxAssetPath;
 
   int get _freeRideDistanceIncrement {
     if (_deviceDataType == null) return 1000; // default to 1km
@@ -98,6 +103,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     });
     _checkDeviceAvailability(config);
     _loadSupportedResistanceLevelRange();
+    _loadGpxFiles();
   }
 
   Future<void> _loadSupportedResistanceLevelRange() async {
@@ -118,6 +124,15 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         _updateResistanceController();
       });
     }
+  }
+
+  Future<void> _loadGpxFiles() async {
+    if (_deviceDataType == null) return;
+
+    final files = await GpxFileProvider.getSortedGpxData(DeviceType.fromFtms(_deviceDataType!));
+    setState(() {
+      _gpxFiles = files;
+    });
   }
 
   void _checkDeviceAvailability(LiveDataDisplayConfig? config) {
@@ -189,6 +204,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
             builder: (context) => TrainingSessionProgressScreen(
               session: session,
               ftmsDevice: widget.ftmsDevice,
+              gpxAssetPath: _selectedGpxAssetPath,
             ),
           ),
         );
@@ -265,6 +281,37 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                // GPX Route Selection Row
+                if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
+                  SizedBox(
+                    height: 85,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _gpxFiles!.map((data) => GpxMapPreviewWidget(
+                          info: data,
+                          isSelected: _selectedGpxAssetPath == data.assetPath,
+                          onTap: () {
+                            setState(() {
+                              if (_selectedGpxAssetPath == data.assetPath) {
+                                _selectedGpxAssetPath = null;
+                                if (_isFreeRideDistanceBased) {
+                                  _freeRideDistanceMeters = 5000; // reset to default
+                                }
+                              } else {
+                                _selectedGpxAssetPath = data.assetPath;
+                                if (_isFreeRideDistanceBased) {
+                                  _freeRideDistanceMeters = data.totalDistance.round();
+                                }
+                              }
+                            });
+                          },
+                        )).toList(),
+                      ),
+                    ),
+                  ),
+                if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
+                  const SizedBox(height: 16),
                 // Free Ride Section
                 Card(
                   child: Column(
@@ -295,6 +342,10 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                     onChanged: (value) {
                                       setState(() {
                                         _isFreeRideDistanceBased = value;
+                                        if (value && _selectedGpxAssetPath != null) {
+                                          final selectedData = _gpxFiles!.firstWhere((data) => data.assetPath == _selectedGpxAssetPath);
+                                          _freeRideDistanceMeters = selectedData.totalDistance.round();
+                                        }
                                       });
                                     },
                                   ),
@@ -518,6 +569,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                         builder: (context) => TrainingSessionProgressScreen(
                                           session: session,
                                           ftmsDevice: widget.ftmsDevice,
+                                          gpxAssetPath: _selectedGpxAssetPath,
                                         ),
                                       ),
                                     );

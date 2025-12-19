@@ -14,11 +14,13 @@ import 'widgets/training_session_scaffold.dart';
 class TrainingSessionProgressScreen extends StatefulWidget {
   final TrainingSessionDefinition session;
   final BluetoothDevice ftmsDevice;
+  final String? gpxAssetPath;
 
   const TrainingSessionProgressScreen({
     super.key,
     required this.session,
     required this.ftmsDevice,
+    this.gpxAssetPath,
   });
 
   @override
@@ -49,7 +51,7 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
   }
 
   Future<void> _loadGpxFile() async {
-    final gpxFile = await GpxFileProvider.getRandomGpxFile(widget.session.ftmsMachineType);
+    final gpxFile = widget.gpxAssetPath ?? await GpxFileProvider.getRandomGpxFile(widget.session.ftmsMachineType);
     setState(() {
       _gpxFilePath = gpxFile;
     });

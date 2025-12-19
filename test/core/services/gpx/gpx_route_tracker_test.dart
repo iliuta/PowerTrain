@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/services/gpx/gpx_route_tracker.dart';
+import 'package:ftms/core/services/gpx/gpx_data.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

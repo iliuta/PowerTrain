@@ -8,6 +8,7 @@ import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/features/training/model/unit_training_interval.dart';
 import 'package:ftms/features/training/model/session_state.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -23,7 +24,7 @@ import '../../core/utils/logger.dart';
 
 class TrainingSessionController extends ChangeNotifier
     implements SessionEffectHandler {
-  final ExpandedTrainingSessionDefinition session;
+  ExpandedTrainingSessionDefinition session;
   final BluetoothDevice ftmsDevice;
   late final FTMSService _ftmsService;
   late final Stream<DeviceData?> _ftmsStream;
@@ -492,6 +493,15 @@ class TrainingSessionController extends ChangeNotifier
   }
 
   @override
+  void onSessionCompletedAwaitingConfirmation() {
+    Future.microtask(() async {
+      if (_disposed) return;
+      await stopOrPauseWithControl();
+    });
+    // Recording will be handled by the completion dialog
+  }
+
+  @override
   void onSendFtmsPause() {
     Future.microtask(() async {
       if (_disposed) return;
@@ -658,6 +668,55 @@ class TrainingSessionController extends ChangeNotifier
   void discardSession() {
     if (_state.hasEnded) return;
     _state.onUserStopped();
+  }
+
+  /// Complete the session (stop and reset FTMS machine) after user confirmation
+  void completeSessionAfterConfirmation() {
+    onSessionCompleted();
+  }
+
+  /// Extend the session with a new interval and continue
+  void extendSessionAndContinue() {
+    // Calculate total duration/distance of original session
+    final totalDuration = session.isDistanceBased ? null : session.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
+    final totalDistance = session.isDistanceBased ? session.intervals.fold<double>(0.0, (sum, interval) => sum + (interval.distance ?? 0.0)) : null;
+
+    // Create a new interval with the same duration/distance as the original session
+    final newInterval = ExpandedUnitTrainingInterval(
+      title: 'Extended',
+      duration: totalDuration,
+      distance: totalDistance?.toInt(),
+      originalInterval: UnitTrainingInterval(
+        title: 'Extended',
+        duration: totalDuration,
+        distance: totalDistance?.toInt(),
+      ),
+    );
+
+    // Create new session with the additional interval
+    final extendedIntervals = [...session.intervals, newInterval];
+    final extendedSession = ExpandedTrainingSessionDefinition(
+      title: session.title,
+      ftmsMachineType: session.ftmsMachineType,
+      intervals: extendedIntervals,
+      isCustom: session.isCustom,
+      isDistanceBased: session.isDistanceBased,
+    );
+
+    // Update the session
+    session = extendedSession;
+
+    // Update the state to continue from completed state
+    _state = _state.copyWith(
+      status: SessionStatus.running,
+      timing: _state.timing.extendWithNewInterval(extendedSession),
+      session: extendedSession,
+    );
+
+    // Resume the session (send startOrResume to FTMS, no reset)
+    onSendFtmsResume();
+    onStartTimer();
+    notifyListeners();
   }
 
   // ============ Lifecycle ============

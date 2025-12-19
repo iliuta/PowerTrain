@@ -10,6 +10,7 @@ abstract interface class SessionEffectHandler {
   void onPlayWarningSound();
   void onIntervalChanged(ExpandedUnitTrainingInterval newInterval);
   void onSessionCompleted();
+  void onSessionCompletedAwaitingConfirmation();
   void onSendFtmsPause();
   void onSendFtmsResume();
   void onSendFtmsStopAndReset();
@@ -207,6 +208,33 @@ class SessionTiming {
   /// Whether the interval changed after a tick
   bool didIntervalChange(SessionTiming previous) =>
       currentIntervalIndex != previous.currentIntervalIndex;
+
+  /// Creates a new SessionTiming extended with a new interval
+  SessionTiming extendWithNewInterval(ExpandedTrainingSessionDefinition extendedSession) {
+    return SessionTiming.fromSession(extendedSession).copyWith(
+      elapsedSeconds: elapsedSeconds,
+      elapsedDistance: elapsedDistance,
+      currentIntervalIndex: intervals.length, // Set to the new interval index
+    );
+  }
+
+  /// Creates a copy of this timing with modified properties
+  SessionTiming copyWith({
+    int? elapsedSeconds,
+    double? elapsedDistance,
+    int? currentIntervalIndex,
+  }) {
+    return SessionTiming(
+      elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
+      elapsedDistance: elapsedDistance ?? this.elapsedDistance,
+      currentIntervalIndex: currentIntervalIndex ?? this.currentIntervalIndex,
+      intervalStartTimes: intervalStartTimes,
+      intervalStartDistances: intervalStartDistances,
+      totalDuration: totalDuration,
+      totalDistance: totalDistance,
+      intervals: intervals,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -431,7 +459,7 @@ class TrainingSessionState {
     if (session.isDistanceBased ? timing.isDistanceReached : timing.isDurationReached) {
       status = SessionStatus.completed;
       _handler?.onStopTimer();
-      _handler?.onSessionCompleted();
+      _handler?.onSessionCompletedAwaitingConfirmation();
       _handler?.onNotifyListeners();
       return;
     }
@@ -460,7 +488,7 @@ class TrainingSessionState {
     if (timing.isDistanceReached) {
       status = SessionStatus.completed;
       _handler?.onStopTimer();
-      _handler?.onSessionCompleted();
+      _handler?.onSessionCompletedAwaitingConfirmation();
       _handler?.onNotifyListeners();
       return;
     }
@@ -476,6 +504,22 @@ class TrainingSessionState {
     _handler?.onStopTimer();
     _handler?.onSendFtmsStopAndReset();
     _handler?.onNotifyListeners();
+  }
+
+  /// Creates a copy of this state with modified properties
+  TrainingSessionState copyWith({
+    SessionStatus? status,
+    SessionTiming? timing,
+    bool? isDeviceConnected,
+    ExpandedTrainingSessionDefinition? session,
+  }) {
+    return TrainingSessionState(
+      status: status ?? this.status,
+      timing: timing ?? this.timing,
+      isDeviceConnected: isDeviceConnected ?? this.isDeviceConnected,
+      session: session ?? this.session,
+      handler: _handler,
+    );
   }
 
   @override

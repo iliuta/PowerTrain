@@ -34,6 +34,9 @@ class MockSessionEffectHandler implements SessionEffectHandler {
   void onSessionCompleted() => calls.add('sessionCompleted');
 
   @override
+  void onSessionCompletedAwaitingConfirmation() => calls.add('sessionCompletedAwaitingConfirmation');
+
+  @override
   void onSendFtmsPause() => calls.add('sendFtmsPause');
 
   @override
@@ -50,6 +53,7 @@ class MockSessionEffectHandler implements SessionEffectHandler {
   bool get playWarningSoundCalled => calls.contains('playWarningSound');
   bool get intervalChangedCalled => calls.contains('intervalChanged');
   bool get sessionCompletedCalled => calls.contains('sessionCompleted');
+  bool get sessionCompletedAwaitingConfirmationCalled => calls.contains('sessionCompletedAwaitingConfirmation');
   bool get sendFtmsPauseCalled => calls.contains('sendFtmsPause');
   bool get sendFtmsResumeCalled => calls.contains('sendFtmsResume');
   bool get sendFtmsStopAndResetCalled => calls.contains('sendFtmsStopAndReset');
@@ -916,7 +920,7 @@ void main() {
         state.onDistanceUpdate(2500.0); // Total distance of session
 
         expect(state.status, SessionStatus.completed);
-        expect(mockHandler.sessionCompletedCalled, true);
+        expect(mockHandler.sessionCompletedAwaitingConfirmationCalled, true);
         expect(mockHandler.stopTimerCalled, true);
         expect(mockHandler.notifyListenersCalled, true);
       });
@@ -1299,7 +1303,7 @@ void main() {
         expect(mockHandler.playWarningSoundCalled, true);
       });
 
-      test('calls sessionCompleted and stopTimer when duration reached', () {
+      test('calls sessionCompletedAwaitingConfirmation and stopTimer when duration reached', () {
         final original = UnitTrainingInterval(duration: 3);
         final shortSession = ExpandedTrainingSessionDefinition(
           title: 'Short',
@@ -1321,7 +1325,7 @@ void main() {
         state.onTimerTick();
 
         expect(mockHandler.stopTimerCalled, true);
-        expect(mockHandler.sessionCompletedCalled, true);
+        expect(mockHandler.sessionCompletedAwaitingConfirmationCalled, true);
         expect(mockHandler.notifyListenersCalled, true);
       });
 
