@@ -59,7 +59,9 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
           _confirmationDialogShown = true;
           Navigator.of(dialogContext).pop();
           Navigator.of(context).pop();
-          if (!isSessionComplete) {
+          if (isSessionComplete) {
+            widget.controller.completeSessionAfterConfirmation();
+          } else {
             widget.controller.discardSession();
           }
         },
@@ -73,6 +75,11 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
               Navigator.of(context).pop();
             }
           });
+        },
+        onContinue: () {
+          _confirmationDialogShown = false; // Reset flag so extended session can show dialog again
+          Navigator.of(dialogContext).pop();
+          widget.controller.extendSessionAndContinue();
         },
       ),
     );
@@ -102,13 +109,13 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
           // Main scaffold with all UI
           Scaffold(
             appBar: TrainingSessionAppBar(
-              session: widget.session,
+              session: widget.controller.session,
               controller: widget.controller,
               onBackPressed: _onBackPressed,
               onStopPressed: _onStopPressed,
             ),
             body: TrainingSessionBody(
-              session: widget.session,
+              session: widget.controller.session,
               controller: widget.controller,
               config: widget.config,
               ftmsDevice: widget.ftmsDevice,
@@ -154,6 +161,7 @@ class _StopConfirmationDialog extends StatefulWidget {
   final bool isSessionComplete;
   final VoidCallback onDiscard;
   final VoidCallback onSaveComplete;
+  final VoidCallback onContinue;
   final VoidCallback? onStop;
 
   const _StopConfirmationDialog({
@@ -161,6 +169,7 @@ class _StopConfirmationDialog extends StatefulWidget {
     required this.isSessionComplete,
     required this.onDiscard,
     required this.onSaveComplete,
+    required this.onContinue,
     this.onStop,
   });
 
@@ -194,7 +203,7 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
 
     // Initial state
     if (widget.isSessionComplete) {
-      return const Text('You have completed the training session. Would you like to save your workout?');
+      return const Text('You have completed the training session. Would you like to save your workout or continue with an extended session?');
     }
     return const Text('Are you sure you want to stop the training session? This action cannot be undone.');
   }
@@ -209,6 +218,15 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
+        ),
+      if (widget.isSessionComplete)
+        ElevatedButton(
+          onPressed: widget.onContinue,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Continue'),
         ),
       ElevatedButton(
         onPressed: widget.onDiscard,
@@ -240,6 +258,10 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
       }
     }
     await widget.controller.saveRecording();
+
+    if (widget.isSessionComplete) {
+      widget.controller.completeSessionAfterConfirmation();
+    }
 
     if (mounted) {
       // Close dialog and navigate back after a brief delay
