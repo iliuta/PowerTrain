@@ -92,7 +92,7 @@ class TrainingSessionDefinition {
   }
 
   /// Creates a templated training session based on machine type
-  static TrainingSessionDefinition createTemplate(DeviceType machineType, {bool isDistanceBased = false, int? workoutValue, Map<String, dynamic>? targets, int? resistanceLevel}) {
+  static TrainingSessionDefinition createTemplate(DeviceType machineType, {bool isDistanceBased = false, int? workoutValue, Map<String, dynamic>? targets, int? resistanceLevel, bool hasWarmup = true, bool hasCooldown = true}) {
     final defaultWorkoutValue = isDistanceBased ? 5000 : 1200; // 5km for distance, 20min for time
     final actualWorkoutValue = workoutValue ?? defaultWorkoutValue;
     final String machineName = machineType == DeviceType.rower ? 'Rowing' : 'Cycling';
@@ -100,8 +100,8 @@ class TrainingSessionDefinition {
     final String title = 'New $machineName $sessionType Training Session';
 
     final intervals = machineType == DeviceType.indoorBike
-        ? _createBikeTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets, resistanceLevel: resistanceLevel)
-        : _createRowerTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets, resistanceLevel: resistanceLevel);
+        ? _createBikeTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets, resistanceLevel: resistanceLevel, hasWarmup: hasWarmup, hasCooldown: hasCooldown)
+        : _createRowerTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets, resistanceLevel: resistanceLevel, hasWarmup: hasWarmup, hasCooldown: hasCooldown);
 
     return TrainingSessionDefinition(
       title: title,
@@ -112,32 +112,40 @@ class TrainingSessionDefinition {
     );
   }
 
-  static List<TrainingInterval> _createBikeTemplate(int workoutValue, {bool isDistanceBased = false, Map<String, dynamic>? targets, int? resistanceLevel}) {
-    final interval = UnitTrainingInterval(
-      title: 'Workout',
-      duration: isDistanceBased ? null : workoutValue,
-      distance: isDistanceBased ? workoutValue : null,
-      targets: targets ?? {},
-      resistanceLevel: resistanceLevel,
-    );
-    return [interval];
+  static List<TrainingInterval> _createBikeTemplate(int workoutValue, {bool isDistanceBased = false, Map<String, dynamic>? targets, int? resistanceLevel, bool hasWarmup = true, bool hasCooldown = true}) {
+    // Bike template always has just the workout interval
+    return [
+      UnitTrainingInterval(
+        title: 'Workout',
+        duration: isDistanceBased ? null : workoutValue,
+        distance: isDistanceBased ? workoutValue : null,
+        targets: targets ?? {},
+        resistanceLevel: resistanceLevel,
+      ),
+    ];
   }
 
-  static List<TrainingInterval> _createRowerTemplate(int workoutValue, {bool isDistanceBased = false, Map<String, dynamic>? targets, int? resistanceLevel}) {
+  static List<TrainingInterval> _createRowerTemplate(int workoutValue, {bool isDistanceBased = false, Map<String, dynamic>? targets, int? resistanceLevel, bool hasWarmup = true, bool hasCooldown = true}) {
     if (isDistanceBased) {
       // Distance-based rowing template
       final warmupDistance = 200; // 200m per interval
       final cooldownDistance = 200; // 200m per interval
-      final workoutDistanceAdjusted = workoutValue - (5 * warmupDistance) - (5 * cooldownDistance);
+      final int totalWarmupDistance = hasWarmup ? 5 * warmupDistance : 0;
+      final int totalCooldownDistance = hasCooldown ? 5 * cooldownDistance : 0;
+      final workoutDistanceAdjusted = workoutValue - totalWarmupDistance - totalCooldownDistance;
 
-      final warmUpIntervals = List.generate(5, (i) => UnitTrainingInterval(
-        title: 'Warm Up ${i + 1}',
-        distance: warmupDistance,
-        targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
-        resistanceLevel: 20 + i * 10,
-      ));
+      final List<TrainingInterval> intervals = [];
 
-      final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
+      if (hasWarmup) {
+        final warmUpIntervals = List.generate(5, (i) => UnitTrainingInterval(
+          title: 'Warm Up ${i + 1}',
+          distance: warmupDistance,
+          targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
+          resistanceLevel: 20 + i * 10,
+        ));
+        final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
+        intervals.add(warmUpGroup);
+      }
 
       final workoutInterval = UnitTrainingInterval(
         title: 'Workout',
@@ -145,34 +153,40 @@ class TrainingSessionDefinition {
         targets: targets ?? {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
         resistanceLevel: resistanceLevel ?? 60,
       );
+      intervals.add(workoutInterval);
 
-      final coolDownIntervals = warmUpIntervals.reversed.toList().asMap().entries.map((entry) {
-        final index = entry.key;
-        final interval = entry.value;
-        return UnitTrainingInterval(
-          title: 'Cool down ${index + 1}',
-          distance: interval.distance,
-          targets: interval.targets,
-          resistanceLevel: interval.resistanceLevel,
-        );
-      }).toList();
-      final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
+      if (hasCooldown) {
+        final coolDownIntervals = List.generate(5, (i) => UnitTrainingInterval(
+          title: 'Cool down ${i + 1}',
+          distance: cooldownDistance,
+          targets: {'Instantaneous Pace': '${84 + (4 - i) * 3}%', 'Stroke Rate': 20},
+          resistanceLevel: 20 + (4 - i) * 10,
+        ));
+        final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
+        intervals.add(coolDownGroup);
+      }
 
-      return [warmUpGroup, workoutInterval, coolDownGroup];
+      return intervals;
     } else {
       // Time-based rowing template (existing logic)
       final warmupDuration = 5 * 60;
       final cooldownDuration = 5 * 60;
-      final workoutDurationAdjusted = workoutValue - warmupDuration - cooldownDuration;
+      final int totalWarmupDuration = hasWarmup ? warmupDuration : 0;
+      final int totalCooldownDuration = hasCooldown ? cooldownDuration : 0;
+      final workoutDurationAdjusted = workoutValue - totalWarmupDuration - totalCooldownDuration;
 
-      final warmUpIntervals = List.generate(5, (i) => UnitTrainingInterval(
-        title: 'Warm Up ${i + 1}',
-        duration: 60,
-        targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
-        resistanceLevel: 20 + i * 10,
-      ));
+      final List<TrainingInterval> intervals = [];
 
-      final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
+      if (hasWarmup) {
+        final warmUpIntervals = List.generate(5, (i) => UnitTrainingInterval(
+          title: 'Warm Up ${i + 1}',
+          duration: 60,
+          targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
+          resistanceLevel: 20 + i * 10,
+        ));
+        final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
+        intervals.add(warmUpGroup);
+      }
 
       final workoutInterval = UnitTrainingInterval(
         title: 'Workout',
@@ -180,20 +194,20 @@ class TrainingSessionDefinition {
         targets: targets ?? {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
         resistanceLevel: resistanceLevel ?? 60,
       );
+      intervals.add(workoutInterval);
 
-      final coolDownIntervals = warmUpIntervals.reversed.toList().asMap().entries.map((entry) {
-        final index = entry.key;
-        final interval = entry.value;
-        return UnitTrainingInterval(
-          title: 'Cool down ${index + 1}',
-          duration: interval.duration,
-          targets: interval.targets,
-          resistanceLevel: interval.resistanceLevel,
-        );
-      }).toList();
-      final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
+      if (hasCooldown) {
+        final coolDownIntervals = List.generate(5, (i) => UnitTrainingInterval(
+          title: 'Cool down ${i + 1}',
+          duration: 60,
+          targets: {'Instantaneous Pace': '${84 + (4 - i) * 3}%', 'Stroke Rate': 20},
+          resistanceLevel: 20 + (4 - i) * 10,
+        ));
+        final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
+        intervals.add(coolDownGroup);
+      }
 
-      return [warmUpGroup, workoutInterval, coolDownGroup];
+      return intervals;
     }
   }
 }

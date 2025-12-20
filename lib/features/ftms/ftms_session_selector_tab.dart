@@ -45,6 +45,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   int? _freeRideResistanceLevel;
   TextEditingController? _resistanceController;
   bool _isResistanceLevelValid = true;
+  bool _hasWarmup = true; // Default to true for rowers
+  bool _hasCooldown = true; // Default to true for rowers
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?> _configs = {};
   bool _isLoadingSettings = true;
@@ -551,6 +553,40 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   ),
                                 ),
                               const SizedBox(height: 16),
+                              // Warm-up and Cool-down checkboxes (only for rowers)
+                              if (_deviceDataType != null && DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Switch(
+                                          value: _hasWarmup,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _hasWarmup = value;
+                                            });
+                                          },
+                                        ),
+                                        const Text('Include warm up'),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Row(
+                                      children: [
+                                        Switch(
+                                          value: _hasCooldown,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _hasCooldown = value;
+                                            });
+                                          },
+                                        ),
+                                        const Text('Include cool down'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ElevatedButton(
                                 onPressed: !_isResistanceLevelValid ? null : () {
                                   if (_deviceDataType != null) {
@@ -563,6 +599,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       workoutValue: workoutValue,
                                       targets: _freeRideTargets,
                                       resistanceLevel: _freeRideResistanceLevel,
+                                      hasWarmup: _hasWarmup,
+                                      hasCooldown: _hasCooldown,
                                     );
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
