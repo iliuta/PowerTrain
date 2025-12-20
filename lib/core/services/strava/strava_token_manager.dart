@@ -54,6 +54,16 @@ class StravaTokenManager {
           width: 300,
           child: WebViewWidget(controller: controller),
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              logger.i('❌ Turnstile verification cancelled by user');
+              completer.complete(null);
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
       ),
     );
 
