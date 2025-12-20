@@ -1,6 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../utils/logger.dart';
 import '../http/network_client.dart';
 import 'strava_config.dart';
@@ -23,6 +28,43 @@ class StravaTokenManager {
   static const String _expiresAtKey = 'strava_expires_at';
   static const String _athleteNameKey = 'strava_athlete_name';
   static const String _athleteIdKey = 'strava_athlete_id';
+
+  /// Gets a Turnstile token by loading the verification page in a WebView
+  Future<String?> getTurnstileToken(BuildContext context) async {
+    final completer = Completer<String?>();
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse('https://iliuta.github.io/powertrain-training-sessions/turnstile.html'))
+      ..addJavaScriptChannel(
+        'turnstileCallback',
+        onMessageReceived: (JavaScriptMessage message) {
+          logger.i('✅ Turnstile token received');
+          completer.complete(message.message);
+          Navigator.of(context).pop();
+        },
+      );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Verifying...'),
+        content: SizedBox(
+          height: 400,
+          width: 300,
+          child: WebViewWidget(controller: controller),
+        ),
+      ),
+    );
+
+    return completer.future.timeout(
+      const Duration(seconds: 60),
+      onTimeout: () {
+        logger.e('⏱️ Turnstile token timeout');
+        return null;
+      },
+    );
+  }
 
   /// Safely writes a value to secure storage with fallback to SharedPreferences
   Future<void> _safeWrite(String key, String value) async {
@@ -155,8 +197,8 @@ class StravaTokenManager {
   }
   
   /// Gets the current access token, refreshing if necessary
-  Future<String?> getValidAccessToken() async {
-    final tokenRefreshed = await _refreshTokenIfNeeded();
+  Future<String?> getValidAccessToken(BuildContext? context) async {
+    final tokenRefreshed = await _refreshTokenIfNeeded(context);
     if (!tokenRefreshed) return null;
     
     return await _safeRead(_accessTokenKey);
@@ -164,7 +206,7 @@ class StravaTokenManager {
   
 
   /// Refreshes access token if needed
-  Future<bool> _refreshTokenIfNeeded() async {
+  Future<bool> _refreshTokenIfNeeded(BuildContext? context) async {
     try {
       final expiresAtStr = await _safeRead(_expiresAtKey);
       if (expiresAtStr == null) return false;
@@ -179,15 +221,30 @@ class StravaTokenManager {
       if (refreshToken == null) return false;
       
       logger.i('🔄 Refreshing Strava access token...');
-      
+
+      String? turnstileToken;
+      if (context != null) {
+        // Get Turnstile token for verification
+        turnstileToken = await getTurnstileToken(context);
+        if (turnstileToken == null) {
+          logger.e('❌ Failed to obtain Turnstile token for refresh');
+          return false;
+        }
+        logger.i('✅ Turnstile token obtained for refresh');
+      }
+
       final client = NetworkClient.client;
+      final body = {
+        'refresh_token': refreshToken,
+        'grant_type': 'refresh_token',
+      };
+      if (turnstileToken != null) {
+        body['turnstile_token'] = turnstileToken;
+      }
       final response = await client.post(
         Uri.parse(StravaConfig.tokenExchangeUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'refresh_token': refreshToken,
-          'grant_type': 'refresh_token',
-        }),
+        body: jsonEncode(body),
       );
       
       if (response.statusCode != 200) {
@@ -210,14 +267,31 @@ class StravaTokenManager {
   }
   
   /// Exchanges authorization code for access tokens
-  Future<bool> exchangeCodeForTokens(String code) async {
+  Future<bool> exchangeCodeForTokens(String code, BuildContext? context) async {
     try {
+      logger.i('🔄 Exchanging authorization code for tokens...');
+
+      String? turnstileToken;
+      if (context != null) {
+        // Get Turnstile token for verification
+        turnstileToken = await getTurnstileToken(context);
+        if (turnstileToken == null) {
+          logger.e('❌ Failed to obtain Turnstile token');
+          return false;
+        }
+        logger.i('✅ Turnstile token obtained');
+      }
+
       // Exchange code for tokens
       final client = NetworkClient.client;
+      final body = {'code': code};
+      if (turnstileToken != null) {
+        body['turnstile_token'] = turnstileToken;
+      }
       final response = await client.post(
         Uri.parse(StravaConfig.tokenExchangeUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'code': code}),
+        body: jsonEncode(body),
       );
       
       if (response.statusCode != 200) {
