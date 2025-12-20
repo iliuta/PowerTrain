@@ -498,5 +498,83 @@ void main() {
         expect(interval.resistanceLevel, equals(60 - i * 10));
       }
     });
+
+    test('createTemplate creates rower template without warm-up when hasWarmup is false', () {
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.rower, workoutValue: 600, hasWarmup: false);
+
+      expect(session.title, equals('New Rowing Time Training Session'));
+      expect(session.ftmsMachineType, equals(DeviceType.rower));
+      expect(session.isCustom, isTrue);
+      expect(session.intervals, hasLength(2)); // workout + cool-down
+
+      // Workout interval
+      final workoutInterval = session.intervals[0] as UnitTrainingInterval;
+      expect(workoutInterval.title, equals('Workout'));
+      expect(workoutInterval.duration, equals(300)); // 600 - 300 (cool-down)
+      expect(workoutInterval.targets!['Instantaneous Pace'], equals('96%'));
+      expect(workoutInterval.targets!['Stroke Rate'], equals(22));
+      expect(workoutInterval.resistanceLevel, equals(60));
+
+      // Cool down group
+      final coolDownGroup = session.intervals[1] as GroupTrainingInterval;
+      expect(coolDownGroup.repeat, equals(1));
+      expect(coolDownGroup.intervals, hasLength(5));
+      final expectedCoolDownPowers = ['96%', '93%', '90%', '87%', '84%'];
+      for (int i = 0; i < 5; i++) {
+        final interval = coolDownGroup.intervals[i];
+        expect(interval.title, equals('Cool down ${i + 1}'));
+        expect(interval.duration, equals(60));
+        expect(interval.targets!['Instantaneous Pace'], equals(expectedCoolDownPowers[i]));
+        expect(interval.targets!['Stroke Rate'], equals(20));
+        expect(interval.resistanceLevel, equals(60 - i * 10));
+      }
+    });
+
+    test('createTemplate creates rower template without cool-down when hasCooldown is false', () {
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.rower, workoutValue: 600, hasCooldown: false);
+
+      expect(session.title, equals('New Rowing Time Training Session'));
+      expect(session.ftmsMachineType, equals(DeviceType.rower));
+      expect(session.isCustom, isTrue);
+      expect(session.intervals, hasLength(2)); // warm-up + workout
+
+      // Warm up group
+      final warmUpGroup = session.intervals[0] as GroupTrainingInterval;
+      expect(warmUpGroup.repeat, equals(1));
+      expect(warmUpGroup.intervals, hasLength(5));
+      for (int i = 0; i < 5; i++) {
+        final interval = warmUpGroup.intervals[i];
+        expect(interval.title, equals('Warm Up ${i + 1}'));
+        expect(interval.duration, equals(60));
+        expect(interval.targets!['Instantaneous Pace'], equals('${84 + i * 3}%'));
+        expect(interval.targets!['Stroke Rate'], equals(20));
+        expect(interval.resistanceLevel, equals(20 + i * 10));
+      }
+
+      // Workout interval
+      final workoutInterval = session.intervals[1] as UnitTrainingInterval;
+      expect(workoutInterval.title, equals('Workout'));
+      expect(workoutInterval.duration, equals(300)); // 600 - 300 (warm-up)
+      expect(workoutInterval.targets!['Instantaneous Pace'], equals('96%'));
+      expect(workoutInterval.targets!['Stroke Rate'], equals(22));
+      expect(workoutInterval.resistanceLevel, equals(60));
+    });
+
+    test('createTemplate creates rower template with only workout when hasWarmup and hasCooldown are false', () {
+      final session = TrainingSessionDefinition.createTemplate(DeviceType.rower, workoutValue: 600, hasWarmup: false, hasCooldown: false);
+
+      expect(session.title, equals('New Rowing Time Training Session'));
+      expect(session.ftmsMachineType, equals(DeviceType.rower));
+      expect(session.isCustom, isTrue);
+      expect(session.intervals, hasLength(1));
+
+      // Workout interval
+      final workoutInterval = session.intervals.first as UnitTrainingInterval;
+      expect(workoutInterval.title, equals('Workout'));
+      expect(workoutInterval.duration, equals(600)); // full workout value
+      expect(workoutInterval.targets!['Instantaneous Pace'], equals('96%'));
+      expect(workoutInterval.targets!['Stroke Rate'], equals(22));
+      expect(workoutInterval.resistanceLevel, equals(60));
+    });
   });
 }
