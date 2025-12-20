@@ -176,12 +176,13 @@ class MockStravaService extends _i1.Mock implements _i7.StravaService {
     String? fitFilePath,
     String? activityName, {
     String? activityType = 'workout',
+    _i8.BuildContext? context,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
               #uploadActivity,
               [fitFilePath, activityName],
-              {#activityType: activityType},
+              {#activityType: activityType, #context: context},
             ),
             returnValue: _i6.Future<Map<String, dynamic>?>.value(),
           )
@@ -196,6 +197,7 @@ class MockStravaService extends _i1.Mock implements _i7.StravaService {
     bool? isPrivate = false,
     bool? hasHeartrate = false,
     bool? hasPower = false,
+    _i8.BuildContext? context,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#uploadActivityWithMetadata, [], {
@@ -206,6 +208,7 @@ class MockStravaService extends _i1.Mock implements _i7.StravaService {
               #isPrivate: isPrivate,
               #hasHeartrate: hasHeartrate,
               #hasPower: hasPower,
+              #context: context,
             }),
             returnValue: _i6.Future<Map<String, dynamic>?>.value(),
           )

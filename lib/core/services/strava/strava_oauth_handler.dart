@@ -34,7 +34,7 @@ class StravaOAuthHandler {
       if (authCode == null) return false;
 
       // Exchange code for tokens
-      return await _tokenManager.exchangeCodeForTokens(authCode);
+      return await _tokenManager.exchangeCodeForTokens(authCode, null);
     } catch (e) {
       logger.e('❌ Error during authentication: $e');
       return false;

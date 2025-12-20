@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../utils/logger.dart';
 import 'strava_config.dart';
@@ -16,10 +17,11 @@ class StravaActivityUploader {
     String fitFilePath, 
     String activityName, {
     String activityType = 'workout',
+    BuildContext? context,
   }) async {
     try {
       // Ensure we have a valid access token
-      final accessToken = await _tokenManager.getValidAccessToken();
+      final accessToken = await _tokenManager.getValidAccessToken(context);
       if (accessToken == null) {
         logger.e('❌ No valid Strava access token available');
         return null;
@@ -70,9 +72,10 @@ class StravaActivityUploader {
     bool isPrivate = false,
     bool hasHeartrate = false,
     bool hasPower = false,
+    BuildContext? context,
   }) async {
     try {
-      final accessToken = await _tokenManager.getValidAccessToken();
+      final accessToken = await _tokenManager.getValidAccessToken(context);
       if (accessToken == null) {
         logger.e('❌ No valid Strava access token available');
         return null;

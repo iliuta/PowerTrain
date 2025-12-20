@@ -243,7 +243,7 @@ void main() {
 
       when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
       when(mockStravaService.isAuthenticated()).thenAnswer((_) async => true);
-      when(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType')))
+      when(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType'), context: anyNamed('context')))
           .thenAnswer((_) async => {'id': '12345', 'name': 'Test Activity'});
       when(mockFitFileManager.deleteFitFile(any)).thenAnswer((_) async => true);
 
