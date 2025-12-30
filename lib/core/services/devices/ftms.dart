@@ -10,13 +10,21 @@ import 'bt_device_navigation_registry.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
 import '../../bloc/ftms_bloc.dart';
+import '../demo/simulated_rower_device.dart';
 import '../ftms_service.dart';
+
+/// Demo device constants
+const String demoDeviceId = 'DEMO:ROWER:001';
+const String demoDeviceName = 'Demo Rowing Machine';
 
 /// Service for FTMS (Fitness Machine Service) devices
 class Ftms extends BTDevice {
   static final Ftms _instance = Ftms._internal();
   factory Ftms() => _instance;
   Ftms._internal();
+
+  /// Simulated rower device for demo mode
+  SimulatedRowerDevice? _simulatedRowerDevice;
 
   DeviceType? _deviceType;
   final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
@@ -92,6 +100,11 @@ class Ftms extends BTDevice {
   // We'll use this for synchronous operations like sorting
   @override
   bool isDeviceOfThisType(BluetoothDevice device, List<ScanResult> scanResults) {
+    // Demo device is always recognized as FTMS
+    if (device.remoteId.str == demoDeviceId) {
+      return true;
+    }
+
     // Look for common FTMS service UUIDs in advertisement data
     final scanResult = scanResults.firstWhere(
       (result) => result.device.remoteId == device.remoteId,
@@ -126,14 +139,55 @@ class Ftms extends BTDevice {
     return false;
   }
 
+  /// Override connectToDevice to handle demo device specially
+  /// Demo device doesn't have real Bluetooth connection state, so we need to handle it manually
+  @override
+  Future<bool> connectToDevice(BluetoothDevice device) async {
+    if (device.remoteId.str == demoDeviceId) {
+      // Handle demo device connection manually
+      try {
+        final success = await _connectDemoDevice();
+        if (success) {
+          // Use protected method to mark simulated device as connected
+          await setSimulatedDeviceConnected(device, displayName: demoDeviceName);
+        }
+        return success;
+      } catch (e) {
+        return false;
+      }
+    }
+    // For real devices, use the parent implementation
+    return super.connectToDevice(device);
+  }
+
+  /// Override disconnectFromDevice to handle demo device specially
+  @override
+  Future<void> disconnectFromDevice(BluetoothDevice device) async {
+    if (device.remoteId.str == demoDeviceId) {
+      _disconnectDemoDevice();
+      await setSimulatedDeviceDisconnected();
+      return;
+    }
+    // For real devices, use the parent implementation
+    return super.disconnectFromDevice(device);
+  }
+
   /// Asynchronous check if a device is an FTMS device
   /// This is more accurate but can't be used for sorting
   Future<bool> isFtmsDevice(BluetoothDevice device) {
+    if (device.remoteId.str == demoDeviceId) {
+      return Future.value(true);
+    }
     return FTMS.isBluetoothDeviceFTMSDevice(device);
   }
 
   @override
   Future<bool> performConnection(BluetoothDevice device) async {
+    // Handle demo device specially
+    if (device.remoteId.str == demoDeviceId) {
+      return _connectDemoDevice();
+    }
+
     try {
       logger.i('🔧 FTMS: Connecting to device: ${device.platformName}');
       
@@ -207,7 +261,7 @@ class Ftms extends BTDevice {
       } else if (detectedType == DeviceType.rower) {
         preferredDeviceDataType = DeviceDataType.rower;
       }
-      
+
       FTMS.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
@@ -251,27 +305,27 @@ class Ftms extends BTDevice {
         logger.i('🔧 FTMS: Discovering services for device type detection');
         await device.discoverServices();
       }
-      
+
       // Find FTMS service
       final ftmsServices = device.servicesList
           .where((s) => s.uuid.toString().toLowerCase().contains('1826'));
-      
+
       if (ftmsServices.isEmpty) {
         logger.w('⚠️ FTMS: No FTMS service found on device');
         return null;
       }
-      
+
       final ftmsService = ftmsServices.first;
       final characteristics = ftmsService.characteristics;
-      
+
       // Check for rower data characteristic (0x2AD1)
       final hasRowerData = characteristics
           .any((c) => c.uuid.toString().toLowerCase().contains('2ad1'));
-      
+
       // Check for indoor bike data characteristic (0x2AD2)
       final hasBikeData = characteristics
           .any((c) => c.uuid.toString().toLowerCase().contains('2ad2'));
-      
+
       // Determine device type based on available characteristics
       if (hasRowerData) {
         return DeviceType.rower;
@@ -289,7 +343,40 @@ class Ftms extends BTDevice {
 
   @override
   Future<void> performDisconnection(BluetoothDevice device) async {
+    // Handle demo device specially
+    if (device.remoteId.str == demoDeviceId) {
+      _disconnectDemoDevice();
+      return;
+    }
     await FTMS.disconnectFromFTMSDevice(device);
+  }
+
+  /// Connect to demo device (simulated rower)
+  Future<bool> _connectDemoDevice() async {
+    try {
+      logger.i('🔧 FTMS Demo: Connecting to demo rowing machine');
+
+      // Create and start the simulated rower device
+      _simulatedRowerDevice = SimulatedRowerDevice();
+      await _simulatedRowerDevice!.connect();
+
+      // Set the device type to rower
+      updateDeviceType(DeviceType.rower);
+
+      logger.i('🔧 FTMS Demo: Successfully connected to demo rowing machine');
+      return true;
+    } catch (e) {
+      logger.e('❌ FTMS Demo: Connection failed: $e');
+      _simulatedRowerDevice = null;
+      return false;
+    }
+  }
+
+  /// Disconnect from demo device
+  void _disconnectDemoDevice() {
+    logger.i('🔧 FTMS Demo: Disconnecting from demo rowing machine');
+    _simulatedRowerDevice?.disconnect();
+    _simulatedRowerDevice = null;
   }
 
   @override

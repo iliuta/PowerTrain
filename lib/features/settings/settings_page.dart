@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'model/user_settings.dart';
 import '../../core/utils/logger.dart';
+import '../../core/services/demo/demo_mode_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/services/user_settings_service.dart';
 import 'widgets/settings_section.dart';
@@ -21,12 +22,40 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = true;
   bool _hasChanges = false;
   String _appVersion = '';
+  bool _demoModeEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
     _loadAppVersion();
+    _loadDemoMode();
+  }
+
+  Future<void> _loadDemoMode() async {
+    await DemoModeService().initialize();
+    setState(() {
+      _demoModeEnabled = DemoModeService().isDemoModeEnabled;
+    });
+  }
+
+  Future<void> _toggleDemoMode(bool value) async {
+    await DemoModeService().setDemoMode(value);
+    setState(() {
+      _demoModeEnabled = value;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(value
+              ? 'Demo mode enabled - A simulated rowing machine will appear in device scan'
+              : 'Demo mode disabled'),
+          backgroundColor: value ? Colors.blue : Colors.grey,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Future<void> _loadAppVersion() async {
@@ -187,6 +216,20 @@ class _SettingsPageState extends State<SettingsPage> {
             UserPreferencesSection(
               userSettings: _userSettings!,
               onChanged: _onUserSettingsChanged,
+            ),
+            const SizedBox(height: 24),
+            SettingsSection(
+              title: 'Demo Mode',
+              subtitle: 'For App Store review and demonstration',
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.play_circle_outline, color: Colors.blue),
+                  title: const Text('Enable Demo Mode'),
+                  subtitle: const Text('Simulates a rowing machine without real Bluetooth hardware'),
+                  value: _demoModeEnabled,
+                  onChanged: _toggleDemoMode,
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             SettingsSection(

@@ -25,6 +25,7 @@ abstract class BTDevice {
   DateTime? _connectedAt;
   BluetoothConnectionState _connectionState = BluetoothConnectionState.disconnected;
   StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
+  String? _customDisplayName; // For simulated/demo devices
   
   // Reference to the device manager (set by the manager during initialization)
   SupportedBTDeviceManager? _deviceManager;
@@ -39,7 +40,13 @@ abstract class BTDevice {
   DateTime? get connectedAt => _connectedAt;
 
   /// Device name
-  String get name => _connectedDevice?.platformName.isEmpty == true ? '(unknown device)' : _connectedDevice?.platformName ?? '(no device)';
+  String get name {
+    // Use custom display name if set (for simulated devices)
+    if (_customDisplayName != null && _customDisplayName!.isNotEmpty) {
+      return _customDisplayName!;
+    }
+    return _connectedDevice?.platformName.isEmpty == true ? '(unknown device)' : _connectedDevice?.platformName ?? '(no device)';
+  }
 
   /// Device ID
   String get id => _connectedDevice?.remoteId.str ?? '';
@@ -126,6 +133,49 @@ abstract class BTDevice {
     
     // Save device information for auto-reconnection
     _saveDeviceInfo();
+  }
+  
+  /// Protected method to mark a simulated/demo device as connected
+  /// This version doesn't subscribe to connection state changes (for demo devices)
+  @protected
+  Future<void> setSimulatedDeviceConnected(BluetoothDevice device, {String? displayName}) async {
+    final name = displayName ?? device.platformName;
+    logger.i('📱 Setting simulated device as connected: $name (${device.remoteId})');
+    _connectedDevice = device;
+    _connectedAt = DateTime.now();
+    _connectionState = BluetoothConnectionState.connected;
+    _customDisplayName = displayName; // Store the custom display name
+    
+    // Don't subscribe to connection state for simulated devices
+    _connectionSubscription?.cancel();
+    _connectionSubscription = null;
+    
+    // Add to global registry via manager
+    if (_deviceManager != null) {
+      _deviceManager?.addConnectedDevice(device.remoteId.str, this);
+    }
+    
+    _notifyDevicesChanged();
+  }
+  
+  /// Protected method to mark a simulated/demo device as disconnected
+  @protected
+  Future<void> setSimulatedDeviceDisconnected() async {
+    final deviceId = _connectedDevice?.remoteId.str;
+    
+    _connectionSubscription?.cancel();
+    _connectionSubscription = null;
+    _connectedDevice = null;
+    _customDisplayName = null; // Clear custom display name
+    _connectedAt = null;
+    _connectionState = BluetoothConnectionState.disconnected;
+    
+    // Remove from global registry via manager
+    if (deviceId != null && _deviceManager != null) {
+      _deviceManager?.removeConnectedDevice(deviceId);
+    }
+    
+    _notifyDevicesChanged();
   }
 
   /// Internal method to mark device as disconnected

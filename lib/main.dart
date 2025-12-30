@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
+import 'package:ftms/core/services/demo/demo_mode_service.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,6 +25,9 @@ void main() async {
   } catch (e) {
     logger.i('🔥 Firebase not available (likely dev build): $e');
   }
+  
+  // Initialize demo mode service
+  await DemoModeService().initialize();
   
   // Note: Edge-to-edge is automatically enabled on Android 15+ (Flutter 3.27+)
   // We do NOT call SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)
