@@ -155,7 +155,7 @@ abstract class BTDevice {
       _deviceManager?.addConnectedDevice(device.remoteId.str, this);
     }
     
-    _notifyDevicesChanged();
+    notifyDevicesChanged();
   }
   
   /// Protected method to mark a simulated/demo device as disconnected
@@ -175,7 +175,7 @@ abstract class BTDevice {
       _deviceManager?.removeConnectedDevice(deviceId);
     }
     
-    _notifyDevicesChanged();
+    notifyDevicesChanged();
   }
 
   /// Internal method to mark device as disconnected

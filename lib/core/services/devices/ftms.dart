@@ -68,6 +68,19 @@ class Ftms extends BTDevice {
   /// Override to load saved machine type after connection
   @override
   Future<bool> connectToDevice(BluetoothDevice device) async {
+    if (device.remoteId.str == demoDeviceId) {
+      // Handle demo device connection manually
+      try {
+        final success = await _connectDemoDevice();
+        if (success) {
+          // Use protected method to mark simulated device as connected
+          await setSimulatedDeviceConnected(device, displayName: demoDeviceName);
+        }
+        return success;
+      } catch (e) {
+        return false;
+      }
+    }
     final success = await super.connectToDevice(device);
     if (success) {
       // Try to load saved machine type for this FTMS device
@@ -137,27 +150,6 @@ class Ftms extends BTDevice {
     }
 
     return false;
-  }
-
-  /// Override connectToDevice to handle demo device specially
-  /// Demo device doesn't have real Bluetooth connection state, so we need to handle it manually
-  @override
-  Future<bool> connectToDevice(BluetoothDevice device) async {
-    if (device.remoteId.str == demoDeviceId) {
-      // Handle demo device connection manually
-      try {
-        final success = await _connectDemoDevice();
-        if (success) {
-          // Use protected method to mark simulated device as connected
-          await setSimulatedDeviceConnected(device, displayName: demoDeviceName);
-        }
-        return success;
-      } catch (e) {
-        return false;
-      }
-    }
-    // For real devices, use the parent implementation
-    return super.connectToDevice(device);
   }
 
   /// Override disconnectFromDevice to handle demo device specially
