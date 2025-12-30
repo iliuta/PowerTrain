@@ -581,7 +581,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                             });
                                           },
                                         ),
-                                        const Text('Include warm up'),
+                                        const Text('Warm up'),
                                       ],
                                     ),
                                     const SizedBox(width: 16),
@@ -595,7 +595,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                             });
                                           },
                                         ),
-                                        const Text('Include cool down'),
+                                        const Text('Cool down'),
                                       ],
                                     ),
                                   ],

@@ -30,7 +30,7 @@ This is a personal project. Use it at your own risk. If you browse the code, you
 ## Screenshots
 ![App Screenshot](doc/screen1.png)
 ![App Screenshot](doc/screen2-2.png)
-![App Screenshot](doc/screen2-1.png)
+![App Screenshot](doc/screen2-2.png)
 ![App Screenshot](doc/screen3.png)
 ![App Screenshot](doc/screen4.png)
 ![App Screenshot](doc/screen5.png)
