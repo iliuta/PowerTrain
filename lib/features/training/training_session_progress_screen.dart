@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/config/live_data_display_config.dart';
+import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
 import '../settings/model/user_settings.dart';
 import 'model/training_session.dart';
@@ -39,6 +40,10 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    AnalyticsService().logScreenView(
+      screenName: 'training_session_progress',
+      screenClass: 'TrainingSessionProgressScreen',
+    );
     _loadUserSettings();
     _loadGpxFile();
   }

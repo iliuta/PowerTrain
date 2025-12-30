@@ -1,6 +1,8 @@
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -12,6 +14,15 @@ import 'core/services/devices/bt_device_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    AnalyticsService().initialize();
+    logger.i('🔥 Firebase initialized successfully');
+  } catch (e) {
+    logger.e('🔥 Failed to initialize Firebase: $e');
+  }
   
   // Note: Edge-to-edge is automatically enabled on Android 15+ (Flutter 3.27+)
   // We do NOT call SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)

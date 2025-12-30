@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/models/device_types.dart';
 import '../../core/bloc/ftms_bloc.dart';
+import '../../core/services/analytics/analytics_service.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
 import '../training/training_session_progress_screen.dart';
@@ -73,6 +74,10 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView(
+      screenName: 'session_selector',
+      screenClass: 'FTMSessionSelectorTab',
+    );
     _loadUserSettings();
     _startFTMS();
     _resistanceController = TextEditingController();
@@ -201,6 +206,14 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       userSettings: _userSettings,
       configs: _configs,
       onSessionSelected: (session) {
+        // Log analytics event for session selection
+        AnalyticsService().logTrainingSessionSelected(
+          machineType: session.ftmsMachineType,
+          sessionTitle: session.title,
+          isCustom: session.isCustom,
+          isDistanceBased: session.isDistanceBased,
+        );
+        
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => TrainingSessionProgressScreen(
@@ -602,6 +615,18 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       hasWarmup: _hasWarmup,
                                       hasCooldown: _hasCooldown,
                                     );
+                                    
+                                    // Log free ride analytics
+                                    AnalyticsService().logFreeRideStarted(
+                                      machineType: DeviceType.fromFtms(_deviceDataType!),
+                                      isDistanceBased: _isFreeRideDistanceBased,
+                                      targetValue: workoutValue,
+                                      hasWarmup: _hasWarmup,
+                                      hasCooldown: _hasCooldown,
+                                      resistanceLevel: _freeRideResistanceLevel,
+                                      hasGpxRoute: _selectedGpxAssetPath != null,
+                                    );
+                                    
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (context) => TrainingSessionProgressScreen(
