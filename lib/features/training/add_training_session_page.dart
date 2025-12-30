@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
+import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import 'widgets/training_session_chart.dart';
@@ -53,6 +54,10 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView(
+      screenName: _isEditMode ? 'edit_training_session' : 'add_training_session',
+      screenClass: 'AddTrainingSessionPage',
+    );
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -920,6 +925,22 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
       // Save the session
       await storageService.saveSession(session);
+
+      // Log analytics event
+      final analytics = AnalyticsService();
+      if (_isEditMode) {
+        analytics.logTrainingSessionEdited(
+          machineType: widget.machineType,
+          isDistanceBased: _isDistanceBased,
+          intervalCount: _intervalsList.length,
+        );
+      } else {
+        analytics.logTrainingSessionCreated(
+          machineType: widget.machineType,
+          isDistanceBased: _isDistanceBased,
+          intervalCount: _intervalsList.length,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();

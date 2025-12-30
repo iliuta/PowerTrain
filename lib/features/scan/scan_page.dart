@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/utils/logger.dart';
+import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/services/devices/bt_device.dart';
 import '../../core/services/devices/bt_device_manager.dart';
@@ -33,6 +34,10 @@ class _ScanPageState extends State<ScanPage> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView(
+      screenName: 'device_scan',
+      screenClass: 'ScanPage',
+    );
     _printBluetoothState();
     _checkStravaStatus();
     _listenToAdapterState();

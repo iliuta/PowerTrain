@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/models/live_data_field_value.dart';
+import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/unit_training_interval.dart';
@@ -59,6 +60,10 @@ class TrainingSessionController extends ChangeNotifier
   bool stravaUploadAttempted = false;
   bool stravaUploadSuccessful = false;
   String? stravaActivityId;
+
+  // Analytics
+  final AnalyticsService _analytics = AnalyticsService();
+  bool _sessionStartedEventLogged = false;
 
   // Allow injection of dependencies for testing
   TrainingSessionController({
@@ -290,6 +295,7 @@ class TrainingSessionController extends ChangeNotifier
     if (activityDetected) {
       debugPrint('🚀 Activity detected! Starting session ($usedParamName: $currentValue)');
       _state.onDataChanged();
+      _logSessionStarted();
       _recordDataPoint(data);
     }
 
@@ -494,6 +500,7 @@ class TrainingSessionController extends ChangeNotifier
 
   @override
   void onSessionCompletedAwaitingConfirmation() {
+    _logSessionCompleted();
     Future.microtask(() async {
       if (_disposed) return;
       await stopOrPauseWithControl();
@@ -641,6 +648,7 @@ class TrainingSessionController extends ChangeNotifier
     if (_state.status != SessionStatus.created) return;
     logger.i('▶️ Manually starting training session');
     _state.onDataChanged(); // This transitions from created to running
+    _logSessionStarted();
   }
 
   /// Pause the current training session
@@ -648,6 +656,11 @@ class TrainingSessionController extends ChangeNotifier
     if (_state.status != SessionStatus.running) return;
     logger.i('⏸️ Manually pausing training session');
     _state.onUserPaused();
+    _analytics.logTrainingSessionPaused(
+      machineType: session.ftmsMachineType,
+      isFreeRide: _isFreeRide,
+      elapsedTimeSeconds: _state.elapsedSeconds,
+    );
   }
 
   /// Resume the paused training session
@@ -655,11 +668,17 @@ class TrainingSessionController extends ChangeNotifier
     if (!_state.isPaused) return;
     logger.i('▶️ Manually resuming training session');
     _state.onUserResumed();
+    _analytics.logTrainingSessionResumed(
+      machineType: session.ftmsMachineType,
+      isFreeRide: _isFreeRide,
+      elapsedTimeSeconds: _state.elapsedSeconds,
+    );
   }
 
   /// Stop the training session completely
   void stopSession() {
     if (_state.hasEnded) return;
+    _logSessionCancelled();
     _state.onUserStopped();
     // Recording will be handled by the completion dialog
   }
@@ -667,6 +686,7 @@ class TrainingSessionController extends ChangeNotifier
   /// Discard the session without saving
   void discardSession() {
     if (_state.hasEnded) return;
+    _logSessionCancelled();
     _state.onUserStopped();
   }
 
@@ -677,6 +697,12 @@ class TrainingSessionController extends ChangeNotifier
 
   /// Extend the session with a new interval and continue
   void extendSessionAndContinue() {
+    _analytics.logTrainingSessionExtended(
+      machineType: session.ftmsMachineType,
+      isFreeRide: _isFreeRide,
+      elapsedTimeSeconds: _state.elapsedSeconds,
+    );
+    
     // Calculate total duration/distance of original session
     final totalDuration = session.isDistanceBased ? null : session.intervals.fold<int>(0, (sum, interval) => sum + (interval.duration ?? 0));
     final totalDistance = session.isDistanceBased ? session.intervals.fold<double>(0.0, (sum, interval) => sum + (interval.distance ?? 0.0)) : null;
@@ -812,5 +838,67 @@ class TrainingSessionController extends ChangeNotifier
     } catch (e) {
       debugPrint('Failed to reset: $e');
     }
+  }
+
+  // ============ Analytics Helpers ============
+
+  /// Determines if this is a free ride session (template-based with generic title)
+  bool get _isFreeRide {
+    final title = session.title.toLowerCase();
+    return title.contains('new') && 
+           (title.contains('rowing') || title.contains('cycling')) && 
+           title.contains('training session');
+  }
+
+  /// Log session started event (called when session first starts running)
+  void _logSessionStarted() {
+    if (_sessionStartedEventLogged) return;
+    _sessionStartedEventLogged = true;
+    
+    final totalDuration = session.intervals.fold<int>(
+      0, (sum, interval) => sum + (interval.duration ?? 0));
+    final totalDistance = session.isDistanceBased 
+        ? session.intervals.fold<int>(
+            0, (sum, interval) => sum + (interval.distance ?? 0))
+        : null;
+    
+    _analytics.logTrainingSessionStarted(
+      machineType: session.ftmsMachineType,
+      isDistanceBased: session.isDistanceBased,
+      isFreeRide: _isFreeRide,
+      totalDurationSeconds: totalDuration,
+      totalDistanceMeters: totalDistance,
+      intervalCount: session.intervals.length,
+    );
+  }
+
+  /// Log session cancelled event (called when user stops before completion)
+  void _logSessionCancelled() {
+    final totalDuration = session.intervals.fold<int>(
+      0, (sum, interval) => sum + (interval.duration ?? 0));
+    final completionPercentage = totalDuration > 0 
+        ? (_state.elapsedSeconds / totalDuration) * 100 
+        : 0.0;
+    
+    _analytics.logTrainingSessionCancelled(
+      machineType: session.ftmsMachineType,
+      isDistanceBased: session.isDistanceBased,
+      isFreeRide: _isFreeRide,
+      elapsedTimeSeconds: _state.elapsedSeconds,
+      totalDurationSeconds: totalDuration,
+      completionPercentage: completionPercentage,
+    );
+  }
+
+  /// Log session completed event (called when session finishes naturally)
+  void _logSessionCompleted() {
+    _analytics.logTrainingSessionCompleted(
+      machineType: session.ftmsMachineType,
+      isDistanceBased: session.isDistanceBased,
+      isFreeRide: _isFreeRide,
+      elapsedTimeSeconds: _state.elapsedSeconds,
+      totalDistanceMeters: null,
+      totalCalories: null,
+    );
   }
 }

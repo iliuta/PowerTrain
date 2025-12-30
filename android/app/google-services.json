@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "611797771068",
+    "project_id": "powertrain-app",
+    "storage_bucket": "powertrain-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611797771068:android:c9f18c92238e056b623439",
+        "android_client_info": {
+          "package_name": "com.iliuta.ftms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCn3WLzqgk1ICFFhJxW78a9QbqCpU_zvn4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
