@@ -97,8 +97,6 @@ class AnalyticsService {
     required bool isDistanceBased,
     required bool isFreeRide,
     required int elapsedTimeSeconds,
-    int? totalDistanceMeters,
-    int? totalCalories,
   }) async {
     await _analytics?.logEvent(
       name: 'training_session_completed',
@@ -107,8 +105,6 @@ class AnalyticsService {
         'is_distance_based': isDistanceBased.toString(),
         'is_free_ride': isFreeRide.toString(),
         'elapsed_time_seconds': elapsedTimeSeconds,
-        if (totalDistanceMeters != null) 'total_distance_meters': totalDistanceMeters,
-        if (totalCalories != null) 'total_calories': totalCalories,
       },
     );
   }

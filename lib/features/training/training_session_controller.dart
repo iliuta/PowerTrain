@@ -897,8 +897,6 @@ class TrainingSessionController extends ChangeNotifier
       isDistanceBased: session.isDistanceBased,
       isFreeRide: _isFreeRide,
       elapsedTimeSeconds: _state.elapsedSeconds,
-      totalDistanceMeters: null,
-      totalCalories: null,
     );
   }
 }
