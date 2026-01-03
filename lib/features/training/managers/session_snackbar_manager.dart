@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 import '../training_session_controller.dart';
 
 /// Handles pause/resume snackbar messages
@@ -21,17 +22,17 @@ class SessionSnackBarManager {
     _pauseSnackBarShown = true;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.pause_circle, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Text('Session Paused - Press Resume to continue'),
+            const Icon(Icons.pause_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.sessionPaused),
           ],
         ),
         backgroundColor: Colors.orange,
         duration: const Duration(days: 1),
         action: SnackBarAction(
-          label: 'Resume',
+          label: AppLocalizations.of(context)!.resume,
           textColor: Colors.white,
           onPressed: controller.resumeSession,
         ),

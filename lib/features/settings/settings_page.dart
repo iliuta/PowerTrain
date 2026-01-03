@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'model/user_settings.dart';
 import '../../core/utils/logger.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/user_preferences_section.dart';
 
@@ -76,10 +77,10 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Settings saved successfully'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.settingsSavedSuccessfully),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }

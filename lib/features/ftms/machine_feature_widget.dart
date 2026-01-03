@@ -7,6 +7,7 @@ import '../../core/bloc/ftms_bloc.dart';
 import '../../core/models/supported_resistance_level_range.dart';
 import '../../core/models/supported_power_range.dart';
 import '../../core/services/ftms_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class MachineFeatureWidget extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -102,14 +103,14 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Command ${opcode.name} sent successfully'), backgroundColor: Colors.green),
+          SnackBar(content: Text(AppLocalizations.of(context)!.commandSent(opcode.name)), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       setState(() => _lastError = e.toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Failed: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+          SnackBar(content: Text(AppLocalizations.of(context)!.commandFailed(e.toString())), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
         );
       }
     }
@@ -181,7 +182,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                     value = int.tryParse(controller.text);
                     if (value == null || value < minValue || value > maxValue) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Invalid value. Range: $minValue-$maxValue')),
+                        SnackBar(content: Text(AppLocalizations.of(context)!.invalidValueRange(minValue.toString(), maxValue.toString()))),
                       );
                       return;
                     }
@@ -189,15 +190,15 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                   await _executeCommand(relatedCommand, value: value);
                 },
                 icon: const Icon(Icons.send, size: 16),
-                label: const Text('Test'),
+                label: Text(AppLocalizations.of(context)!.test),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   minimumSize: const Size(80, 36),
                 ),
               )
             else if (!isSupported)
-              const Text(
-                'Not available',
+              Text(
+                AppLocalizations.of(context)!.notAvailable,
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
           ],
@@ -214,23 +215,23 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
         if (!snapshot.hasData) {
           return Center(
             child: _isLoading
-                ? const Column(
+                ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading machine features...'),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(AppLocalizations.of(context)!.loadingMachineFeatures),
                     ],
                   )
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("No Machine Features found!"),
+                      Text(AppLocalizations.of(context)!.noMachineFeaturesFound),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: _loadMachineFeatures,
                         icon: const Icon(Icons.refresh),
-                        label: const Text("Retry"),
+                        label: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
@@ -295,16 +296,16 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
               const Divider(),
               
               // Control features section
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Text(
-                  'Control Features (Interactive):',
+                  AppLocalizations.of(context)!.controlFeatures,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               
               _buildFeatureControl(
-                'Resistance Level',
+                AppLocalizations.of(context)!.resistanceLevel,
                 (features[MachineFeatureFlag.resistanceLevelFlag] ?? false) && _resistanceLevelRange != null,
                 relatedCommand: MachineControlPointOpcodeType.setTargetResistanceLevel,
                 needsInput: true,
@@ -397,7 +398,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                 ),
               
               _buildFeatureControl(
-                'Power Target (ERG Mode)',
+                AppLocalizations.of(context)!.powerTargetErgMode,
                 (features[MachineFeatureFlag.powerMeasurementFlag] ?? false) && _powerRange != null,
                 relatedCommand: MachineControlPointOpcodeType.setTargetPower,
                 needsInput: true,
@@ -422,7 +423,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                             Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'Supported Range:',
+                              AppLocalizations.of(context)!.supportedRange,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blue[700],
@@ -490,7 +491,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
                 ),
               
               _buildFeatureControl(
-                'Inclination',
+                AppLocalizations.of(context)!.inclination,
                 features[MachineFeatureFlag.inclinationFlag] ?? false,
                 relatedCommand: MachineControlPointOpcodeType.setTargetInclination,
               ),
@@ -498,34 +499,34 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
               const Divider(),
               
               // General commands
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Text(
-                  'General Commands:',
+                  AppLocalizations.of(context)!.generalCommands,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               
               _buildFeatureControl(
-                'Request Control',
+                AppLocalizations.of(context)!.requestControl,
                 true,
                 relatedCommand: MachineControlPointOpcodeType.requestControl,
               ),
               
               _buildFeatureControl(
-                'Start/Resume',
+                AppLocalizations.of(context)!.startOrResume,
                 true,
                 relatedCommand: MachineControlPointOpcodeType.startOrResume,
               ),
               
               _buildFeatureControl(
-                'Stop/Pause',
+                AppLocalizations.of(context)!.stopOrPause,
                 true,
                 relatedCommand: MachineControlPointOpcodeType.stopOrPause,
               ),
               
               _buildFeatureControl(
-                'Reset',
+                AppLocalizations.of(context)!.resetCommand,
                 true,
                 relatedCommand: MachineControlPointOpcodeType.reset,
               ),
@@ -533,46 +534,46 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
               const Divider(),
               
               // Read-only features
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Text(
-                  'Data Features (Read-only):',
+                  AppLocalizations.of(context)!.readOnlyFeatures,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               
               _buildFeatureControl(
-                'Average Speed',
+                AppLocalizations.of(context)!.averageSpeed,
                 features[MachineFeatureFlag.averageSpeedFlag] ?? false,
               ),
               
               _buildFeatureControl(
-                'Cadence',
+                AppLocalizations.of(context)!.cadence,
                 features[MachineFeatureFlag.cadenceFlag] ?? false,
               ),
               
               _buildFeatureControl(
-                'Total Distance',
+                AppLocalizations.of(context)!.totalDistance,
                 features[MachineFeatureFlag.totalDistanceFlag] ?? false,
               ),
               
               _buildFeatureControl(
-                'Heart Rate',
+                AppLocalizations.of(context)!.heartRate,
                 features[MachineFeatureFlag.heartRateFlag] ?? false,
               ),
               
               _buildFeatureControl(
-                'Power Measurement',
+                AppLocalizations.of(context)!.powerMeasurement,
                 features[MachineFeatureFlag.powerMeasurementFlag] ?? false,
               ),
               
               _buildFeatureControl(
-                'Elapsed Time',
+                AppLocalizations.of(context)!.elapsedTime,
                 features[MachineFeatureFlag.elapsedTimeFlag] ?? false,
               ),
               
               _buildFeatureControl(
-                'Expended Energy',
+                AppLocalizations.of(context)!.expendedEnergy,
                 features[MachineFeatureFlag.expendedEnergyFlag] ?? false,
               ),
               

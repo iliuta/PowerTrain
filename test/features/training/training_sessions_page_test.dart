@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/training/training_sessions_page.dart';
 import 'package:flutter/services.dart';
 import 'package:mockito/mockito.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
@@ -68,6 +69,8 @@ void main() {
     testWidgets('can be instantiated', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: TrainingSessionsPage(),
         ),
       );
@@ -79,6 +82,8 @@ void main() {
     testWidgets('shows loading indicator initially', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: TrainingSessionsPage(),
         ),
       );
@@ -90,6 +95,8 @@ void main() {
     testWidgets('shows app bar with title', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: TrainingSessionsPage(),
         ),
       );
@@ -101,6 +108,8 @@ void main() {
     testWidgets('shows floating action button', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: TrainingSessionsPage(),
         ),
       );
@@ -113,6 +122,8 @@ void main() {
     testWidgets('fab is tappable', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: TrainingSessionsPage(),
         ),
       );
@@ -130,6 +141,8 @@ void main() {
     testWidgets('has duplicate functionality integrated', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: TrainingSessionsPage(),
         ),
       );
@@ -150,6 +163,8 @@ void main() {
       const trainingSessionsPage = TrainingSessionsPage();
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: trainingSessionsPage,
         ),
       );

@@ -5,6 +5,7 @@ import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/features/training/services/training_session_storage_service.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'training_session_expansion_panel.dart';
 import 'training_session_progress_screen.dart';
 import 'add_training_session_page.dart';
@@ -127,15 +128,12 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('No Device Connected'),
-          content: const Text(
-            'To start a training session, please connect to a compatible fitness machine first.\n\n'
-            'You can scan for devices from the main page.',
-          ),
+          title: Text(AppLocalizations.of(context)!.noDeviceConnected),
+          content: Text(AppLocalizations.of(context)!.noDeviceConnectedMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: Text(AppLocalizations.of(context)!.ok),
             ),
             TextButton(
               onPressed: () {
@@ -143,7 +141,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
                 // Navigate back to main page for device scanning
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
-              child: const Text('Scan for Devices'),
+              child: Text(AppLocalizations.of(context)!.scanForDevices),
             ),
           ],
         ),
@@ -219,7 +217,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Training session "${session.title}" deleted successfully'),
+            content: Text(AppLocalizations.of(context)!.trainingSessionDeleted(session.title)),
             backgroundColor: Colors.green,
           ),
         );
@@ -228,8 +226,8 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
       } else {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete training session'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedToDeleteTrainingSession),
             backgroundColor: Colors.red,
           ),
         );
@@ -243,7 +241,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error deleting training session: $e'),
+          content: Text(AppLocalizations.of(context)!.errorDeletingTrainingSession(e)),
           backgroundColor: Colors.red,
         ),
       );
@@ -259,14 +257,14 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Training Sessions'),
+        title: Text(AppLocalizations.of(context)!.trainingSessions),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                const Text('Machine Type: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.machineType, style: const TextStyle(fontWeight: FontWeight.bold)),
                 Expanded(
                   child: DropdownButton<DeviceType>(
                     value: _selectedMachineType,
@@ -274,7 +272,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
                     items: _availableDeviceTypes.map((DeviceType deviceType) {
                       return DropdownMenuItem<DeviceType>(
                         value: deviceType,
-                        child: Text(deviceType == DeviceType.indoorBike ? 'Indoor Bike' : 'Rowing Machine'),
+                        child: Text(deviceType == DeviceType.indoorBike ? AppLocalizations.of(context)!.indoorBike : AppLocalizations.of(context)!.rowingMachine),
                       );
                     }).toList(),
                     onChanged: _onMachineTypeChanged,
@@ -335,7 +333,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadSessions,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),

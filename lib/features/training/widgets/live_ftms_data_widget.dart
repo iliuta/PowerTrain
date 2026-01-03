@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import '../../../core/bloc/ftms_bloc.dart';
 import '../../../core/config/live_data_display_config.dart';
 import '../../../core/widgets/ftms_live_data_display_widget.dart';
@@ -39,7 +40,7 @@ class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
     if (deviceDataType == null) {
       setState(() {
         _config = null;
-        _configError = 'Device type not detected';
+        _configError = AppLocalizations.of(context)!.deviceTypeNotDetected;
       });
       return;
     }
@@ -47,7 +48,7 @@ class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
     final config = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
     setState(() {
       _config = config;
-      _configError = config == null ? 'No config for this machine ftmsMachineType' : null;
+      _configError = config == null ? AppLocalizations.of(context)!.noConfigForMachineType : null;
     });
 
     if (config != null) {
@@ -82,9 +83,9 @@ class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
                   stream: ftmsBloc.ftmsDeviceDataControllerStream,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
-                      return const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text('No FTMS data'),
+                      return Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(AppLocalizations.of(context)!.noFtmsData),
                       );
                     }
                     final deviceData = snapshot.data!;

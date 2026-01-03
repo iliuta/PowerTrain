@@ -5,6 +5,7 @@ import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/widgets/edit_target_fields_widget.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
   group('EditTargetFieldsWidget', () {
@@ -60,6 +61,8 @@ void main() {
     testWidgets('displays target fields for available targets', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: EditTargetFieldsWidget(
               machineType: DeviceType.rower,
@@ -83,6 +86,8 @@ void main() {
     testWidgets('percentage input for fields with userSetting', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: EditTargetFieldsWidget(
               machineType: DeviceType.rower,
@@ -111,6 +116,8 @@ void main() {
     testWidgets('number input for fields without userSetting', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: EditTargetFieldsWidget(
               machineType: DeviceType.rower,
@@ -139,6 +146,8 @@ void main() {
     testWidgets('shows absolute value preview for percentage inputs', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: EditTargetFieldsWidget(
               machineType: DeviceType.indoorBike, // Use bike for cyclingFtp
@@ -158,6 +167,8 @@ void main() {
     testWidgets('clears target when input is empty', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: EditTargetFieldsWidget(
               machineType: DeviceType.rower,

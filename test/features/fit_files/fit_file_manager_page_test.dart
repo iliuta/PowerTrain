@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/fit_files/fit_file_manager_page.dart';
 import 'package:ftms/core/services/fit/fit_file_manager.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:ftms/core/services/strava/strava_service.dart';
@@ -25,6 +26,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -56,6 +59,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -87,6 +92,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -130,6 +137,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: const MediaQueryData(size: Size(1200, 2000)),
             child: Scaffold(
@@ -187,6 +196,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: const MediaQueryData(size: Size(1200, 2000)),
             child: Scaffold(
@@ -249,6 +260,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -285,6 +298,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -319,7 +334,8 @@ void main() {
       when(mockFitFileManager.getAllFitFiles()).thenAnswer((_) async => testFiles);
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -357,6 +373,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -405,6 +423,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(
             fitFileManager: mockFitFileManager,
             stravaService: mockStravaService,
@@ -432,6 +452,8 @@ void main() {
     testWidgets('should show loading indicator initially', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
@@ -443,10 +465,12 @@ void main() {
     testWidgets('should show loading state during initialization', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
-      
+
       // Just test that the page loads without crashing
       // Wait a bit for initial load but don't wait for full settle
       await tester.pump();
@@ -459,6 +483,8 @@ void main() {
     testWidgets('should show app bar with title and refresh button', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
@@ -470,6 +496,8 @@ void main() {
     testWidgets('should show refresh button in app bar', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
@@ -478,11 +506,11 @@ void main() {
       await tester.pump();
 
       expect(find.byIcon(Icons.refresh), findsOneWidget);
-      
+
       // Test that refresh button can be tapped without waiting for async operations
       await tester.tap(find.byIcon(Icons.refresh));
       await tester.pump();
-      
+
       // Should still show the refresh icon after tap
       expect(find.byIcon(Icons.refresh), findsOneWidget);
     });
@@ -490,6 +518,8 @@ void main() {
     testWidgets('should not show select all button when no files exist', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
@@ -506,6 +536,8 @@ void main() {
     testWidgets('should not show FAB when no files selected', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
@@ -520,6 +552,8 @@ void main() {
     testWidgets('page should build without errors', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );
@@ -534,6 +568,8 @@ void main() {
     testWidgets('page should build without errors', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: FitFileManagerPage(),
         ),
       );

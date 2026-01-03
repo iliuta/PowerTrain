@@ -5,6 +5,11 @@
     {
       "name": "Instantaneous Pace",
       "label": "Speed",
+      "labelI18n": {
+        "en": "Speed",
+        "fr": "Vitesse",
+        "de": "Geschwindigkeit"
+      },
       "display": "speedometer",
       "formatter": "rowerPaceFormatter",
       "unit": "seconds/500m",
@@ -18,6 +23,11 @@
     {
       "name": "Stroke Rate",
       "label": "Stroke Rate",
+      "labelI18n": {
+        "en": "Stroke Rate",
+        "fr": "Cadence",
+        "de": "Schlagfrequenz"
+      },
       "display": "speedometer",
       "formatter": "intFormatter",
       "unit": "spm",
@@ -30,6 +40,11 @@
     {
       "name": "Instantaneous Power",
       "label": "Power",
+      "labelI18n": {
+        "en": "Power",
+        "fr": "Puissance",
+        "de": "Leistung"
+      },
       "display": "number",
       "unit": "W",
       "icon": "power",
@@ -39,6 +54,11 @@
     {
       "name": "Resistance Level",
       "label": "Resistance",
+      "labelI18n": {
+        "en": "Resistance",
+        "fr": "Résistance",
+        "de": "Widerstand"
+      },
       "display": "number",
       "formatter": "intFormatter",
       "icon": "resistance"
@@ -46,6 +66,11 @@
     {
       "name": "Heart Rate",
       "label": "Heart rate",
+      "labelI18n": {
+        "en": "Heart rate",
+        "fr": "Pouls",
+        "de": "Herzfrequenz"
+      },
       "display": "number",
       "formatter": "intFormatter",
       "unit": "bpm",
@@ -54,6 +79,11 @@
     {
       "name": "Total Distance",
       "label": "Distance",
+      "labelI18n": {
+        "en": "Distance",
+        "fr": "Distance",
+        "de": "Entfernung"
+      },
       "display": "number",
       "unit": "m",
       "icon": "distance",
@@ -62,6 +92,11 @@
     {
       "name": "Total Energy",
       "label": "Calories",
+      "labelI18n": {
+        "en": "Calories",
+        "fr": "Calories",
+        "de": "Kalorien"
+      },
       "display": "number",
       "formatter": "intFormatter",
       "unit": "kcal",

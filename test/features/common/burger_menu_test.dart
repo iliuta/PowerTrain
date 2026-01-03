@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/features/common/burger_menu.dart';
@@ -11,6 +12,8 @@ void main() {
     testWidgets('should show all menu items', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             appBar: AppBar(
               actions: const [BurgerMenu()],
@@ -37,6 +40,8 @@ void main() {
     testWidgets('should have FIT Files menu item that can be tapped', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             appBar: AppBar(
               actions: const [BurgerMenu()],
@@ -67,6 +72,8 @@ void main() {
     testWidgets('should show menu tooltip', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             appBar: AppBar(
               actions: const [BurgerMenu()],
@@ -86,6 +93,8 @@ void main() {
     testWidgets('should show menu icon', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             appBar: AppBar(
               actions: const [BurgerMenu()],
@@ -100,6 +109,8 @@ void main() {
     testWidgets('should handle menu selection properly', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             appBar: AppBar(
               actions: const [BurgerMenu()],

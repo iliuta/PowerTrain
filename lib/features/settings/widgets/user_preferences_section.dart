@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../model/user_settings.dart';
 import 'settings_section.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Widget for editing user fitness preferences
 class UserPreferencesSection extends StatefulWidget {
@@ -67,7 +68,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
 
     return ListTile(
       leading: const Icon(Icons.directions_bike, color: Colors.blue),
-      title: const Text('Cycling FTP'),
+      title: Text(AppLocalizations.of(context)!.cyclingFtp),
       subtitle: isEditing
           ? Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -88,7 +89,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
                 onSubmitted: (value) => _saveCyclingFtp(),
               ),
             )
-          : Text('${widget.userSettings.cyclingFtp} watts'),
+          : Text(AppLocalizations.of(context)!.watts(widget.userSettings.cyclingFtp)),
       trailing: isEditing
           ? Row(
               mainAxisSize: MainAxisSize.min,
@@ -116,7 +117,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
 
     return ListTile(
       leading: const Icon(Icons.rowing, color: Colors.teal),
-      title: const Text('Rowing FTP'),
+      title: Text(AppLocalizations.of(context)!.rowingFtp),
       subtitle: isEditing
           ? Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -132,7 +133,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
                 onSubmitted: (value) => _saveRowingFtp(),
               ),
             )
-          : Text('${widget.userSettings.rowingFtp} per 500m'),
+          : Text(AppLocalizations.of(context)!.per500m(widget.userSettings.rowingFtp)),
       trailing: isEditing
           ? Row(
               mainAxisSize: MainAxisSize.min,
@@ -158,8 +159,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
   Widget _buildDeveloperModeField() {
     return ListTile(
       leading: const Icon(Icons.developer_mode, color: Colors.orange),
-      title: const Text('Developer Mode'),
-      subtitle: const Text('Enable debugging options and beta features'),
+      title: Text(AppLocalizations.of(context)!.developerMode),
+      subtitle: Text(AppLocalizations.of(context)!.developerModeSubtitle),
       trailing: Switch(
         value: widget.userSettings.developerMode,
         onChanged: (bool value) {
@@ -212,8 +213,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid FTP (50-1000 watts)'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.invalidFtp),
         ),
       );
     }
@@ -233,8 +234,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid time format (M:SS)'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.invalidTimeFormat),
         ),
       );
     }

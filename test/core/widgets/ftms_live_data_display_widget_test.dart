@@ -5,6 +5,7 @@ import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/core/widgets/ftms_live_data_display_widget.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('FtmsLiveDataDisplayWidget covers all branches for 100% coverage',
@@ -76,6 +77,8 @@ void main() {
       'Power': 150,
     };
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: FtmsLiveDataDisplayWidget(
           config: config,
@@ -103,6 +106,8 @@ void main() {
     await tester.pumpWidget(SizedBox(
       width: 200,
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: FtmsLiveDataDisplayWidget(
             config: config,
@@ -135,6 +140,8 @@ void main() {
       ),
     };
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: FtmsLiveDataDisplayWidget(
           config: weirdConfig,
@@ -148,6 +155,8 @@ void main() {
 
     // Edge case: testing with targets to verify color changes
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: FtmsLiveDataDisplayWidget(
           config: config,
@@ -183,6 +192,8 @@ void main() {
     await tester.pumpWidget(SizedBox(
       width: 1000,
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: FtmsLiveDataDisplayWidget(
             config: singleConfig,

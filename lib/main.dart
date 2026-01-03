@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/core/utils/logger.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'features/scan/scan_page.dart';
@@ -72,6 +73,17 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         useMaterial3: true,
       ),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: (locale, supportedLocales) {
+        if (locale?.languageCode == 'fr') {
+          return const Locale('fr');
+        } else if (locale?.languageCode == 'de') {
+          return const Locale('de');
+        } else {
+          return const Locale('en');
+        }
+      },
       home: const FlutterFTMSApp(),
     );
   }
@@ -116,7 +128,7 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Fitness machines"),
+        title: Text(AppLocalizations.of(context)!.appTitle),
         titleSpacing: 0, // Reduce spacing between leading and title
         leading: BurgerMenu(connectedDevice: _connectedFtmsDevice),
         actions: [
@@ -133,9 +145,9 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
                 color: Colors.brown,
                 size: 18,
               ),
-              label: const Text(
-                'Buy me a coffee',
-                style: TextStyle(
+              label: Text(
+                AppLocalizations.of(context)!.buyMeCoffee,
+                style: const TextStyle(
                   color: Colors.brown,
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
@@ -151,9 +163,9 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
                   
                   if (!launched && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Could not open the coffee link. Please visit https://coff.ee/iliuta manually.'),
-                        duration: Duration(seconds: 4),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)!.coffeeLinkError),
+                        duration: const Duration(seconds: 4),
                       ),
                     );
                   }
@@ -161,7 +173,7 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Error opening coffee link: $e'),
+                        content: Text(AppLocalizations.of(context)!.coffeeLinkErrorWithDetails(e)),
                         duration: const Duration(seconds: 3),
                       ),
                     );

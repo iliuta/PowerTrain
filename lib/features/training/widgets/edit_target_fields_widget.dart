@@ -4,8 +4,10 @@ import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/config/live_data_field_format_strategy.dart';
+import 'package:ftms/core/utils/i18n_utils.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/model/target_power_strategy.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 class EditTargetFieldsWidget extends StatelessWidget {
   final DeviceType machineType;
@@ -28,11 +30,11 @@ class EditTargetFieldsWidget extends StatelessWidget {
     final availableTargetFields = config.fields.where((field) => field.availableAsTarget).toList();
 
     return Column(
-      children: availableTargetFields.map((field) => _buildTargetField(field)).toList(),
+      children: availableTargetFields.map((field) => _buildTargetField(context, field)).toList(),
     );
   }
 
-  Widget _buildTargetField(LiveDataFieldConfig field) {
+  Widget _buildTargetField(BuildContext context, LiveDataFieldConfig field) {
     final currentValue = targets[field.name];
 
     // Fields with userSetting always use percentage input
@@ -53,7 +55,7 @@ class EditTargetFieldsWidget extends StatelessWidget {
         children: [
           SizedBox(
             width: 80,
-            child: Text('${field.label}:'),
+            child: Text('${getFieldLabel(field, Localizations.localeOf(context).languageCode)}:'),
           ),
           Expanded(
             child: canShowPercentage
@@ -63,7 +65,7 @@ class EditTargetFieldsWidget extends StatelessWidget {
                         child: TextFormField(
                           initialValue: initialPercentage,
                           decoration: InputDecoration(
-                            hintText: 'e.g. 80',
+                            hintText: AppLocalizations.of(context)!.examplePercentage,
                             suffixText: '%',
                             border: const OutlineInputBorder(),
                             isDense: true,
@@ -90,7 +92,7 @@ class EditTargetFieldsWidget extends StatelessWidget {
                 : TextFormField(
                     initialValue: currentValue?.toString() ?? '',
                     decoration: InputDecoration(
-                      hintText: 'Enter value',
+                      hintText: AppLocalizations.of(context)!.enterValue,
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),

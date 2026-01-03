@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/unit_training_interval.dart';
 import 'package:ftms/features/training/widgets/training_interval_list.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
   group('TrainingIntervalList', () {
@@ -17,6 +18,8 @@ void main() {
       ];
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: TrainingIntervalList(
               intervals: intervals,

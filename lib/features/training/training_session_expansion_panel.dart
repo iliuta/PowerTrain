@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'model/training_session.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/services/devices/bt_device.dart';
@@ -86,7 +87,7 @@ class _TrainingSessionExpansionPanelListState
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      session.isCustom ? 'Custom' : 'Built-in',
+                      session.isCustom ? AppLocalizations.of(context)!.custom : AppLocalizations.of(context)!.builtIn,
                       style: TextStyle(
                         fontSize: 10,
                         color: session.isCustom ? Colors.blue : Colors.green,
@@ -96,7 +97,7 @@ class _TrainingSessionExpansionPanelListState
                   ),
                 ],
               ),
-              subtitle: Text('Intervals: ${session.intervals.length}'),
+              subtitle: Text(AppLocalizations.of(context)!.intervalsCount(session.intervals.length)),
               trailing: isExpanded
                   ? const Icon(Icons.expand_less)
                   : const Icon(Icons.expand_more),
@@ -162,7 +163,7 @@ class _TrainingSessionExpansionPanelListState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Training Intensity',
+                    AppLocalizations.of(context)!.trainingIntensity,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
@@ -184,7 +185,7 @@ class _TrainingSessionExpansionPanelListState
               // Add duplicate button for all sessions
               IconButton(
                 icon: const Icon(Icons.content_copy, size: 16),
-                tooltip: 'Duplicate',
+                tooltip: AppLocalizations.of(context)!.duplicate,
                 onPressed: () {
                   _showDuplicateConfirmationDialog(context, session);
                 },
@@ -194,7 +195,7 @@ class _TrainingSessionExpansionPanelListState
               if (session.isCustom) ...[
                 IconButton(
                   icon: const Icon(Icons.edit, size: 16),
-                  tooltip: 'Edit',
+                  tooltip: AppLocalizations.of(context)!.edit,
                   onPressed: () {
                     if (widget.onSessionEdit != null) {
                       widget.onSessionEdit!(session);
@@ -204,7 +205,7 @@ class _TrainingSessionExpansionPanelListState
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  tooltip: 'Delete',
+                  tooltip: AppLocalizations.of(context)!.delete,
                   onPressed: () {
                     _showDeleteConfirmationDialog(context, session);
                   },
@@ -240,13 +241,12 @@ class _TrainingSessionExpansionPanelListState
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
-        title: const Text('Delete Training Session'),
-        content: Text(
-            'Are you sure you want to delete "${session.title}"?\n\nThis action cannot be undone.'),
+        title: Text(AppLocalizations.of(context)!.deleteTrainingSession),
+        content: Text(AppLocalizations.of(context)!.deleteConfirmation(session.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -256,7 +256,7 @@ class _TrainingSessionExpansionPanelListState
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -266,23 +266,22 @@ class _TrainingSessionExpansionPanelListState
   void _showDuplicateConfirmationDialog(
       BuildContext context, TrainingSessionDefinition session) {
     final TextEditingController titleController = TextEditingController();
-    titleController.text = '${session.title} (Copy)';
+    titleController.text = '${session.title}${AppLocalizations.of(context)!.copySuffix}';
 
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
-        title: const Text('Duplicate Training Session'),
+        title: Text(AppLocalizations.of(context)!.duplicateTrainingSession),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-                'Create a copy of "${session.title}" as a new custom session?'),
+            Text(AppLocalizations.of(context)!.duplicateConfirmation(session.title)),
             const SizedBox(height: 16),
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'New Session Title',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.newSessionTitle,
+                border: const OutlineInputBorder(),
               ),
               maxLength: 50,
             ),
@@ -291,14 +290,14 @@ class _TrainingSessionExpansionPanelListState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
               _duplicateSession(context, session, titleController.text.trim());
             },
-            child: const Text('Duplicate'),
+            child: Text(AppLocalizations.of(context)!.duplicate),
           ),
         ],
       ),
@@ -309,8 +308,8 @@ class _TrainingSessionExpansionPanelListState
       TrainingSessionDefinition session, String newTitle) async {
     if (newTitle.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Session title cannot be empty'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.sessionTitleCannotBeEmpty),
           backgroundColor: Colors.red,
         ),
       );
@@ -320,19 +319,19 @@ class _TrainingSessionExpansionPanelListState
     try {
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              SizedBox(width: 16),
-              Text('Duplicating session...'),
+              const SizedBox(width: 16),
+              Text(AppLocalizations.of(context)!.duplicatingSession),
             ],
           ),
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -357,7 +356,7 @@ class _TrainingSessionExpansionPanelListState
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Session "$newTitle" duplicated successfully!'),
+            content: Text(AppLocalizations.of(context)!.sessionDuplicated(newTitle)),
             backgroundColor: Colors.green,
           ),
         );
@@ -372,7 +371,7 @@ class _TrainingSessionExpansionPanelListState
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to duplicate session: $e'),
+            content: Text(AppLocalizations.of(context)!.failedToDuplicateSession(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),
@@ -399,7 +398,7 @@ class _TrainingSessionExpansionPanelListState
         return ElevatedButton.icon(
           icon: const Icon(Icons.play_arrow, size: 16),
           label: Text(
-            hasCompatibleDevice ? 'Start Session' : 'Not connected',
+            hasCompatibleDevice ? AppLocalizations.of(context)!.startSession : AppLocalizations.of(context)!.notConnected,
             style: const TextStyle(fontSize: 13),
           ),
           onPressed: hasCompatibleDevice

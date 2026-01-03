@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../l10n/app_localizations.dart';
 
 class HelpPage extends StatefulWidget {
   const HelpPage({super.key});
@@ -23,7 +24,7 @@ class _HelpPageState extends State<HelpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Help'),
+        title: Text(AppLocalizations.of(context)!.help),
       ),
       body: WebViewWidget(controller: controller),
     );

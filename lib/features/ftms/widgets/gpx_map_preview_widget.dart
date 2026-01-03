@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/gpx/gpx_data.dart';
 import '../../../core/services/gpx/gpx_route_tracker.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../training/widgets/route_map_widget.dart';
 
 /// A preview widget for a GPX file showing a small map with title and distance
@@ -94,7 +95,7 @@ class _GpxMapPreviewWidgetState extends State<GpxMapPreviewWidget> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${(widget.info.totalDistance / 1000).toStringAsFixed(1)} km',
+                        '${(widget.info.totalDistance / 1000).toStringAsFixed(1)} ${AppLocalizations.of(context)!.kilometers}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,

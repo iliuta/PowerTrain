@@ -10,7 +10,7 @@ import '../../core/services/devices/bt_scan_service.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart' as ph;
-
+import '../../l10n/app_localizations.dart';
 
 import 'scan_widgets.dart';
 
@@ -71,18 +71,18 @@ class _ScanPageState extends State<ScanPage> {
       // Show initial feedback with detailed instructions
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Opening Strava authorization...'),
-                SizedBox(height: 4),
-                Text('Sign in with your Strava account in the popup', 
-                     style: TextStyle(fontSize: 12)),
+                Text(AppLocalizations.of(context)!.openingStravaAuth),
+                const SizedBox(height: 4),
+                Text(AppLocalizations.of(context)!.signInStravaPopup, 
+                     style: const TextStyle(fontSize: 12)),
               ],
             ),
-            duration: Duration(seconds: 4),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -93,8 +93,8 @@ class _ScanPageState extends State<ScanPage> {
         await _checkStravaStatus();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Successfully connected to Strava!'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.stravaConnected),
               backgroundColor: Colors.green,
             ),
           );
@@ -103,14 +103,14 @@ class _ScanPageState extends State<ScanPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Column(
+              content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Strava authentication was not completed'),
-                  SizedBox(height: 4),
-                  Text('Please try again or check your Strava credentials', 
-                       style: TextStyle(fontSize: 12)),
+                Text(AppLocalizations.of(context)!.stravaAuthIncomplete),
+                  const SizedBox(height: 4),
+                  Text(AppLocalizations.of(context)!.stravaAuthRetry, 
+                       style: const TextStyle(fontSize: 12)),
                 ],
               ),
               backgroundColor: Colors.orange,
@@ -124,7 +124,7 @@ class _ScanPageState extends State<ScanPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error connecting to Strava: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.stravaError(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -181,7 +181,7 @@ class _ScanPageState extends State<ScanPage> {
         case BTScanResult.permissionDenied:
           scaffoldMessenger.showSnackBar(
             SnackBar(
-              content: const Text('Bluetooth permissions are required to scan for devices'),
+              content: Text(AppLocalizations.of(context)!.bluetoothPermissionsRequired),
               action: SnackBarAction(
                 label: 'Settings',
                 onPressed: () async => await ph.openAppSettings(),
@@ -192,8 +192,8 @@ class _ScanPageState extends State<ScanPage> {
 
         case BTScanResult.scanError:
           scaffoldMessenger.showSnackBar(
-            const SnackBar(
-              content: Text('Failed to start Bluetooth scan. Please try again later.'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.bluetoothScanFailed),
               backgroundColor: Colors.orange,
             ),
           );
@@ -224,7 +224,7 @@ class _ScanPageState extends State<ScanPage> {
                     children: [
                       ElevatedButton.icon(
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Scan for devices'),
+                        label: Text(AppLocalizations.of(context)!.scanForDevices),
                         onPressed: _startScan,
                       ),
                       const SizedBox(height: 8),
@@ -236,7 +236,7 @@ class _ScanPageState extends State<ScanPage> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Icon(_stravaStatus != null ? Icons.check_circle : Icons.link),
-                        label: Text(_stravaStatus != null ? 'Connected to Strava' : 'Connect to Strava'),
+                        label: Text(_stravaStatus != null ? AppLocalizations.of(context)!.connectedToStrava : AppLocalizations.of(context)!.connectToStrava),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _stravaStatus != null ? Colors.green : null,
                           foregroundColor: _stravaStatus != null ? Colors.white : null,
@@ -253,7 +253,7 @@ class _ScanPageState extends State<ScanPage> {
                       Flexible(
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Scan for devices'),
+                          label: Text(AppLocalizations.of(context)!.scanForDevices),
                           onPressed: _startScan,
                         ),
                       ),
@@ -303,11 +303,12 @@ class _ScanPageState extends State<ScanPage> {
                     onTap: () async {
                       // Capture the ScaffoldMessengerState before async operations
                       final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final disconnectedMessage = AppLocalizations.of(context)!.disconnectedFromStrava;
                       await _stravaService.signOut();
                       await _checkStravaStatus();
                       if (mounted) {
                         scaffoldMessenger.showSnackBar(
-                          const SnackBar(content: Text('Disconnected from Strava')),
+                          SnackBar(content: Text(disconnectedMessage)),
                         );
                       }
                     },

@@ -6,6 +6,7 @@ import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import 'widgets/training_session_chart.dart';
 import 'widgets/edit_target_fields_widget.dart';
@@ -88,7 +89,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load configuration: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLoadConfiguration(e))),
         );
       }
     }
@@ -171,7 +172,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     final key = 'interval_${DateTime.now().millisecondsSinceEpoch}';
     setState(() {
       _intervals[key] = UnitTrainingInterval(
-        title: 'Interval ${_intervals.length + 1}',
+        title: '${AppLocalizations.of(context)!.interval} ${_intervals.length + 1}',
         duration: _isDistanceBased ? null : 300, // 5 minutes default for time-based
         distance: _isDistanceBased ? 2000 : null, // 2km default for distance-based
         targets: {},
@@ -187,7 +188,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
       _intervals[key] = GroupTrainingInterval(
         intervals: [
           UnitTrainingInterval(
-            title: 'Interval 1',
+            title: '${AppLocalizations.of(context)!.interval} 1',
             duration: _isDistanceBased ? null : 240, // 4 minutes for time-based
             distance: _isDistanceBased ? 1500 : null, // 1.5km for distance-based
             targets: {},
@@ -262,23 +263,23 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Add Training Session')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.addTrainingSession)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_config == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Add Training Session')),
-        body: const Center(
-          child: Text('Unable to load configuration for this machine type'),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.addTrainingSession)),
+        body: Center(
+          child: Text(AppLocalizations.of(context)!.unableToLoadConfiguration),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Training Session' : 'Add Training Session'),
+        title: Text(_isEditMode ? AppLocalizations.of(context)!.editTrainingSession : AppLocalizations.of(context)!.addTrainingSession),
         actions: [
           ElevatedButton(
             onPressed: _intervals.isNotEmpty ? _saveSession : null,
@@ -288,7 +289,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             ),
             child: Text(
-              _isEditMode ? 'Update' : 'Save',
+              _isEditMode ? AppLocalizations.of(context)!.update : AppLocalizations.of(context)!.save,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -302,10 +303,10 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             padding: const EdgeInsets.all(10.0),
             child: TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Session Title',
-                hintText: 'Enter session name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.sessionTitle,
+                hintText: AppLocalizations.of(context)!.enterSessionName,
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -321,8 +322,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     Expanded(
                       child: Text(
                         _isEditMode 
-                          ? 'Session Type: ${_isDistanceBased ? 'Distance-based' : 'Time-based'}'
-                          : 'Distance-based session',
+                          ? '${AppLocalizations.of(context)!.sessionType}${_isDistanceBased ? AppLocalizations.of(context)!.distanceBased : AppLocalizations.of(context)!.timeBased}'
+                          : AppLocalizations.of(context)!.distanceBasedSession,
                         style: TextStyle(
                           fontSize: 14, 
                           fontWeight: FontWeight.w500,
@@ -355,7 +356,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Training Preview',
+                      AppLocalizations.of(context)!.trainingPreview,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 4),
@@ -374,11 +375,11 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           // Intervals List
           Expanded(
             child: _intervals.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'No intervals added yet.\nTap the + button to add intervals.',
+                      AppLocalizations.of(context)!.noIntervalsAdded,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   )
                 : ReorderableListView(
@@ -416,14 +417,14 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           FloatingActionButton.small(
             heroTag: 'add_group',
             onPressed: _addGroupInterval,
-            tooltip: 'Add Group Interval',
+            tooltip: AppLocalizations.of(context)!.addGroupInterval,
             child: const Icon(Icons.repeat),
           ),
           const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: 'add_unit',
             onPressed: _addUnitInterval,
-            tooltip: 'Add Unit Interval',
+            tooltip: AppLocalizations.of(context)!.addUnitInterval,
             child: const Icon(Icons.add),
           ),
         ],
@@ -441,8 +442,8 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(interval is GroupTrainingInterval
-                  ? 'Group ${index + 1} (${interval.repeat ?? 1}x)'
-                  : (interval is UnitTrainingInterval ? (interval.title ?? 'Interval ${index + 1}') : 'Interval ${index + 1}')),
+                  ? '${AppLocalizations.of(context)!.group} ${index + 1} (${interval.repeat ?? 1}x)'
+                  : (interval is UnitTrainingInterval ? (interval.title ?? '${AppLocalizations.of(context)!.interval} ${index + 1}') : '${AppLocalizations.of(context)!.interval} ${index + 1}')),
             ),
           ],
         ),
@@ -453,12 +454,12 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             IconButton(
               icon: const Icon(Icons.copy),
               onPressed: () => _duplicateInterval(key),
-              tooltip: 'Duplicate',
+              tooltip: AppLocalizations.of(context)!.duplicate,
             ),
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () => _removeInterval(key),
-              tooltip: 'Delete',
+              tooltip: AppLocalizations.of(context)!.delete,
             ),
           ],
         ),
@@ -539,7 +540,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           if (_isDistanceBased) ...[
             Row(
               children: [
-                const SizedBox(width: 80, child: Text('Distance:')),
+                SizedBox(width: 80, child: Text(AppLocalizations.of(context)!.distanceLabel)),
                 IconButton(
                   icon: const Icon(Icons.remove),
                   onPressed: (interval.distance ?? 0) > _minDistance
@@ -591,7 +592,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           ] else ...[
             Row(
               children: [
-                const SizedBox(width: 80, child: Text('Duration:')),
+                SizedBox(width: 80, child: Text(AppLocalizations.of(context)!.durationLabel)),
                 IconButton(
                   icon: const Icon(Icons.remove),
                   onPressed: (interval.duration ?? 0) > 10
@@ -644,7 +645,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
           // Targets
           const SizedBox(height: 16),
-          const Text('Targets:', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context)!.targets, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           EditTargetFieldsWidget(
             machineType: widget.machineType,
@@ -673,16 +674,16 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const SizedBox(width: 80, child: Text('Resistance:')),
+                SizedBox(width: 80, child: Text(AppLocalizations.of(context)!.resistanceLabel)),
                 Expanded(
                   child: TextFormField(
                     initialValue: interval.resistanceLevel?.toString() ?? '',
-                    decoration: const InputDecoration(
-                      hintText: 'Resistance level',
-                      suffixText: 'level',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.resistanceLevel,
+                      suffixText: AppLocalizations.of(context)!.level,
                       isDense: true,
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -717,7 +718,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           // Repeat count
           Row(
             children: [
-              const SizedBox(width: 80, child: Text('Repeat:')),
+              SizedBox(width: 80, child: Text(AppLocalizations.of(context)!.repeatLabel)),
               IconButton(
                 icon: const Icon(Icons.remove),
                 onPressed: (interval.repeat ?? 1) > 1
@@ -766,12 +767,12 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           // Sub-intervals header with add button
           Row(
             children: [
-              const Text('Sub-intervals:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context)!.subIntervals, style: const TextStyle(fontWeight: FontWeight.bold)),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.add, size: 20),
                 onPressed: () => _addSubInterval(key, interval),
-                tooltip: 'Add Sub-interval',
+                tooltip: AppLocalizations.of(context)!.addSubInterval,
               ),
             ],
           ),
@@ -795,14 +796,14 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            subInterval.title ?? 'Sub-interval ${subIndex + 1}',
+                            subInterval.title ?? '${AppLocalizations.of(context)!.subInterval} ${subIndex + 1}',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, size: 16),
                           onPressed: () => _removeSubInterval(key, interval, subIndex),
-                          tooltip: 'Remove Sub-interval',
+                          tooltip: AppLocalizations.of(context)!.removeSubInterval,
                         ),
                       ],
                     ),
@@ -813,7 +814,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     interval: subInterval,
                     isEditing: true,
                     onUpdate: (updatedInterval) => _updateSubInterval(key, interval, subIndex, updatedInterval),
-                    labelPrefix: 'Sub-interval',
+                    labelPrefix: AppLocalizations.of(context)!.subInterval,
                   ),
                 ],
               ),
@@ -822,11 +823,11 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
 
           // Show message if no sub-intervals
           if (interval.intervals.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Text(
-                'No sub-intervals. Add one using the + button above.',
-                style: TextStyle(color: Colors.grey),
+                AppLocalizations.of(context)!.noSubIntervals,
+                style: const TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -838,7 +839,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   void _addSubInterval(String key, GroupTrainingInterval groupInterval) {
     setState(() {
       final newSubInterval = UnitTrainingInterval(
-        title: 'Interval ${groupInterval.intervals.length + 1}',
+        title: '${AppLocalizations.of(context)!.interval} ${groupInterval.intervals.length + 1}',
         duration: _isDistanceBased ? null : 120, // 2 minutes default for time-based
         distance: _isDistanceBased ? 1000 : null, // 1km default for distance-based
         targets: {},
@@ -872,14 +873,14 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   Future<void> _saveSession() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a session title')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.enterSessionTitle)),
       );
       return;
     }
 
     if (_intervals.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one interval')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.addAtLeastOneInterval)),
       );
       return;
     }
@@ -895,7 +896,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 16),
-            Text(_isEditMode ? 'Updating session...' : 'Saving session...'),
+            Text(_isEditMode ? AppLocalizations.of(context)!.updatingSession : AppLocalizations.of(context)!.savingSession),
           ],
         ),
         duration: const Duration(seconds: 2),
@@ -946,7 +947,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Session "${_titleController.text}" ${_isEditMode ? 'updated' : 'saved'} successfully!'),
+            content: Text(_isEditMode ? AppLocalizations.of(context)!.sessionUpdated(_titleController.text) : AppLocalizations.of(context)!.sessionSaved(_titleController.text)),
             backgroundColor: Colors.green,
           ),
         );
@@ -957,7 +958,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save session: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.failedToSaveSession(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 import '../../../core/config/live_data_display_config.dart';
 import 'interval_target_fields_display.dart';
@@ -40,8 +41,8 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
     if (widget.intervals.isEmpty) {
       return SizedBox(
         height: widget.height,
-        child: const Center(
-          child: Text('No intervals'),
+        child: Center(
+          child: Text(AppLocalizations.of(context)!.noIntervals),
         ),
       );
     }
@@ -205,7 +206,7 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                interval.title ?? 'Interval ${_hoveredIntervalIndex! + 1}',
+                interval.title ?? '${AppLocalizations.of(context)!.interval} ${_hoveredIntervalIndex! + 1}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -214,8 +215,8 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
               const SizedBox(height: 4),
               Text(
                 widget.isDistanceBased
-                    ? 'Distance: ${_formatDistance(interval.distance ?? 0)}'
-                    : 'Duration: ${_formatDuration(interval.duration ?? 0)}',
+                    ? '${AppLocalizations.of(context)!.distanceLabel} ${_formatDistance(interval.distance ?? 0)}'
+                    : '${AppLocalizations.of(context)!.durationLabel} ${_formatDuration(interval.duration ?? 0)}',
                 style: const TextStyle(fontSize: 12),
               ),
               if (interval.targets != null && interval.targets!.isNotEmpty) ...[

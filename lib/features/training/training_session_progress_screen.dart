@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
@@ -96,8 +97,8 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
             
             final expandedSession = sessionSnapshot.data;
             if (expandedSession == null) {
-              return const Scaffold(
-                body: Center(child: Text('Failed to load session')),
+              return Scaffold(
+                body: Center(child: Text(AppLocalizations.of(context)!.failedToLoadSession)),
               );
             }
             

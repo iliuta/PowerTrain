@@ -73,6 +73,95 @@ For home trainers, the resistance is a percentage from 0 to 100.
 flutter pub get
 ```
 
+## Internationalization (i18n)
+
+This app supports multiple languages with automatic locale detection. Currently supported languages: English (en), French (fr), and German (de).
+
+### How i18n Works
+
+The app uses Flutter's built-in internationalization system with ARB (Application Resource Bundle) files:
+
+1. **ARB Files**: Translation files are stored in `lib/l10n/`:
+   - `intl_en.arb` - English translations (template file)
+   - `intl_fr.arb` - French translations  
+   - `intl_de.arb` - German translations
+
+2. **Configuration**: The `l10n.yaml` file configures the Flutter gen-l10n tool:
+   ```yaml
+   arb-dir: lib/l10n
+   template-arb-file: intl_en.arb
+   output-localization-file: app_localizations.dart
+   ```
+
+3. **Generated Code**: The `AppLocalizations` class is auto-generated from ARB files and provides type-safe access to translations.
+
+### Adding New Translations
+
+#### For UI Text (Dialogs, Buttons, Messages)
+
+1. **Add to ARB files**: Add the new key-value pair to all ARB files:
+   ```
+   // intl_en.arb
+   "newFeatureTitle": "New Feature",
+   
+   // intl_fr.arb  
+   "newFeatureTitle": "Nouvelle Fonctionnalité",
+   
+   // intl_de.arb
+   "newFeatureTitle": "Neue Funktion",
+   ```
+
+2. **Regenerate localizations**:
+   ```zsh
+   flutter gen-l10n
+   ```
+
+3. **Use in code**:
+   ```
+   Text(AppLocalizations.of(context)!.newFeatureTitle)
+   ```
+
+#### For FTMS Field Labels (Speed, Power, etc.)
+
+Field labels are stored directly in the machine configuration JSON files for better maintainability:
+
+1. **Update JSON config**: Add `labelI18n` to field definitions in `lib/config/*.json`:
+   ```json
+   {
+     "name": "Instantaneous Speed",
+     "label": "Speed",
+     "labelI18n": {
+       "en": "Speed",
+       "fr": "Vitesse", 
+       "de": "Geschwindigkeit"
+     },
+     "display": "speedometer",
+     "unit": "km/h"
+   }
+   ```
+
+2. **Use in widgets**: The app automatically uses the localized label based on device locale:
+   ```
+   import 'package:ftms/core/utils/i18n_utils.dart';
+   
+   Text(getFieldLabel(field, Localizations.localeOf(context).languageCode))
+   ```
+
+### Adding a New Language
+
+1. **Create new ARB file**: Copy `intl_en.arb` to `intl_<language_code>.arb`
+2. **Translate all keys**: Provide translations for every key in the new ARB file
+3. **Update MaterialApp**: Add the new locale to `supportedLocales` in `main.dart`
+4. **Test**: Change device language and verify translations appear correctly
+
+### Best Practices
+
+- **Key naming**: Use camelCase for keys (e.g., `fieldLabelSpeed`)
+- **Fallback**: Always provide English as fallback language
+- **Context**: Include context in ARB files as comments for translators
+- **Testing**: Test with different device locales to ensure proper switching
+- **Consistency**: Use consistent terminology across all languages
+
 ### Build and Run
 
 #### Android (on a test phone)

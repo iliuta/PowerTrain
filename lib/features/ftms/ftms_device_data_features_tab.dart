@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/bloc/ftms_bloc.dart';
+import '../../l10n/app_localizations.dart';
 
 class FTMSDeviceDataFeaturesTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -81,13 +82,13 @@ class FTMSDeviceDataFeaturesTabState extends State<FTMSDeviceDataFeaturesTab> {
       stream: ftmsBloc.ftmsDeviceDataControllerStream,
       builder: (c, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text("Waiting for device data..."),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(AppLocalizations.of(context)!.waitingForDeviceData),
               ],
             ),
           );

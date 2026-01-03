@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/services/fit/fit_file_manager.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Screen for managing unsynchronized FIT files
 class FitFileManagerPage extends StatefulWidget {
@@ -59,7 +60,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load FIT files: $e'),
+            content: Text(AppLocalizations.of(context)!.failedToLoadFitFiles(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -85,7 +86,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Successfully deleted ${filesToDelete.length} file(s)'),
+              content: Text(AppLocalizations.of(context)!.successfullyDeletedFiles(filesToDelete.length.toString())),
               backgroundColor: Colors.green,
             ),
           );
@@ -94,7 +95,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to delete ${failedDeletions.length} file(s)'),
+              content: Text(AppLocalizations.of(context)!.failedToDeleteFiles(failedDeletions.length.toString())),
               backgroundColor: Colors.orange,
             ),
           );
@@ -106,7 +107,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error deleting files: $e'),
+            content: Text(AppLocalizations.of(context)!.errorDeletingFiles(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -122,9 +123,9 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete FIT Files'),
+        title: Text(AppLocalizations.of(context)!.deleteFitFiles),
         content: Text(
-          'Are you sure you want to delete ${_selectedFiles.length} selected file(s)? This action cannot be undone.',
+          AppLocalizations.of(context)!.deleteFitFilesConfirmation(_selectedFiles.length.toString()),
         ),
         actions: [
           TextButton(
@@ -146,8 +147,8 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
     if (!isAuthenticated) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please authenticate with Strava first in Settings'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.stravaAuthRequired),
             backgroundColor: Colors.orange,
           ),
         );
@@ -185,9 +186,9 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                deleteSuccess 
-                  ? 'Successfully uploaded to Strava and deleted local file'
-                  : 'Uploaded to Strava but failed to delete local file',
+                deleteSuccess
+                  ? AppLocalizations.of(context)!.uploadedToStravaAndDeleted
+                  : AppLocalizations.of(context)!.uploadedToStravaFailedDelete,
               ),
               backgroundColor: deleteSuccess ? Colors.green : Colors.orange,
             ),
@@ -200,8 +201,8 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to upload to Strava'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.failedToUploadToStrava),
               backgroundColor: Colors.red,
             ),
           );
@@ -212,7 +213,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error uploading to Strava: $e'),
+            content: Text(AppLocalizations.of(context)!.errorUploadingToStrava(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -238,7 +239,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error sharing file: $e'),
+            content: Text(AppLocalizations.of(context)!.errorSharingFile(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -270,13 +271,13 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FIT Files'),
+        title: Text(AppLocalizations.of(context)!.fitFiles),
         actions: [
           if (_fitFiles.isNotEmpty)
             TextButton(
               onPressed: _selectAll,
               child: Text(
-                _selectedFiles.length == _fitFiles.length ? 'Deselect All' : 'Select All',
+                _selectedFiles.length == _fitFiles.length ? AppLocalizations.of(context)!.deselectAll : AppLocalizations.of(context)!.selectAll,
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -298,7 +299,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.delete),
-              label: Text(_isDeleting ? 'Deleting...' : 'Delete Selected'),
+              label: Text(_isDeleting ? AppLocalizations.of(context)!.deleting : AppLocalizations.of(context)!.deleteSelected),
               backgroundColor: Colors.red,
             )
           : null,
@@ -313,27 +314,27 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
     }
 
     if (_fitFiles.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.folder_open,
               size: 64,
               color: Colors.grey,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
-              'No FIT files found',
-              style: TextStyle(
+              AppLocalizations.of(context)!.noFitFilesFound,
+              style: const TextStyle(
                 fontSize: 18,
                 color: Colors.grey,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'FIT files will appear here after completing training sessions',
-              style: TextStyle(
+              AppLocalizations.of(context)!.fitFilesWillAppear,
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
               ),
@@ -360,7 +361,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${_fitFiles.length} file(s) • Tap to select, long press for options',
+                    AppLocalizations.of(context)!.filesInfo(_fitFiles.length.toString()),
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -437,27 +438,27 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                             }
                           },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'upload',
                               child: ListTile(
                                 leading: Icon(Icons.cloud_upload),
-                                title: Text('Upload to Strava'),
+                                title: Text(AppLocalizations.of(context)!.uploadToStrava),
                                 dense: true,
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'download',
                               child: ListTile(
                                 leading: Icon(Icons.download),
-                                title: Text('Share'),
+                                title: Text(AppLocalizations.of(context)!.share),
                                 dense: true,
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
                               child: ListTile(
                                 leading: Icon(Icons.delete, color: Colors.red),
-                                title: Text('Delete'),
+                                title: Text(AppLocalizations.of(context)!.delete),
                                 dense: true,
                               ),
                             ),
