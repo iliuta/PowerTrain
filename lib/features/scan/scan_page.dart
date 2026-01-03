@@ -328,15 +328,15 @@ class _ScanPageState extends State<ScanPage> {
                   children: [
                     const Icon(Icons.star, color: Colors.blue),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Enjoying PowerTrain? Rate it on the app store!',
+                        AppLocalizations.of(context)!.enjoyingAppReviewPrompt,
                         style: TextStyle(color: Colors.blue),
                       ),
                     ),
                     TextButton(
                       onPressed: _requestReview,
-                      child: const Text('Rate Now'),
+                      child: Text(AppLocalizations.of(context)!.rateNow),
                     ),
                     IconButton(
                       onPressed: _dismissReviewBanner,

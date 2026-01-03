@@ -742,4 +742,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String autoReconnected(Object deviceName, Object deviceType) {
     return 'Auto-reconnected to $deviceType: $deviceName';
   }
+
+  @override
+  String get enjoyingAppReviewPrompt =>
+      'Enjoying PowerTrain? Rate it on the app store!';
+
+  @override
+  String get rateNow => 'Rate Now';
 }

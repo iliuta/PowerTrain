@@ -222,5 +222,7 @@
   "failedToConnect": "Failed to connect to {deviceName}",
   "unsupportedDevice": "Unsupported device {deviceName}",
   "disconnect": "Disconnect",
-  "autoReconnected": "Auto-reconnected to {deviceType}: {deviceName}"
+  "autoReconnected": "Auto-reconnected to {deviceType}: {deviceName}",
+  "enjoyingAppReviewPrompt": "Enjoying PowerTrain? Rate it on the app store!",
+  "rateNow": "Rate Now"
 }

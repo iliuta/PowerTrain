@@ -753,4 +753,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String autoReconnected(Object deviceName, Object deviceType) {
     return 'Automatisch wieder verbunden mit $deviceType: $deviceName';
   }
+
+  @override
+  String get enjoyingAppReviewPrompt =>
+      'Gefällt Ihnen PowerTrain? Bewerten Sie es im App Store!';
+
+  @override
+  String get rateNow => 'Jetzt bewerten';
 }

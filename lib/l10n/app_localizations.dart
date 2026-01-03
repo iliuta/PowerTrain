@@ -1389,6 +1389,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-reconnected to {deviceType}: {deviceName}'**
   String autoReconnected(Object deviceName, Object deviceType);
+
+  /// No description provided for @enjoyingAppReviewPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying PowerTrain? Rate it on the app store!'**
+  String get enjoyingAppReviewPrompt;
+
+  /// No description provided for @rateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Now'**
+  String get rateNow;
 }
 
 class _AppLocalizationsDelegate

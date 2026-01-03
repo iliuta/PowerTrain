@@ -222,5 +222,7 @@
   "failedToConnect": "Verbindung zu {deviceName} fehlgeschlagen",
   "unsupportedDevice": "Nicht unterstütztes Gerät {deviceName}",
   "disconnect": "Trennen",
-  "autoReconnected": "Automatisch wieder verbunden mit {deviceType}: {deviceName}"
+  "autoReconnected": "Automatisch wieder verbunden mit {deviceType}: {deviceName}",
+  "enjoyingAppReviewPrompt": "Gefällt Ihnen PowerTrain? Bewerten Sie es im App Store!",
+  "rateNow": "Jetzt bewerten"
 }
