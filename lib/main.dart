@@ -16,13 +16,13 @@ import 'core/services/devices/bt_device_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
+  // Initialize Firebase (only available when Google Services plugin is applied)
   try {
     await Firebase.initializeApp();
     AnalyticsService().initialize();
     logger.i('🔥 Firebase initialized successfully');
   } catch (e) {
-    logger.e('🔥 Failed to initialize Firebase: $e');
+    logger.i('🔥 Firebase not available (likely dev build): $e');
   }
   
   // Note: Edge-to-edge is automatically enabled on Android 15+ (Flutter 3.27+)

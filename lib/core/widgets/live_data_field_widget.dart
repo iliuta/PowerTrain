@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
-import 'package:audioplayers/audioplayers.dart';
 import '../config/live_data_field_config.dart';
 import '../models/live_data_field_value.dart';
 import 'live_data_field_widget_registry.dart';
 import 'package:ftms/core/utils/i18n_utils.dart';
 import '../../l10n/app_localizations.dart';
+import '../services/sound_service.dart';
 
 /// Widget for displaying a single FTMS field.
 class LiveDataFieldWidget extends StatefulWidget {
@@ -30,7 +30,7 @@ class LiveDataFieldWidget extends StatefulWidget {
 }
 
 class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
-  late AudioPlayer _audioPlayer;
+  late SoundService _soundService;
   bool _wasOutOfRange = false;
   Color? _backgroundColor;
   Timer? _flashTimer;
@@ -38,12 +38,11 @@ class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
+    _soundService = SoundService.instance;
   }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
     _flashTimer?.cancel();
     super.dispose();
   }
@@ -72,7 +71,7 @@ class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
 
     // Play sound and flash if just went out of range
     if (isOutOfRange && !_wasOutOfRange) {
-      _audioPlayer.play(AssetSource('sounds/disappointing_beep.wav'));
+      _soundService.playSound('sounds/disappointing_beep.wav');
       _backgroundColor = Colors.red.withValues(alpha: 0.3);
       _flashTimer?.cancel();
       _flashTimer = Timer(const Duration(milliseconds: 300), () {
