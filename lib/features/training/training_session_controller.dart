@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
@@ -21,6 +20,7 @@ import '../../core/services/ftms_service.dart';
 import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
+import '../../core/services/sound_service.dart';
 import '../../core/utils/logger.dart';
 
 class TrainingSessionController extends ChangeNotifier
@@ -41,7 +41,7 @@ class TrainingSessionController extends ChangeNotifier
   late final StravaService _stravaService;
 
   // Audio player for warning sounds
-  AudioPlayer? _audioPlayer;
+  SoundService? _soundService;
 
   // Session state machine
   late TrainingSessionState _state;
@@ -73,7 +73,6 @@ class TrainingSessionController extends ChangeNotifier
     StravaService? stravaService,
     TrainingDataRecorder? dataRecorder,
     bool enableFitFileGeneration = true, // Allow disabling for tests
-    AudioPlayer? audioPlayer, // Allow injection for testing
     String? gpxFilePath, // Optional GPX file path for route display
   })  : _enableFitFileGeneration = enableFitFileGeneration,
         _gpxFilePath = gpxFilePath {
@@ -83,8 +82,8 @@ class TrainingSessionController extends ChangeNotifier
     // Initialize session state with this controller as the effect handler
     _state = TrainingSessionState.initial(session, handler: this);
 
-    // Initialize audio player with error handling for tests
-    _initAudioPlayer(audioPlayer);
+    // Initialize sound service (singleton)
+    _soundService = SoundService.instance;
     _dataRecorder = dataRecorder;
 
     // Ensure wakelock stays enabled during training sessions
@@ -103,21 +102,6 @@ class TrainingSessionController extends ChangeNotifier
     WakelockPlus.enable().catchError((e) {
       debugPrint('Failed to enable wakelock during training: $e');
     });
-  }
-
-  void _initAudioPlayer(AudioPlayer? audioPlayer) {
-    // Initialize audio player with error handling for tests
-    if (audioPlayer != null) {
-      _audioPlayer = audioPlayer;
-    } else {
-      try {
-        _audioPlayer = AudioPlayer();
-      } catch (e) {
-        debugPrint(
-            'Failed to initialize AudioPlayer (likely in test environment): $e');
-        _audioPlayer = null;
-      }
-    }
   }
 
   // ============ Public getters (delegating to state) ============
@@ -541,14 +525,13 @@ class TrainingSessionController extends ChangeNotifier
   // ============ Audio ============
 
   Future<void> _playWarningSound() async {
-    if (_audioPlayer == null) {
-      debugPrint('🔔 AudioPlayer not available, skipping sound playback');
+    if (_soundService == null) {
+      debugPrint('🔔 SoundService not available, skipping sound playback');
       return;
     }
 
     try {
-      await _audioPlayer!.play(AssetSource('sounds/beep.wav'));
-      debugPrint('🔔 Played custom beep sound');
+      await _soundService!.playSound('sounds/beep.wav');
     } catch (e) {
       debugPrint('🔔 Failed to play warning sound: $e');
     }
@@ -755,7 +738,6 @@ class TrainingSessionController extends ChangeNotifier
     _ftmsSub.cancel();
     _connectionStateSub.cancel();
     onStopTimer();
-    _audioPlayer?.dispose();
 
     if (!_state.hasEnded) {
       Future.microtask(() async {
