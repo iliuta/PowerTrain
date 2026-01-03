@@ -678,10 +678,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fieldLabelHeartRate => 'Herzfrequenz';
 
   @override
-  String get fieldLabelAvgSpeed => 'Durchschn. Geschwindigkeit';
+  String get fieldLabelAvgSpeed => 'Ø Geschw.';
 
   @override
-  String get fieldLabelAvgPower => 'Durchschn. Leistung';
+  String get fieldLabelAvgPower => 'Ø Leist.';
 
   @override
   String get fieldLabelDistance => 'Strecke';

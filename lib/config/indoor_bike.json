@@ -66,7 +66,7 @@
       "labelI18n": {
         "en": "Avg speed",
         "fr": "Vitesse moy.",
-        "de": "Durchschn. Geschwindigkeit"
+        "de": "Ø Geschw."
       },
       "display": "number",
       "unit": "km/h",
@@ -78,7 +78,7 @@
       "labelI18n": {
         "en": "Avg power",
         "fr": "Puissance moy.",
-        "de": "Durchschn. Leistung"
+        "de": "Ø Leist."
       },
       "display": "number",
       "unit": "W",
