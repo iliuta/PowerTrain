@@ -232,6 +232,12 @@ abstract class AppLocalizations {
   /// **'Disconnected from Strava'**
   String get disconnectedFromStrava;
 
+  /// No description provided for @connectedAsAthlete.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {athleteName}'**
+  String connectedAsAthlete(Object athleteName);
+
   /// No description provided for @failedLoadTrainingSessions.
   ///
   /// In en, this message translates to:
@@ -417,6 +423,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load training session'**
   String get loadTrainingSessionButton;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'...'**
+  String get loading;
 
   /// No description provided for @noTrainingSessions.
   ///
@@ -1401,6 +1413,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rate Now'**
   String get rateNow;
+
+  /// No description provided for @noDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'(no device)'**
+  String get noDevice;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
 }
 
 class _AppLocalizationsDelegate

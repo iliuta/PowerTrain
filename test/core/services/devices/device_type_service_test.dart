@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/devices/bt_device.dart';
 import 'package:ftms/core/services/devices/bt_device_manager.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'dart:async';
 
 void main() {
@@ -63,33 +64,77 @@ void main() {
     });
 
     group('getConnectedActions', () {
-      test('should return Open button when device page is available', () {
-        final actions = service.getConnectedActions(mockDevice, mockContext);
-        expect(actions, hasLength(1));
-        expect(actions.first, isA<ElevatedButton>());
+      testWidgets('should return Open button when device page is available', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final actions = service.getConnectedActions(mockDevice, context);
+                expect(actions, hasLength(1));
+                expect(actions.first, isA<ElevatedButton>());
+                return Container();
+              },
+            ),
+          ),
+        );
       });
 
-      test('should return Open button when navigation callback is available', () {
+      testWidgets('should return Open button when navigation callback is available', (WidgetTester tester) async {
         service.hasNavigationCallback = true;
-        final actions = service.getConnectedActions(mockDevice, mockContext);
-        expect(actions, hasLength(1));
-        expect(actions.first, isA<ElevatedButton>());
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final actions = service.getConnectedActions(mockDevice, context);
+                expect(actions, hasLength(1));
+                expect(actions.first, isA<ElevatedButton>());
+                return Container();
+              },
+            ),
+          ),
+        );
       });
 
-      test('should prioritize device page over navigation callback', () {
+      testWidgets('should prioritize device page over navigation callback', (WidgetTester tester) async {
         service.hasNavigationCallback = true;
         service.hasDevicePage = true;
-        final actions = service.getConnectedActions(mockDevice, mockContext);
-        expect(actions, hasLength(1));
-        // Should use device page, not navigation callback
-        expect(service.getDevicePageCalled, isTrue);
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final actions = service.getConnectedActions(mockDevice, context);
+                expect(actions, hasLength(1));
+                // Should use device page, not navigation callback
+                expect(service.getDevicePageCalled, isTrue);
+                return Container();
+              },
+            ),
+          ),
+        );
       });
 
-      test('should return empty list when no page or callback available', () {
+      testWidgets('should return empty list when no page or callback available', (WidgetTester tester) async {
         service.hasDevicePage = false;
         service.hasNavigationCallback = false;
-        final actions = service.getConnectedActions(mockDevice, mockContext);
-        expect(actions, isEmpty);
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final actions = service.getConnectedActions(mockDevice, context);
+                expect(actions, isEmpty);
+                return Container();
+              },
+            ),
+          ),
+        );
       });
     });
   });

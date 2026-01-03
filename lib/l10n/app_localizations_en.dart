@@ -88,6 +88,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disconnectedFromStrava => 'Disconnected from Strava';
 
   @override
+  String connectedAsAthlete(Object athleteName) {
+    return 'Connected as $athleteName';
+  }
+
+  @override
   String get failedLoadTrainingSessions => 'Failed to load training sessions.';
 
   @override
@@ -191,6 +196,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadTrainingSessionButton => 'Load training session';
+
+  @override
+  String get loading => '...';
 
   @override
   String get noTrainingSessions => 'No Training Sessions';
@@ -749,4 +757,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rateNow => 'Rate Now';
+
+  @override
+  String get noDevice => '(no device)';
+
+  @override
+  String get open => 'Open';
 }

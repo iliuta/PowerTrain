@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/core/services/devices/bt_device_navigation_registry.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
   group('FtmsDeviceService', () {
@@ -119,18 +120,40 @@ void main() {
     });
 
     group('getConnectedActions', () {
-      test('should return Open button when navigation callback is available', () {
+      testWidgets('should return Open button when navigation callback is available', (WidgetTester tester) async {
         void testCallback(BuildContext context, BluetoothDevice device) {}
         registry.registerNavigation('FTMS', testCallback);
-        
-        final actions = ftmsBtDevice.getConnectedActions(mockDevice, mockContext);
-        expect(actions, hasLength(1));
-        expect(actions.first, isA<ElevatedButton>());
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final actions = ftmsBtDevice.getConnectedActions(mockDevice, context);
+                expect(actions, hasLength(1));
+                expect(actions.first, isA<ElevatedButton>());
+                return Container();
+              },
+            ),
+          ),
+        );
       });
 
-      test('should return empty list when no navigation callback available', () {
-        final actions = ftmsBtDevice.getConnectedActions(mockDevice, mockContext);
-        expect(actions, isEmpty);
+      testWidgets('should return empty list when no navigation callback available', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final actions = ftmsBtDevice.getConnectedActions(mockDevice, context);
+                expect(actions, isEmpty);
+                return Container();
+              },
+            ),
+          ),
+        );
       });
     });
   });

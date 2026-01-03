@@ -58,7 +58,7 @@ class _ScanPageState extends State<ScanPage> {
     final status = await _stravaService.getAuthStatus();
     setState(() {
       if (status != null) {
-        _stravaStatus = 'Connected as ${status['athleteName']}';
+        _stravaStatus = AppLocalizations.of(context)!.connectedAsAthlete(status['athleteName']);
       } else {
         _stravaStatus = null;
       }

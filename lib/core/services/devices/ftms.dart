@@ -3,6 +3,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/utils/logger.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'bt_device.dart';
 import 'bt_device_navigation_registry.dart';
 import '../../bloc/ftms_bloc.dart';
@@ -194,7 +195,7 @@ class Ftms extends BTDevice {
     if (page != null) {
       actions.add(
         ElevatedButton(
-          child: const Text("Open"),
+          child: Text(AppLocalizations.of(context)!.open),
           onPressed: () {
             Navigator.push(
               context,
@@ -206,7 +207,7 @@ class Ftms extends BTDevice {
     } else if (navigationCallback != null) {
       actions.add(
         ElevatedButton(
-          child: const Text("Open"),
+          child: Text(AppLocalizations.of(context)!.open),
           onPressed: () => navigationCallback(context, device),
         ),
       );

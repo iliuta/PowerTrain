@@ -21,6 +21,7 @@
   "connectedToStrava": "Mit Strava verbunden",
   "connectToStrava": "Mit Strava verbinden",
   "disconnectedFromStrava": "Von Strava getrennt",
+  "connectedAsAthlete": "Verbunden als {athleteName}",
   "failedLoadTrainingSessions": "Laden der Trainingseinheiten fehlgeschlagen.",
   "noTrainingSessionsFound": "Keine Trainingseinheiten für diesen Maschinentyp gefunden.",
   "noFtmsDataFound": "Keine FTMS-Daten gefunden!",
@@ -52,6 +53,7 @@
   "noMachineFeaturesFound": "Keine Maschinenfunktionen gefunden!",
   "retry": "Erneut versuchen",
   "loadTrainingSessionButton": "Trainingseinheit laden",
+  "loading": "...",
   "noTrainingSessions": "Keine Trainingseinheiten",
   "waitingForDeviceData": "Warten auf Gerätedaten...",
   "noData": "Keine Daten",
@@ -224,5 +226,7 @@
   "disconnect": "Trennen",
   "autoReconnected": "Automatisch wieder verbunden mit {deviceType}: {deviceName}",
   "enjoyingAppReviewPrompt": "Gefällt Ihnen PowerTrain? Bewerten Sie es im App Store!",
-  "rateNow": "Jetzt bewerten"
+  "rateNow": "Jetzt bewerten",
+  "noDevice": "(kein Gerät)",
+  "open": "Öffnen"
 }

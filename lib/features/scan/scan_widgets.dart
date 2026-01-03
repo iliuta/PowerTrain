@@ -154,7 +154,7 @@ Widget _buildConnectedDeviceCard(BTDevice connectedDevice, BuildContext context)
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  connectedDevice.name,
+                  _getLocalizedDeviceName(connectedDevice, context),
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),
@@ -234,7 +234,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
       stream: device.connectionState,
       builder: (c, snapshot) {
         if (!snapshot.hasData) {
-          return const Text("...");
+          return Text(AppLocalizations.of(context)!.loading);
         }
         var deviceState = snapshot.data!;
         switch (deviceState) {
@@ -390,6 +390,17 @@ void initializeDeviceNavigation() {
       ),
     );
   });
+}
+
+/// Get localized device name for display
+String _getLocalizedDeviceName(BTDevice device, BuildContext context) {
+  final name = device.name;
+  if (name == '(unknown device)') {
+    return AppLocalizations.of(context)!.unknownDevice;
+  } else if (name == '(no device)') {
+    return AppLocalizations.of(context)!.noDevice;
+  }
+  return name;
 }
 
 /// Handle auto-reconnection and display UI feedback

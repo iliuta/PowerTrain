@@ -21,6 +21,7 @@
   "connectedToStrava": "Connected to Strava",
   "connectToStrava": "Connect to Strava",
   "disconnectedFromStrava": "Disconnected from Strava",
+  "connectedAsAthlete": "Connected as {athleteName}",
   "failedLoadTrainingSessions": "Failed to load training sessions.",
   "noTrainingSessionsFound": "No training sessions found for this machine type.",
   "noFtmsDataFound": "No FTMSData found!",
@@ -52,6 +53,7 @@
   "noMachineFeaturesFound": "No Machine Features found!",
   "retry": "Retry",
   "loadTrainingSessionButton": "Load training session",
+  "loading": "...",
   "noTrainingSessions": "No Training Sessions",
   "waitingForDeviceData": "Waiting for device data...",
   "noData": "No data",
@@ -224,5 +226,7 @@
   "disconnect": "Disconnect",
   "autoReconnected": "Auto-reconnected to {deviceType}: {deviceName}",
   "enjoyingAppReviewPrompt": "Enjoying PowerTrain? Rate it on the app store!",
-  "rateNow": "Rate Now"
+  "rateNow": "Rate Now",
+  "noDevice": "(no device)",
+  "open": "Open"
 }
