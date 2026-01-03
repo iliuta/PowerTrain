@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 import '../../../core/config/live_data_display_config.dart';
 import 'interval_target_fields_display.dart';
@@ -42,7 +43,7 @@ class TrainingIntervalList extends StatelessWidget {
           child: ListTile(
             title: Text(
               _intervalTitleWithIndex(
-                interval.title ?? 'Interval',
+                interval.title == 'Workout' ? AppLocalizations.of(context)!.workout : (interval.title ?? AppLocalizations.of(context)!.interval),
                 currentInterval + idx + 1,
                 intervals.length,
               ),

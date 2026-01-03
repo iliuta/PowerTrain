@@ -8,6 +8,7 @@ import 'package:ftms/features/training/widgets/training_session_chart.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:flutter/services.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
@@ -38,6 +39,8 @@ void main() {
   // Helper method to create widget with test data
   Widget createTestWidget(List<TrainingSessionDefinition> sessions) {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: TrainingSessionExpansionPanelList(
           sessions: sessions,

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/utils/logger.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../ftms/ftms_page.dart';
 import '../../core/services/devices/bt_device_manager.dart';
@@ -9,19 +10,6 @@ import '../../core/services/devices/bt_device_navigation_registry.dart';
 import '../../core/services/devices/bt_device.dart';
 import '../../core/services/devices/last_connected_devices_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-
-/// Button for scanning Bluetooth devices
-Widget scanBluetoothButton(bool? isScanning) {
-  if (isScanning == null) {
-    return Container();
-  }
-  return ElevatedButton(
-    onPressed: isScanning ? null : () async {
-    },
-    child:
-        isScanning ? const Text("Scanning...") : const Text("Scan for devices"),
-  );
-}
 
 /// Widget to display scan results as a list of FTMS devices
 Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
@@ -81,7 +69,7 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Text(
-          'Fitness machines',
+          AppLocalizations.of(context)!.fitnessMachines,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -110,7 +98,7 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Text(
-          'Sensors',
+          AppLocalizations.of(context)!.sensors,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -136,12 +124,12 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
   // Show a message if no devices found
   if (deviceWidgets.isEmpty) {
     deviceWidgets.add(
-      const Padding(
-        padding: EdgeInsets.all(16),
+      Padding(
+        padding: const EdgeInsets.all(16),
         child: Center(
           child: Text(
-            'No devices found. Try scanning for devices.',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            AppLocalizations.of(context)!.noDevicesFound,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ),
       ),
@@ -177,9 +165,9 @@ Widget _buildConnectedDeviceCard(BTDevice connectedDevice, BuildContext context)
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Connected',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context)!.connected,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -222,7 +210,7 @@ Widget _buildAvailableDeviceCard(ScanResult scanResult, BTDevice? deviceService,
               Expanded(
                 child: Text(
                   scanResult.device.platformName.isEmpty
-                      ? "(unknown device)"
+                      ? AppLocalizations.of(context)!.unknownDevice
                       : scanResult.device.platformName,
                 ),
               ),
@@ -252,10 +240,10 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
         switch (deviceState) {
           case BluetoothConnectionState.disconnected:
             return ElevatedButton(
-              child: const Text("Connect"),
+              child: Text(AppLocalizations.of(context)!.connect),
               onPressed: () async {
                 final snackBar = SnackBar(
-                  content: Text('Connecting to ${device.platformName}...'),
+                  content: Text(AppLocalizations.of(context)!.connectingTo(device.platformName)),
                   duration: const Duration(seconds: 2),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -280,8 +268,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(
-                              'Connected to ${btDevice.deviceTypeName}: ${device.platformName}'),
+                          content: Text(AppLocalizations.of(context)!.connectedTo(btDevice.deviceTypeName, device.platformName)),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -289,8 +276,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                   } else if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text('Failed to connect to ${device.platformName}'),
+                        content: Text(AppLocalizations.of(context)!.failedToConnect(device.platformName)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -298,8 +284,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content:
-                          Text('Unsupported device ${device.platformName}'),
+                      content: Text(AppLocalizations.of(context)!.unsupportedDevice(device.platformName)),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -327,7 +312,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                       return actions;
                     }(),
                     OutlinedButton(
-                      child: const Text("Disconnect"),
+                      child: Text(AppLocalizations.of(context)!.disconnect),
                       onPressed: () async {
                         // Disconnect using all matching services
                         final matchingBTDevices = deviceTypeManager
@@ -364,7 +349,7 @@ Widget getButtonForConnectedDevice(
           if (connectedDevice.connectedDevice != null)
             ...connectedDevice.getConnectedActions(connectedDevice.connectedDevice!, context),
           OutlinedButton(
-            child: const Text("Disconnect"),
+            child: Text(AppLocalizations.of(context)!.disconnect),
             onPressed: () async {
               // Disconnect using the device service
               if (connectedDevice.connectedDevice != null) {
@@ -420,7 +405,7 @@ void _handleAutoReconnection(List<ScanResult> scanResults, BuildContext context)
       if (result.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Auto-reconnected to ${result.deviceType.name}: ${result.deviceName}'),
+            content: Text(AppLocalizations.of(context)!.autoReconnected(result.deviceType.name, result.deviceName)),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
           ),

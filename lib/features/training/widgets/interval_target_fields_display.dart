@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 import '../../../core/config/live_data_display_config.dart';
 import '../../../core/config/live_data_field_format_strategy.dart';
@@ -24,7 +25,7 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
     if (targets == null || targets!.isEmpty) return const SizedBox.shrink();
     if (config == null) {
       // fallback: show raw
-      return Text('Targets: $targets');
+      return Text(AppLocalizations.of(context)!.targetsLabel(targets.toString()));
     }
     final List<Widget> children = [];
     for (final entry in targets!.entries) {

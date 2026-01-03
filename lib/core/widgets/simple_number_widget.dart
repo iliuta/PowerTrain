@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/config/live_data_field_format_strategy.dart';
-
+import 'package:ftms/core/utils/i18n_utils.dart';
 import '../models/live_data_field_value.dart';
 import 'live_data_icon_registry.dart';
 
@@ -33,7 +33,7 @@ class SimpleNumberWidget extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(displayField.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.bold)),
             if (iconData != null)
               Padding(
                 padding: const EdgeInsets.only(left: 6.0),

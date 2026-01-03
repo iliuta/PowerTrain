@@ -8,6 +8,7 @@ import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/add_training_session_page.dart';
 import 'package:ftms/features/training/model/training_session.dart';
 import 'package:ftms/features/training/model/unit_training_interval.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart' as mockito;
 import 'package:mocktail/mocktail.dart' as mocktail;
@@ -89,6 +90,8 @@ void main() {
       testWidgets('initializes with template for new bike session', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -118,6 +121,8 @@ void main() {
       testWidgets('initializes with template for new rower session', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.rower,
               config: mockConfig,
@@ -157,6 +162,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               existingSession: existingSession,
@@ -188,6 +195,8 @@ void main() {
       testWidgets('adds unit interval', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -212,6 +221,8 @@ void main() {
       testWidgets('adds group interval', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -236,6 +247,8 @@ void main() {
       testWidgets('removes interval', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -270,6 +283,8 @@ void main() {
       testWidgets('duplicates interval', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -305,6 +320,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -334,6 +351,8 @@ void main() {
       testWidgets('shows error when saving without title', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -371,6 +390,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               existingSession: emptySession,
@@ -398,6 +419,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -442,6 +465,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               existingSession: existingSession,
@@ -477,6 +502,8 @@ void main() {
       testWidgets('renders loading state initially', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               storageService: mockStorageService,
@@ -494,6 +521,8 @@ void main() {
       testWidgets('renders training chart when intervals exist', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -520,6 +549,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               existingSession: emptySession,
@@ -539,6 +570,8 @@ void main() {
       testWidgets('renders interval cards correctly', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -564,6 +597,8 @@ void main() {
       testWidgets('renders floating action buttons', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -585,6 +620,8 @@ void main() {
       testWidgets('can edit interval title', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -615,6 +652,8 @@ void main() {
       testWidgets('can edit interval duration', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,
@@ -644,6 +683,8 @@ void main() {
       testWidgets('can edit interval targets', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: AddTrainingSessionPage(
               machineType: DeviceType.indoorBike,
               config: mockConfig,

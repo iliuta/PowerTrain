@@ -8,6 +8,7 @@ import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/bloc/ftms_bloc.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
+import '../../l10n/app_localizations.dart';
 import '../training/training_session_progress_screen.dart';
 import '../../core/utils/ftms_debug_utils.dart';
 import '../../core/config/live_data_display_config.dart';
@@ -101,7 +102,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
         stream: ftmsBloc.ftmsDeviceDataControllerStream,
         builder: (c, snapshot) {
           if (!snapshot.hasData) {
-            return const Center(child: Text("No FTMSData found!"));
+            return Center(child: Text(AppLocalizations.of(context)!.noFtmsDataFound));
           }
           final deviceData = snapshot.data!;
           // Load config if not loaded or if type changed
@@ -153,7 +154,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                             .pop(); // Go back to previous screen
                       },
                       icon: const Icon(Icons.arrow_back),
-                      label: const Text('Go Back'),
+                      label: Text(AppLocalizations.of(context)!.goBack),
                     ),
                   ],
                 ),
@@ -189,7 +190,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                   alignment: Alignment.bottomCenter,
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.play_arrow),
-                    label: const Text('Load training session'),
+                    label: Text(AppLocalizations.of(context)!.loadTrainingSessionButton),
                     onPressed: () async {
                       logger.i(
                           'Start Training pressed. deviceData.deviceDataType: '
@@ -202,8 +203,8 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                         if (!context.mounted) return;
                         showDialog(
                           context: context,
-                          builder: (context) => const AlertDialog(
-                            title: Text('No Training Sessions'),
+                          builder: (context) => AlertDialog(
+                            title: Text(AppLocalizations.of(context)!.noTrainingSessions),
                             content: Text(
                                 'No training sessions found for this machine type.'),
                           ),

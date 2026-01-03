@@ -5,6 +5,11 @@
     {
       "name": "Instantaneous Speed",
       "label": "Speed",
+      "labelI18n": {
+        "en": "Speed",
+        "fr": "Vitesse",
+        "de": "Geschwindigkeit"
+      },
       "display": "speedometer",
       "unit": "km/h",
       "min": 0,
@@ -14,6 +19,11 @@
     {
       "name": "Instantaneous Power",
       "label": "Power",
+      "labelI18n": {
+        "en": "Power",
+        "fr": "Puissance",
+        "de": "Leistung"
+      },
       "display": "number",
       "unit": "W",
       "icon": "power",
@@ -24,6 +34,11 @@
     {
       "name": "Instantaneous Cadence",
       "label": "Cadence",
+      "labelI18n": {
+        "en": "Cadence",
+        "fr": "Cadence",
+        "de": "Kadenz"
+      },
       "display": "speedometer",
       "formatter": "intFormatter",
       "min": 40,
@@ -35,6 +50,11 @@
     {
       "name": "Heart Rate",
       "label": "Heart rate",
+      "labelI18n": {
+        "en": "Heart rate",
+        "fr": "Pouls",
+        "de": "Herzfrequenz"
+      },
       "display": "number",
       "formatter": "intFormatter",
       "unit": "bpm",
@@ -43,6 +63,11 @@
     {
       "name": "Average Speed",
       "label": "Avg speed",
+      "labelI18n": {
+        "en": "Avg speed",
+        "fr": "Vitesse moy.",
+        "de": "Durchschn. Geschwindigkeit"
+      },
       "display": "number",
       "unit": "km/h",
       "icon": "speed"
@@ -50,6 +75,11 @@
     {
       "name": "Average Power",
       "label": "Avg power",
+      "labelI18n": {
+        "en": "Avg power",
+        "fr": "Puissance moy.",
+        "de": "Durchschn. Leistung"
+      },
       "display": "number",
       "unit": "W",
       "icon": "power"
@@ -57,6 +87,11 @@
     {
       "name": "Total Distance",
       "label": "Distance",
+      "labelI18n": {
+        "en": "Distance",
+        "fr": "Distance",
+        "de": "Entfernung"
+      },
       "display": "number",
       "unit": "m",
       "icon": "distance",
@@ -65,6 +100,11 @@
     {
       "name": "Resistance Level",
       "label": "Resistance",
+      "labelI18n": {
+        "en": "Resistance",
+        "fr": "Résistance",
+        "de": "Widerstand"
+      },
       "display": "number",
       "formatter": "intFormatter",
       "icon": "resistance"

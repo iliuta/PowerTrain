@@ -7,6 +7,9 @@ class LiveDataFieldConfig {
   final String name;
   /// The label to be displayed in the UI for this field.
   final String label;
+  /// Localized labels keyed by language code (e.g., 'en', 'fr', 'de').
+  /// If provided, this should be used for display instead of [label].
+  final Map<String, String>? labelI18n;
   /// The display type for this field, such as 'number', 'speedometer', etc.
   /// to be taken from widgets/frms_display_widget_registry.dart
   final String display;
@@ -45,6 +48,7 @@ class LiveDataFieldConfig {
   LiveDataFieldConfig({
     required this.name,
     required this.label,
+    this.labelI18n,
     required this.display,
     this.formatter,
     required this.unit,
@@ -100,6 +104,9 @@ class LiveDataFieldConfig {
     return LiveDataFieldConfig(
       name: json['name'] as String,
       label: json['label'] as String,
+      labelI18n: json['labelI18n'] != null 
+        ? Map<String, String>.from(json['labelI18n'] as Map)
+        : null,
       display: json['display'] as String? ?? 'number',
       formatter: json['formatter'] as String?,
       unit: json['unit'] as String? ?? '',

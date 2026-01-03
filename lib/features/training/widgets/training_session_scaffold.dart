@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import '../../../core/config/live_data_display_config.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../training_session_controller.dart';
@@ -135,9 +136,9 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
   void _showSaveSuccessSnackBar() {
     final message = widget.controller.stravaUploadAttempted
         ? (widget.controller.stravaUploadSuccessful
-            ? 'Workout saved and uploaded to Strava!'
-            : 'Workout saved (Strava not connected)')
-        : 'Workout saved!';
+            ? AppLocalizations.of(context)!.workoutSavedAndUploaded
+            : AppLocalizations.of(context)!.workoutSavedNoStrava)
+        : AppLocalizations.of(context)!.workoutSaved;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -183,7 +184,7 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.isSessionComplete ? 'Congratulations!' : 'Stop Training Session'),
+      title: Text(widget.isSessionComplete ? AppLocalizations.of(context)!.congratulations : AppLocalizations.of(context)!.confirmStopSession),
       content: _buildContent(),
       actions: _buildActions(),
     );
@@ -191,21 +192,21 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
 
   Widget _buildContent() {
     if (_isSaving) {
-      return const Column(
+      return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Saving workout...'),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(AppLocalizations.of(context)!.savingWorkout),
         ],
       );
     }
 
     // Initial state
     if (widget.isSessionComplete) {
-      return const Text('You have completed the training session. Would you like to save your workout or continue with an extended session?');
+      return Text(AppLocalizations.of(context)!.sessionCompleted);
     }
-    return const Text('Are you sure you want to stop the training session? This action cannot be undone.');
+    return Text(AppLocalizations.of(context)!.confirmStopSession);
   }
 
   List<Widget> _buildActions() {
@@ -217,7 +218,7 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
       if (!widget.isSessionComplete)
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
       if (widget.isSessionComplete)
         ElevatedButton(
@@ -226,7 +227,7 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Continue'),
+          child: Text(AppLocalizations.of(context)!.continueSession),
         ),
       ElevatedButton(
         onPressed: widget.onDiscard,
@@ -234,7 +235,7 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
         ),
-        child: const Text('Discard'),
+        child: Text(AppLocalizations.of(context)!.discard),
       ),
       ElevatedButton(
         onPressed: _saveWorkout,
@@ -242,7 +243,7 @@ class _StopConfirmationDialogState extends State<_StopConfirmationDialog> {
           backgroundColor: Colors.red,
           foregroundColor: Colors.white,
         ),
-        child: const Text('Save'),
+        child: Text(AppLocalizations.of(context)!.save),
       ),
     ];
   }

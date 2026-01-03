@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../model/session_state.dart';
 import '../training_session_controller.dart';
@@ -44,9 +45,9 @@ class TrainingSessionAppBar extends StatelessWidget
               color: Colors.blue,
               size: 16,
             ),
-            const Text(
-              'WAITING',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.waiting,
+              style: const TextStyle(
                 color: Colors.blue,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -59,9 +60,9 @@ class TrainingSessionAppBar extends StatelessWidget
               color: Colors.orange,
               size: 16,
             ),
-            const Text(
-              'PAUSED',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.paused,
+              style: const TextStyle(
                 color: Colors.orange,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,

@@ -4,6 +4,7 @@ import '../settings/settings_page.dart';
 import '../fit_files/fit_file_manager_page.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'help_page.dart';
+import '../../l10n/app_localizations.dart';
 
 /// A burger menu widget with navigation options and device status
 class BurgerMenu extends StatelessWidget {
@@ -24,35 +25,35 @@ class BurgerMenu extends StatelessWidget {
       },
       itemBuilder: (BuildContext context) => [
         // Navigation options
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'training_sessions',
           child: ListTile(
-            leading: Icon(Icons.fitness_center),
-            title: Text('Training Sessions'),
+            leading: const Icon(Icons.fitness_center),
+            title: Text(AppLocalizations.of(context)!.trainingSessions),
             dense: true,
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'fit_files',
           child: ListTile(
-            leading: Icon(Icons.folder),
-            title: Text('Unsynchronized activities'),
+            leading: const Icon(Icons.folder),
+            title: Text(AppLocalizations.of(context)!.unsynchronizedActivities),
             dense: true,
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'settings',
           child: ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Settings'),
+            leading: const Icon(Icons.settings),
+            title: Text(AppLocalizations.of(context)!.settings),
             dense: true,
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'help',
           child: ListTile(
-            leading: Icon(Icons.help),
-            title: Text('Help'),
+            leading: const Icon(Icons.help),
+            title: Text(AppLocalizations.of(context)!.help),
             dense: true,
           ),
         ),
@@ -110,7 +111,7 @@ class BurgerMenu extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Disconnected from ${connectedDevice!.platformName}'),
+            content: Text(AppLocalizations.of(context)!.disconnectedFromDevice(connectedDevice!.platformName)),
             backgroundColor: Colors.green,
           ),
         );
@@ -119,7 +120,7 @@ class BurgerMenu extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to disconnect: $e'),
+            content: Text(AppLocalizations.of(context)!.failedToDisconnect(e.toString())),
             backgroundColor: Colors.red,
           ),
         );

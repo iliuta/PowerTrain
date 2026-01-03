@@ -5,6 +5,8 @@ import 'package:audioplayers/audioplayers.dart';
 import '../config/live_data_field_config.dart';
 import '../models/live_data_field_value.dart';
 import 'live_data_field_widget_registry.dart';
+import 'package:ftms/core/utils/i18n_utils.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Widget for displaying a single FTMS field.
 class LiveDataFieldWidget extends StatefulWidget {
@@ -52,7 +54,7 @@ class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
     if (widget.param == null) {
       return Container(
         color: _backgroundColor,
-        child: Text('${widget.field.label}: (not available)', style: const TextStyle(color: Colors.grey)),
+        child: Text('${getFieldLabel(widget.field, Localizations.localeOf(context).languageCode)}: (${AppLocalizations.of(context)!.fieldLabelNotAvailable})', style: const TextStyle(color: Colors.grey)),
       );
     }
     
@@ -100,7 +102,7 @@ class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
     }
     return Container(
       color: _backgroundColor,
-      child: Text('${widget.field.label}: (unknown display type)', style: const TextStyle(color: Colors.red)),
+      child: Text('${getFieldLabel(widget.field, Localizations.localeOf(context).languageCode)}: (${AppLocalizations.of(context)!.fieldLabelUnknownDisplay})', style: const TextStyle(color: Colors.red)),
     );
   }
 

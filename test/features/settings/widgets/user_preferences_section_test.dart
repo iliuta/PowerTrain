@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/settings/widgets/user_preferences_section.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
   late UserSettings testSettings;
@@ -23,6 +24,8 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: UserPreferencesSection(
           userSettings: testSettings,

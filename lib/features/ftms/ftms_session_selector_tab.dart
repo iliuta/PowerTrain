@@ -19,6 +19,7 @@ import '../../core/services/ftms_service.dart';
 import 'widgets/gpx_map_preview_widget.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
 import '../../core/services/gpx/gpx_data.dart';
+import '../../l10n/app_localizations.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -193,11 +194,11 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     }
 
     if (_trainingSessions == null) {
-      return const Center(child: Text('Failed to load training sessions.'));
+      return Center(child: Text(AppLocalizations.of(context)!.failedLoadTrainingSessions));
     }
 
     if (_trainingSessions!.isEmpty) {
-      return const Center(child: Text('No training sessions found for this machine type.'));
+      return Center(child: Text(AppLocalizations.of(context)!.noTrainingSessionsFound));
     }
 
     return TrainingSessionExpansionPanelList(
@@ -235,7 +236,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         stream: ftmsBloc.ftmsDeviceDataControllerStream,
         builder: (c, snapshot) {
           if (!snapshot.hasData) {
-            return const Center(child: Text("No FTMSData found!"));
+            return Center(child: Text(AppLocalizations.of(context)!.noFtmsDataFound));
           }
           final deviceData = snapshot.data!;
 
@@ -283,7 +284,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                         Navigator.of(context).pop(); // Go back to previous screen
                       },
                       icon: const Icon(Icons.arrow_back),
-                      label: const Text('Go Back'),
+                      label: Text(AppLocalizations.of(context)!.goBack),
                     ),
                   ],
                 ),
@@ -332,7 +333,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                   child: Column(
                     children: [
                       ListTile(
-                        title: const Text('Free Ride'),
+                        title: Text(AppLocalizations.of(context)!.freeRide),
                         trailing: Icon(
                           _isFreeRideExpanded ? Icons.expand_less : Icons.expand_more,
                         ),
@@ -351,7 +352,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text('Time'),
+                                  Text(AppLocalizations.of(context)!.time),
                                   Switch(
                                     value: _isFreeRideDistanceBased,
                                     onChanged: (value) {
@@ -364,7 +365,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       });
                                     },
                                   ),
-                                  const Text('Distance'),
+                                  Text(AppLocalizations.of(context)!.distance),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -445,7 +446,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   ],
                                 ),
                               const SizedBox(height: 16),
-                              const Text('Targets:', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text(AppLocalizations.of(context)!.targets, style: const TextStyle(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 8),
                               if (_deviceDataType != null && _userSettings != null && _configs[DeviceType.fromFtms(_deviceDataType!)] != null)
                                 EditTargetFieldsWidget(
@@ -473,9 +474,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                                   child: Row(
                                     children: [
-                                      const SizedBox(
+                                      SizedBox(
                                         width: 80,
-                                        child: Text('Resistance:'),
+                                        child: Text(AppLocalizations.of(context)!.resistance),
                                       ),
                                       Expanded(
                                         child: Row(
@@ -581,7 +582,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                             });
                                           },
                                         ),
-                                        const Text('Warm up'),
+                                        Text(AppLocalizations.of(context)!.warmUp),
                                       ],
                                     ),
                                     const SizedBox(width: 16),
@@ -595,7 +596,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                             });
                                           },
                                         ),
-                                        const Text('Cool down'),
+                                        Text(AppLocalizations.of(context)!.coolDown),
                                       ],
                                     ),
                                   ],
@@ -638,7 +639,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                     );
                                   }
                                 },
-                                child: const Text('Start'),
+                                child: Text(AppLocalizations.of(context)!.start),
                               ),
                             ],
                           ),
@@ -652,7 +653,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                   child: Column(
                     children: [
                       ListTile(
-                        title: const Text('Load Training Session'),
+                        title: Text(AppLocalizations.of(context)!.loadTrainingSession),
                         trailing: Icon(
                           _isTrainingSessionExpanded ? Icons.expand_less : Icons.expand_more,
                         ),
@@ -678,7 +679,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                     child: Column(
                       children: [
                         ListTile(
-                          title: const Text('Device Data Features'),
+                          title: Text(AppLocalizations.of(context)!.deviceDataFeatures),
                           trailing: Icon(
                             _isDeviceDataFeaturesExpanded ? Icons.expand_less : Icons.expand_more,
                           ),
@@ -706,7 +707,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                     child: Column(
                       children: [
                         ListTile(
-                          title: const Text('Machine Features'),
+                          title: Text(AppLocalizations.of(context)!.machineFeatures),
                           trailing: Icon(
                             _isMachineFeaturesExpanded ? Icons.expand_less : Icons.expand_more,
                           ),
