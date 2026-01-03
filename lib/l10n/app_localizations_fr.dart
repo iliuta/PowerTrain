@@ -88,6 +88,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get disconnectedFromStrava => 'Déconnecté de Strava';
 
   @override
+  String connectedAsAthlete(Object athleteName) {
+    return 'Connecté en tant que $athleteName';
+  }
+
+  @override
   String get failedLoadTrainingSessions =>
       'Échec du chargement des sessions d\'entraînement.';
 
@@ -195,6 +200,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get loadTrainingSessionButton => 'Charger une session d\'entraînement';
+
+  @override
+  String get loading => '...';
 
   @override
   String get noTrainingSessions => 'Aucune session d\'entraînement';
@@ -752,4 +760,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String autoReconnected(Object deviceName, Object deviceType) {
     return 'Reconnexion automatique à $deviceType : $deviceName';
   }
+
+  @override
+  String get enjoyingAppReviewPrompt =>
+      'Vous aimez PowerTrain ? Notez-le sur l\'App Store !';
+
+  @override
+  String get rateNow => 'Noter maintenant';
+
+  @override
+  String get noDevice => '(aucun appareil)';
+
+  @override
+  String get open => 'Ouvrir';
 }

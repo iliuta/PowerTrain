@@ -89,6 +89,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get disconnectedFromStrava => 'Von Strava getrennt';
 
   @override
+  String connectedAsAthlete(Object athleteName) {
+    return 'Verbunden als $athleteName';
+  }
+
+  @override
   String get failedLoadTrainingSessions =>
       'Laden der Trainingseinheiten fehlgeschlagen.';
 
@@ -195,6 +200,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get loadTrainingSessionButton => 'Trainingseinheit laden';
+
+  @override
+  String get loading => '...';
 
   @override
   String get noTrainingSessions => 'Keine Trainingseinheiten';
@@ -753,4 +761,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String autoReconnected(Object deviceName, Object deviceType) {
     return 'Automatisch wieder verbunden mit $deviceType: $deviceName';
   }
+
+  @override
+  String get enjoyingAppReviewPrompt =>
+      'Gefällt Ihnen PowerTrain? Bewerten Sie es im App Store!';
+
+  @override
+  String get rateNow => 'Jetzt bewerten';
+
+  @override
+  String get noDevice => '(kein Gerät)';
+
+  @override
+  String get open => 'Öffnen';
 }

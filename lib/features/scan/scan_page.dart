@@ -10,6 +10,8 @@ import '../../core/services/devices/bt_scan_service.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart' as ph;
+import 'package:in_app_review/in_app_review.dart';
+import '../../core/services/in_app_review_service.dart';
 import '../../l10n/app_localizations.dart';
 
 import 'scan_widgets.dart';
@@ -26,11 +28,13 @@ class _ScanPageState extends State<ScanPage> {
   bool get isInTest => Platform.environment['FLUTTER_TEST'] == 'true';
   final StravaService _stravaService = StravaService();
   final BluetoothScanService _bluetoothScanService = BluetoothScanService();
+  final InAppReviewService _reviewService = InAppReviewService();
   bool _isConnectingStrava = false;
   String? _stravaStatus;
   StreamSubscription<BluetoothAdapterState>? _adapterStateSubscription;
   bool _hasStartedScan = false;
-  
+  bool _showReviewBanner = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +44,7 @@ class _ScanPageState extends State<ScanPage> {
     );
     _printBluetoothState();
     _checkStravaStatus();
+    _checkAndRequestReview();
     _listenToAdapterState();
   }
 
@@ -53,13 +58,41 @@ class _ScanPageState extends State<ScanPage> {
     final status = await _stravaService.getAuthStatus();
     setState(() {
       if (status != null) {
-        _stravaStatus = 'Connected as ${status['athleteName']}';
+        _stravaStatus = AppLocalizations.of(context)!.connectedAsAthlete(status['athleteName']);
       } else {
         _stravaStatus = null;
       }
     });
   }
   
+  Future<void> _checkAndRequestReview() async {
+    //await _reviewService.resetAll();
+    await _reviewService.incrementUsageCount();
+    if (await _reviewService.shouldShowReview()) {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        setState(() {
+          _showReviewBanner = true;
+        });
+      }
+    }
+  }
+
+  void _dismissReviewBanner() async {
+    await _reviewService.handleReviewDismissal();
+    setState(() {
+      _showReviewBanner = false;
+    });
+  }
+
+  void _requestReview() async {
+    final InAppReview inAppReview = InAppReview.instance;
+    await inAppReview.requestReview();
+
+    await _reviewService.handleReviewCompleted();
+    _dismissReviewBanner();
+  }
+
   Future<void> _handleStravaConnection() async {
     if (_isConnectingStrava) return;
     
@@ -78,7 +111,7 @@ class _ScanPageState extends State<ScanPage> {
               children: [
                 Text(AppLocalizations.of(context)!.openingStravaAuth),
                 const SizedBox(height: 4),
-                Text(AppLocalizations.of(context)!.signInStravaPopup, 
+                Text(AppLocalizations.of(context)!.signInStravaPopup,
                      style: const TextStyle(fontSize: 12)),
               ],
             ),
@@ -109,7 +142,7 @@ class _ScanPageState extends State<ScanPage> {
                 children: [
                 Text(AppLocalizations.of(context)!.stravaAuthIncomplete),
                   const SizedBox(height: 4),
-                  Text(AppLocalizations.of(context)!.stravaAuthRetry, 
+                  Text(AppLocalizations.of(context)!.stravaAuthRetry,
                        style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -281,6 +314,40 @@ class _ScanPageState extends State<ScanPage> {
               },
             ),
           ),
+          if (_showReviewBanner)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Container(
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.enjoyingAppReviewPrompt,
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _requestReview,
+                      child: Text(AppLocalizations.of(context)!.rateNow),
+                    ),
+                    IconButton(
+                      onPressed: _dismissReviewBanner,
+                      icon: const Icon(Icons.close, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           if (_stravaStatus != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),

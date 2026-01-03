@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/devices/bt_device_manager.dart';
 import 'package:ftms/core/utils/logger.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 import '../../models/device_types.dart';
 import '../../models/bt_device_service_type.dart';
 import 'last_connected_devices_service.dart';
@@ -205,7 +206,7 @@ abstract class BTDevice {
     if (page != null) {
       actions.add(
         ElevatedButton(
-          child: const Text("Open"),
+          child: Text(AppLocalizations.of(context)!.open),
           onPressed: () {
             Navigator.push(
               context,
@@ -217,7 +218,7 @@ abstract class BTDevice {
     } else if (navigationCallback != null) {
       actions.add(
         ElevatedButton(
-          child: const Text("Open"),
+          child: Text(AppLocalizations.of(context)!.open),
           onPressed: () => navigationCallback(context, device),
         ),
       );
