@@ -244,7 +244,6 @@ class AnalyticsService {
     required DeviceType machineType,
     required int durationSeconds,
     int? distanceMeters,
-    int? calories,
   }) async {
     await _analytics?.logEvent(
       name: 'fit_file_saved',
@@ -252,7 +251,6 @@ class AnalyticsService {
         'machine_type': machineType.name,
         'duration_seconds': durationSeconds,
         if (distanceMeters != null) 'distance_meters': distanceMeters,
-        if (calories != null) 'calories': calories,
       },
     );
   }
@@ -275,13 +273,13 @@ class AnalyticsService {
   
   /// Track device connection
   Future<void> logDeviceConnected({
-    required DeviceType machineType,
+    required String deviceType,
     required String deviceName,
   }) async {
     await _analytics?.logEvent(
       name: 'device_connected',
       parameters: {
-        'machine_type': machineType.name,
+        'machine_type': deviceType,
         'device_name': _truncateString(deviceName, 100),
       },
     );
@@ -289,13 +287,13 @@ class AnalyticsService {
   
   /// Track device disconnection
   Future<void> logDeviceDisconnected({
-    required DeviceType machineType,
+    required String deviceType,
     required String deviceName,
   }) async {
     await _analytics?.logEvent(
       name: 'device_disconnected',
       parameters: {
-        'machine_type': machineType.name,
+        'machine_type': deviceType,
         'device_name': _truncateString(deviceName, 100),
       },
     );
@@ -314,24 +312,7 @@ class AnalyticsService {
     );
   }
   
-  // ============ User Properties ============
-  
-  /// Set the user's preferred machine type
-  Future<void> setPreferredMachineType(DeviceType machineType) async {
-    await _analytics?.setUserProperty(
-      name: 'preferred_machine_type',
-      value: machineType.name,
-    );
-  }
-  
-  /// Set whether the user has connected Strava
-  Future<void> setStravaConnected(bool connected) async {
-    await _analytics?.setUserProperty(
-      name: 'strava_connected',
-      value: connected.toString(),
-    );
-  }
-  
+
   // ============ Helper Methods ============
   
   /// Truncate string to fit Firebase Analytics limits (100 chars for param values)

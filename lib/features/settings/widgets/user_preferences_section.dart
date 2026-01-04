@@ -52,8 +52,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
   @override
   Widget build(BuildContext context) {
     return SettingsSection(
-      title: 'Fitness Profile',
-      subtitle: 'Your personal fitness metrics for accurate training targets',
+      title: AppLocalizations.of(context)!.fitnessProfileTitle,
+      subtitle: AppLocalizations.of(context)!.fitnessProfileSubtitle,
       children: [
         _buildCyclingFtpField(),
         _buildRowingFtpField(),
@@ -79,10 +79,10 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
                 ],
-                decoration: const InputDecoration(
-                  hintText: 'Enter FTP',
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.enterFtpHint,
                   suffixText: 'watts',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
                 autofocus: true,
@@ -123,10 +123,10 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
               padding: const EdgeInsets.only(top: 8.0),
               child: TextField(
                 controller: _rowingFtpController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter time (M:SS)',
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.enterTimeHint,
                   suffixText: 'per 500m',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
                 autofocus: true,

@@ -196,7 +196,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noMachineFeaturesFound => 'Keine Maschinenfunktionen gefunden!';
 
   @override
-  String get retry => 'Erneut versuchen';
+  String get retry => 'Wiederholen';
 
   @override
   String get loadTrainingSessionButton => 'Trainingseinheit laden';
@@ -774,4 +774,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get open => 'Öffnen';
+
+  @override
+  String get settingsPageTitle => 'Einstellungen';
+
+  @override
+  String get failedToLoadSettings => 'Fehler beim Laden der Einstellungen';
+
+  @override
+  String get aboutSectionTitle => 'Über';
+
+  @override
+  String get appName => 'PowerTrain';
+
+  @override
+  String get appDescription =>
+      'Indoor-Rudern und -Radfahren mit Ihrer FTMS-kompatiblen Fitnessausrüstung.';
+
+  @override
+  String failedToSaveSettings(Object error) {
+    return 'Fehler beim Speichern der Einstellungen: $error';
+  }
+
+  @override
+  String get fitnessProfileTitle => 'Fitnessprofil';
+
+  @override
+  String get fitnessProfileSubtitle =>
+      'Ihre persönlichen Fitnessmetriken für genaue Trainingsziele';
+
+  @override
+  String get enterFtpHint => 'FTP eingeben';
+
+  @override
+  String get enterTimeHint => 'Zeit eingeben (M:SS)';
 }

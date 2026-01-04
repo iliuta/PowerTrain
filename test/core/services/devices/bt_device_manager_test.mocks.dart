@@ -4,11 +4,10 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
-import 'dart:typed_data' as _i11;
+import 'dart:typed_data' as _i10;
 
 import 'package:flutter/material.dart' as _i8;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as _i2;
-import 'package:ftms/core/models/device_types.dart' as _i10;
 import 'package:ftms/core/services/devices/bt_device.dart' as _i6;
 import 'package:ftms/core/services/devices/bt_device_manager.dart' as _i9;
 import 'package:ftms/core/services/devices/flutter_blue_plus_facade.dart'
@@ -217,8 +216,8 @@ class MockBTDevice extends _i1.Mock implements _i6.BTDevice {
       );
 
   @override
-  void updateDeviceType(_i10.DeviceType? deviceType) => super.noSuchMethod(
-    Invocation.method(#updateDeviceType, [deviceType]),
+  void notifyDevicesChanged() => super.noSuchMethod(
+    Invocation.method(#notifyDevicesChanged, []),
     returnValueForMissingStub: null,
   );
 
@@ -580,7 +579,7 @@ class MockBluetoothDevice extends _i1.Mock implements _i2.BluetoothDevice {
           as _i4.Future<void>);
 
   @override
-  _i4.Future<void> createBond({int? timeout = 90, _i11.Uint8List? pin}) =>
+  _i4.Future<void> createBond({int? timeout = 90, _i10.Uint8List? pin}) =>
       (super.noSuchMethod(
             Invocation.method(#createBond, [], {#timeout: timeout, #pin: pin}),
             returnValue: _i4.Future<void>.value(),

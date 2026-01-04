@@ -390,7 +390,7 @@ class _TrainingSessionExpansionPanelListState
         final ftmsDevices = devices
             .where((d) =>
                 d.deviceTypeName == 'FTMS' &&
-                session.ftmsMachineType == d.deviceType)
+                session.ftmsMachineType == (d as dynamic).deviceType)
             .toList();
 
         final hasCompatibleDevice = ftmsDevices.isNotEmpty;

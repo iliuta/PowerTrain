@@ -1479,6 +1479,7 @@ void main() {
           ftmsParams: anyNamed('ftmsParams'),
         )).thenReturn(null);
         when(mockDataRecorder.generateFitFile()).thenAnswer((_) async => null);
+        when(mockDataRecorder.getStatistics()).thenReturn({});
       });
 
       test('generates FIT file when enableFitFileGeneration is true', () async {
@@ -1609,6 +1610,7 @@ void main() {
         when(mockDataRecorder.recordDataPoint(
           ftmsParams: anyNamed('ftmsParams'),
         )).thenReturn(null);
+        when(mockDataRecorder.getStatistics()).thenReturn({});
       });
 
       test('attempts Strava upload when user is authenticated and FIT file is generated', () async {
@@ -1879,6 +1881,7 @@ void main() {
         when(mockDataRecorder.recordDataPoint(
           ftmsParams: anyNamed('ftmsParams'),
         )).thenReturn(null);
+        when(mockDataRecorder.getStatistics()).thenReturn({});
       });
 
       test('complete workout flow with FIT generation and Strava upload', () async {

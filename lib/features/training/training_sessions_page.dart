@@ -105,6 +105,12 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
         _sessions = sessions;
         _isLoading = false;
       });
+      
+      // Log analytics event for viewing training sessions
+      AnalyticsService().logTrainingSessionsViewed(
+        machineType: _selectedMachineType,
+        sessionCount: sessions.length,
+      );
     } catch (e) {
       setState(() {
         _error = 'Failed to load training sessions: $e';

@@ -228,5 +228,16 @@
   "enjoyingAppReviewPrompt": "Gefällt Ihnen PowerTrain? Bewerten Sie es im App Store!",
   "rateNow": "Jetzt bewerten",
   "noDevice": "(kein Gerät)",
-  "open": "Öffnen"
+  "open": "Öffnen",
+  "settingsPageTitle": "Einstellungen",
+  "failedToLoadSettings": "Fehler beim Laden der Einstellungen",
+  "retry": "Wiederholen",
+  "aboutSectionTitle": "Über",
+  "appName": "PowerTrain",
+  "appDescription": "Indoor-Rudern und -Radfahren mit Ihrer FTMS-kompatiblen Fitnessausrüstung.",
+  "failedToSaveSettings": "Fehler beim Speichern der Einstellungen: {error}",
+  "fitnessProfileTitle": "Fitnessprofil",
+  "fitnessProfileSubtitle": "Ihre persönlichen Fitnessmetriken für genaue Trainingsziele",
+  "enterFtpHint": "FTP eingeben",
+  "enterTimeHint": "Zeit eingeben (M:SS)"
 }

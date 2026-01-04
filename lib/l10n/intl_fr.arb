@@ -204,7 +204,7 @@
   "fieldLabelCadence": "Cadence",
   "fieldLabelHeartRate": "Fréquence cardiaque",
   "fieldLabelAvgSpeed": "Vitesse moy.",
-  "fieldLabelAvgPower": "Puissance moy.",
+  "fieldLabelAvgPower": "Puiss. moy.",
   "fieldLabelDistance": "Distance",
   "fieldLabelResistance": "Résistance",
   "fieldLabelStrokeRate": "Cadence",
@@ -228,5 +228,16 @@
   "enjoyingAppReviewPrompt": "Vous aimez PowerTrain ? Notez-le sur l'App Store !",
   "rateNow": "Noter maintenant",
   "noDevice": "(aucun appareil)",
-  "open": "Ouvrir"
+  "open": "Ouvrir",
+  "settingsPageTitle": "Paramètres",
+  "failedToLoadSettings": "Échec du chargement des paramètres",
+  "retry": "Réessayer",
+  "aboutSectionTitle": "À propos",
+  "appName": "PowerTrain",
+  "appDescription": "Rameur et vélo d'intérieur avec votre équipement de fitness compatible FTMS.",
+  "failedToSaveSettings": "Échec de la sauvegarde des paramètres : {error}",
+  "fitnessProfileTitle": "Profil de fitness",
+  "fitnessProfileSubtitle": "Vos paramètres de fitness pour des objectifs d'entraînement précis",
+  "enterFtpHint": "Saisir FTP",
+  "enterTimeHint": "Saisir temps (M:SS)"
 }

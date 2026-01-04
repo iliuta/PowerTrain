@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/core/services/devices/bt_device_navigation_registry.dart';
+import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
@@ -97,6 +98,24 @@ void main() {
     test('should return null for device page', () {
       final page = ftmsBtDevice.getDevicePage(mockDevice);
       expect(page, isNull);
+    });
+
+    group('Device Type', () {
+      test('should initially have null device type', () {
+        expect(ftmsBtDevice.deviceType, isNull);
+      });
+
+      test('should update device type to indoor bike', () {
+        ftmsBtDevice.updateDeviceType(DeviceType.indoorBike);
+
+        expect(ftmsBtDevice.deviceType, equals(DeviceType.indoorBike));
+      });
+
+      test('should update device type to rower', () {
+        ftmsBtDevice.updateDeviceType(DeviceType.rower);
+
+        expect(ftmsBtDevice.deviceType, equals(DeviceType.rower));
+      });
     });
 
     test('should return navigation callback when registered', () {

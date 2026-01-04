@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/features/settings/settings_page.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 void main() {
   group('SettingsPage Widget Tests', () {
     Widget createWidgetUnderTest() {
       return MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const SettingsPage(),
       );
     }

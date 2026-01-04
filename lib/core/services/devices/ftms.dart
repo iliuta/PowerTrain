@@ -6,6 +6,8 @@ import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'bt_device.dart';
 import 'bt_device_navigation_registry.dart';
+import 'last_connected_devices_service.dart';
+import '../../models/bt_device_service_type.dart';
 import '../../bloc/ftms_bloc.dart';
 
 /// Service for FTMS (Fitness Machine Service) devices
@@ -14,11 +16,61 @@ class Ftms extends BTDevice {
   factory Ftms() => _instance;
   Ftms._internal();
 
+  DeviceType? _deviceType;
+
   @override
   String get deviceTypeName => 'FTMS';
 
   @override
   int get listPriority => 5; // Medium priority - show after HRM devices
+
+  /// Device type (for FTMS devices)
+  DeviceType? get deviceType => _deviceType;
+
+  /// Update device type (for FTMS devices)
+  void updateDeviceType(DeviceType deviceType) {
+    _deviceType = deviceType;
+    notifyDevicesChanged();
+    
+    // Save the machine type to preferences
+    _saveDeviceInfo(machineType: deviceType);
+  }
+
+  Future<void> _saveDeviceInfo({DeviceType? machineType}) async {
+    try {
+      final lastConnectedService = LastConnectedDevicesService();
+      await lastConnectedService.saveLastConnectedDevice(
+        deviceType: BTDeviceServiceType.fromString(deviceTypeName),
+        deviceId: id,
+        deviceName: name,
+        machineType: machineType,
+      );
+    } catch (e) {
+      logger.w('⚠️ Could not save last connected device: $e');
+    }
+  }
+
+  /// Override to load saved machine type after connection
+  @override
+  Future<bool> connectToDevice(BluetoothDevice device) async {
+    final success = await super.connectToDevice(device);
+    if (success) {
+      // Try to load saved machine type for this FTMS device
+      try {
+        final lastConnectedService = LastConnectedDevicesService();
+        final savedDevice = await lastConnectedService.getLastConnectedDevice(
+          BTDeviceServiceType.fromString(deviceTypeName),
+        );
+        if (savedDevice != null && savedDevice['machineType'] != null) {
+          _deviceType = DeviceType.fromString(savedDevice['machineType'] as String);
+        }
+      } catch (e) {
+        // Ignore errors when loading machine type
+        logger.w('⚠️ Could not load saved machine type: $e');
+      }
+    }
+    return success;
+  }
 
   @override
   Widget? getDeviceIcon(BuildContext context) {

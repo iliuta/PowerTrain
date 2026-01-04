@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/devices/bt_device_manager.dart';
+import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import '../../models/device_types.dart';
@@ -23,7 +24,6 @@ abstract class BTDevice {
   BluetoothDevice? _connectedDevice;
   DateTime? _connectedAt;
   BluetoothConnectionState _connectionState = BluetoothConnectionState.disconnected;
-  DeviceType? _deviceType;
   StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
   
   // Reference to the device manager (set by the manager during initialization)
@@ -37,9 +37,6 @@ abstract class BTDevice {
 
   /// Time when device was connected
   DateTime? get connectedAt => _connectedAt;
-
-  /// Device type (for FTMS devices)
-  DeviceType? get deviceType => _deviceType;
 
   /// Device name
   String get name => _connectedDevice?.platformName.isEmpty == true ? '(unknown device)' : _connectedDevice?.platformName ?? '(no device)';
@@ -88,10 +85,19 @@ abstract class BTDevice {
     _deviceManager = deviceManager;
   }
 
-  /// Update device type (for FTMS devices)
-  void updateDeviceType(DeviceType deviceType) {
-    _deviceType = deviceType;
-    _notifyDevicesChanged();
+  /// Save device information to preferences
+  Future<void> _saveDeviceInfo({DeviceType? machineType}) async {
+    try {
+      final lastConnectedService = LastConnectedDevicesService();
+      await lastConnectedService.saveLastConnectedDevice(
+        deviceType: BTDeviceServiceType.fromString(deviceTypeName),
+        deviceId: id,
+        deviceName: name,
+        machineType: machineType,
+      );
+    } catch (e) {
+      logger.w('⚠️ Could not save last connected device: $e');
+    }
   }
 
   /// Internal method to mark device as connected
@@ -112,18 +118,14 @@ abstract class BTDevice {
       _deviceManager?.addConnectedDevice(device.remoteId.str, this);
     }
     
+    // Log analytics event for device connected
+    AnalyticsService().logDeviceConnected(
+      deviceType: deviceTypeName,
+      deviceName: device.platformName.isEmpty ? '(unknown device)' : device.platformName,
+    );
+    
     // Save device information for auto-reconnection
-    try {
-      final lastConnectedService = LastConnectedDevicesService();
-      await lastConnectedService.saveLastConnectedDevice(
-        deviceType: BTDeviceServiceType.fromString(deviceTypeName),
-        deviceId: device.remoteId.str,
-        deviceName: device.platformName.isEmpty ? '(unknown device)' : device.platformName,
-      );
-    } catch (e) {
-      // Ignore errors for unsupported device types (e.g., test devices)
-      logger.w('⚠️ Could not save last connected device: $e');
-    }
+    _saveDeviceInfo();
   }
 
   /// Internal method to mark device as disconnected
@@ -139,11 +141,18 @@ abstract class BTDevice {
     }
     _connectedAt = null;
     _connectionState = BluetoothConnectionState.disconnected;
-    // Note: We don't clear _deviceType on temporary disconnect to preserve it for reconnection
     
     // Remove from global registry via manager
     if (deviceId != null && _deviceManager != null) {
       _deviceManager?.removeConnectedDevice(deviceId);
+    }
+    
+    // Log analytics event for device disconnected
+    if (_connectedDevice != null) {
+      AnalyticsService().logDeviceDisconnected(
+        deviceType: deviceTypeName,
+        deviceName: _connectedDevice!.platformName.isEmpty ? '(unknown device)' : _connectedDevice!.platformName,
+      );
     }
   }
 
@@ -160,7 +169,7 @@ abstract class BTDevice {
       _deviceManager?.addConnectedDevice(_connectedDevice!.remoteId.str, this);
     }
     
-    _notifyDevicesChanged();
+    notifyDevicesChanged();
   }
 
   /// Update connection state
@@ -176,12 +185,12 @@ abstract class BTDevice {
       // Device reconnected
       _setReconnected();
     } else {
-      _notifyDevicesChanged();
+      notifyDevicesChanged();
     }
   }
 
   /// Notify listeners of device changes
-  void _notifyDevicesChanged() {
+  void notifyDevicesChanged() {
     if (_deviceManager != null) {
       // The manager will handle the notification
       _deviceManager?.notifyDevicesChanged();

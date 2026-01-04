@@ -56,7 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load settings: $e'),
+            content: Text(AppLocalizations.of(context)!.failedToLoadSettings),
             backgroundColor: Colors.red,
           ),
         );
@@ -89,7 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save settings: $e'),
+            content: Text(AppLocalizations.of(context)!.failedToSaveSettings(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -126,7 +126,7 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Settings'),
+          title: Text(AppLocalizations.of(context)!.settingsPageTitle),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () async {
@@ -169,7 +169,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadSettings,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),
@@ -189,12 +189,12 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 24),
             SettingsSection(
-              title: 'About',
+              title: AppLocalizations.of(context)!.aboutSectionTitle,
               children: [
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: Text(_appVersion.isNotEmpty ? 'PowerTrain $_appVersion' : 'PowerTrain'),
-                  subtitle: const Text('Indoor Rowing and Cycling with your FTMS compatible fitness equipment.'),
+                  title: Text(_appVersion.isNotEmpty ? '${AppLocalizations.of(context)!.appName} $_appVersion' : AppLocalizations.of(context)!.appName),
+                  subtitle: Text(AppLocalizations.of(context)!.appDescription),
                 ),
               ],
             ),

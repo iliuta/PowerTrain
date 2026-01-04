@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/core/models/bt_device_service_type.dart';
+import 'package:ftms/core/models/device_types.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'bt_device_manager.dart';
 import 'dart:convert';
@@ -50,6 +51,7 @@ class LastConnectedDevicesService {
     required BTDeviceServiceType deviceType,
     required String deviceId,
     required String deviceName,
+    DeviceType? machineType,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -59,6 +61,7 @@ class LastConnectedDevicesService {
         'deviceId': deviceId,
         'deviceName': deviceName,
         'timestamp': DateTime.now().toIso8601String(),
+        if (machineType != null) 'machineType': machineType.name,
       };
       
       await prefs.setString(key, jsonEncode(deviceInfo));
@@ -69,7 +72,7 @@ class LastConnectedDevicesService {
   }
   
   /// Get the last connected device information for a specific device type
-  Future<Map<String, String>?> getLastConnectedDevice(BTDeviceServiceType deviceType) async {
+  Future<Map<String, dynamic>?> getLastConnectedDevice(BTDeviceServiceType deviceType) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final key = _prefsPrefix + deviceType.name.toLowerCase();
@@ -89,6 +92,7 @@ class LastConnectedDevicesService {
         'deviceId': deviceInfo['deviceId'] as String,
         'deviceName': deviceInfo['deviceName'] as String,
         'timestamp': deviceInfo['timestamp'] as String,
+        'machineType': deviceInfo['machineType'] as String?,
       };
     } catch (e) {
       logger.e('❌ Failed to load last connected device: $e');
@@ -97,8 +101,8 @@ class LastConnectedDevicesService {
   }
   
   /// Get all last connected devices (for all device types)
-  Future<Map<BTDeviceServiceType, Map<String, String>>> getAllLastConnectedDevices() async {
-    final result = <BTDeviceServiceType, Map<String, String>>{};
+  Future<Map<BTDeviceServiceType, Map<String, dynamic>>> getAllLastConnectedDevices() async {
+    final result = <BTDeviceServiceType, Map<String, dynamic>>{};
     
     logger.i('🔍 Checking for saved devices in SharedPreferences...');
     

@@ -763,4 +763,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get open => 'Open';
+
+  @override
+  String get settingsPageTitle => 'Settings';
+
+  @override
+  String get failedToLoadSettings => 'Failed to load settings';
+
+  @override
+  String get aboutSectionTitle => 'About';
+
+  @override
+  String get appName => 'PowerTrain';
+
+  @override
+  String get appDescription =>
+      'Indoor Rowing and Cycling with your FTMS compatible fitness equipment.';
+
+  @override
+  String failedToSaveSettings(Object error) {
+    return 'Failed to save settings: $error';
+  }
+
+  @override
+  String get fitnessProfileTitle => 'Fitness Profile';
+
+  @override
+  String get fitnessProfileSubtitle =>
+      'Your personal fitness metrics for accurate training targets';
+
+  @override
+  String get enterFtpHint => 'Enter FTP';
+
+  @override
+  String get enterTimeHint => 'Enter time (M:SS)';
 }

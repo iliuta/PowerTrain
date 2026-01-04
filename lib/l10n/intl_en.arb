@@ -228,5 +228,16 @@
   "enjoyingAppReviewPrompt": "Enjoying PowerTrain? Rate it on the app store!",
   "rateNow": "Rate Now",
   "noDevice": "(no device)",
-  "open": "Open"
+  "open": "Open",
+  "settingsPageTitle": "Settings",
+  "failedToLoadSettings": "Failed to load settings",
+  "retry": "Retry",
+  "aboutSectionTitle": "About",
+  "appName": "PowerTrain",
+  "appDescription": "Indoor Rowing and Cycling with your FTMS compatible fitness equipment.",
+  "failedToSaveSettings": "Failed to save settings: {error}",
+  "fitnessProfileTitle": "Fitness Profile",
+  "fitnessProfileSubtitle": "Your personal fitness metrics for accurate training targets",
+  "enterFtpHint": "Enter FTP",
+  "enterTimeHint": "Enter time (M:SS)"
 }

@@ -77,7 +77,7 @@
       "label": "Avg power",
       "labelI18n": {
         "en": "Avg power",
-        "fr": "Puissance moy.",
+        "fr": "Puiss. moy.",
         "de": "Ø Leist."
       },
       "display": "number",

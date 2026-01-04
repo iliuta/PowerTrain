@@ -1425,6 +1425,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get open;
+
+  /// No description provided for @settingsPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsPageTitle;
+
+  /// No description provided for @failedToLoadSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load settings'**
+  String get failedToLoadSettings;
+
+  /// No description provided for @aboutSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutSectionTitle;
+
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'PowerTrain'**
+  String get appName;
+
+  /// No description provided for @appDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Indoor Rowing and Cycling with your FTMS compatible fitness equipment.'**
+  String get appDescription;
+
+  /// No description provided for @failedToSaveSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save settings: {error}'**
+  String failedToSaveSettings(Object error);
+
+  /// No description provided for @fitnessProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness Profile'**
+  String get fitnessProfileTitle;
+
+  /// No description provided for @fitnessProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal fitness metrics for accurate training targets'**
+  String get fitnessProfileSubtitle;
+
+  /// No description provided for @enterFtpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter FTP'**
+  String get enterFtpHint;
+
+  /// No description provided for @enterTimeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter time (M:SS)'**
+  String get enterTimeHint;
 }
 
 class _AppLocalizationsDelegate

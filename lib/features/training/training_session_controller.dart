@@ -553,6 +553,14 @@ class TrainingSessionController extends ChangeNotifier
           debugPrint('FIT file generated: $fitFilePath');
 
           if (fitFilePath != null) {
+            // Log analytics event for FIT file saved
+            final stats = _dataRecorder!.getStatistics();
+            _analytics.logFitFileSaved(
+              machineType: session.ftmsMachineType,
+              durationSeconds: _state.elapsedSeconds,
+              distanceMeters: (stats['totalDistance'] as double?)?.round(),
+            );
+            
             await _attemptStravaUpload(fitFilePath);
             await _deleteFitFile(fitFilePath);
           }
@@ -616,9 +624,23 @@ class TrainingSessionController extends ChangeNotifier
         stravaUploadSuccessful = false;
         logger.w('❌ Failed to upload activity to Strava');
       }
+      
+      // Log analytics event for Strava upload
+      _analytics.logStravaUpload(
+        machineType: session.ftmsMachineType,
+        success: stravaUploadSuccessful,
+        durationSeconds: _state.elapsedSeconds,
+      );
     } catch (e) {
       stravaUploadSuccessful = false;
       logger.e('Error during Strava upload: $e');
+      
+      // Log analytics event for failed Strava upload
+      _analytics.logStravaUpload(
+        machineType: session.ftmsMachineType,
+        success: false,
+        durationSeconds: _state.elapsedSeconds,
+      );
     }
 
     if (!_disposed) notifyListeners();

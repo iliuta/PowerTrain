@@ -688,7 +688,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fieldLabelAvgSpeed => 'Vitesse moy.';
 
   @override
-  String get fieldLabelAvgPower => 'Puissance moy.';
+  String get fieldLabelAvgPower => 'Puiss. moy.';
 
   @override
   String get fieldLabelDistance => 'Distance';
@@ -773,4 +773,38 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get open => 'Ouvrir';
+
+  @override
+  String get settingsPageTitle => 'Paramètres';
+
+  @override
+  String get failedToLoadSettings => 'Échec du chargement des paramètres';
+
+  @override
+  String get aboutSectionTitle => 'À propos';
+
+  @override
+  String get appName => 'PowerTrain';
+
+  @override
+  String get appDescription =>
+      'Rameur et vélo d\'intérieur avec votre équipement de fitness compatible FTMS.';
+
+  @override
+  String failedToSaveSettings(Object error) {
+    return 'Échec de la sauvegarde des paramètres : $error';
+  }
+
+  @override
+  String get fitnessProfileTitle => 'Profil de fitness';
+
+  @override
+  String get fitnessProfileSubtitle =>
+      'Vos paramètres de fitness pour des objectifs d\'entraînement précis';
+
+  @override
+  String get enterFtpHint => 'Saisir FTP';
+
+  @override
+  String get enterTimeHint => 'Saisir temps (M:SS)';
 }

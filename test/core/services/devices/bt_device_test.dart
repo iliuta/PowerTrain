@@ -6,7 +6,6 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:ftms/core/services/devices/bt_device.dart';
 import 'package:ftms/core/services/devices/bt_device_manager.dart';
-import 'package:ftms/core/models/device_types.dart';
 
 @GenerateNiceMocks([
   MockSpec<BluetoothDevice>(),
@@ -269,34 +268,6 @@ void main() {
 
       test('id should return empty string when no device connected', () {
         expect(btDevice.id, equals(''));
-      });
-    });
-
-    group('Device Type', () {
-      test('should preserve deviceType on temporary disconnect', () async {
-        await btDevice.connectToDevice(mockBluetoothDevice);
-        btDevice.updateDeviceType(DeviceType.indoorBike);
-
-        // Simulate disconnect
-        connectionStateController.add(BluetoothConnectionState.disconnected);
-        await Future.delayed(Duration.zero);
-
-        // Device type should be preserved
-        expect(btDevice.deviceType, equals(DeviceType.indoorBike));
-      });
-
-      test('should preserve deviceType after reconnection', () async {
-        await btDevice.connectToDevice(mockBluetoothDevice);
-        btDevice.updateDeviceType(DeviceType.rower);
-
-        // Disconnect and reconnect
-        connectionStateController.add(BluetoothConnectionState.disconnected);
-        await Future.delayed(Duration.zero);
-        connectionStateController.add(BluetoothConnectionState.connected);
-        await Future.delayed(Duration.zero);
-
-        // Device type should still be preserved
-        expect(btDevice.deviceType, equals(DeviceType.rower));
       });
     });
   });
