@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:fit_tool/fit_tool.dart';
 import '../../utils/logger.dart';
 
 /// Model representing a FIT file with metadata
@@ -8,12 +9,18 @@ class FitFileInfo {
   final String filePath;
   final DateTime creationDate;
   final int fileSizeBytes;
+  final String? activityName;
+  final double? totalDistance;
+  final Duration? totalTime;
 
   FitFileInfo({
     required this.fileName,
     required this.filePath,
     required this.creationDate,
     required this.fileSizeBytes,
+    this.activityName,
+    this.totalDistance,
+    this.totalTime,
   });
 
   String get formattedSize {
@@ -30,6 +37,16 @@ class FitFileInfo {
 /// Service for managing FIT files - listing, deleting, and checking sync status
 class FitFileManager {
   static const String _fitFilesDirName = 'fit_files';
+
+  /// Extract activity name from FIT filename
+  /// Removes timestamp and extension, replaces underscores with spaces
+  static String extractActivityNameFromFilename(String fileName) {
+    // Extract activity name from filename (remove timestamp and extension)
+    final baseName = fileName
+        .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
+        .replaceAll('_', ' ');
+    return '$baseName - PowerTrain';
+  }
 
   /// Get the FIT files directory
   Future<Directory> _getFitFilesDirectory() async {
@@ -60,11 +77,55 @@ class FitFileManager {
           final stat = await file.stat();
           final fileName = file.path.split('/').last;
           
+          // Parse FIT file to extract activity data
+          String activityName = extractActivityNameFromFilename(fileName); // Default to filename-based name
+          double? totalDistance;
+          Duration? totalTime;
+          
+          try {
+            // Use FitDecoder to extract messages from the FIT file
+            final messages = <dynamic>[];
+            final byteStream = file.openRead();
+            await for (final message in byteStream.transform(FitDecoder())) {
+              messages.add(message);
+            }
+            
+            // Extract data from session message (contains activity summary)
+            final sessionMessages = messages.whereType<SessionMessage>();
+            
+            if (sessionMessages.isNotEmpty) {
+              final session = sessionMessages.first;
+              totalDistance = session.totalDistance;
+              if (session.totalTimerTime != null) {
+                totalTime = Duration(seconds: session.totalTimerTime!.toInt());
+              }
+              // Keep filename-based name as primary, but log if we found session data
+              try {
+                final sessionName = session.name;
+                // Check if session name is meaningful (not generic like "session")
+                final isMeaningfulName = sessionName.isNotEmpty && 
+                                        !sessionName.toLowerCase().contains('session') &&
+                                        sessionName != 'Unknown';
+                if (isMeaningfulName) {
+                  logger.i('Found meaningful session name in FIT file: $sessionName (keeping filename-based: $activityName)');
+                }
+              } catch (e) {
+                // Keep filename-based name
+              }
+            }
+          } catch (e) {
+            logger.w('Failed to parse FIT file ${file.path}: $e');
+            // Continue with filename-based activity name
+          }
+          
           fitFiles.add(FitFileInfo(
             fileName: fileName,
             filePath: file.path,
             creationDate: stat.modified,
             fileSizeBytes: stat.size,
+            activityName: activityName,
+            totalDistance: totalDistance,
+            totalTime: totalTime,
           ));
         } catch (e) {
           logger.w('Failed to get stats for file ${file.path}: $e');
