@@ -239,5 +239,15 @@
   "fitnessProfileTitle": "Profil de fitness",
   "fitnessProfileSubtitle": "Vos paramètres de fitness pour des objectifs d'entraînement précis",
   "enterFtpHint": "Saisir FTP",
-  "enterTimeHint": "Saisir temps (M:SS)"
+  "enterTimeHint": "Saisir temps (M:SS)",
+  "failedToLoadFitFileDetail": "Échec du chargement des détails du fichier FIT : {error}",
+  "noDataAvailable": "Aucune donnée disponible",
+  "summary": "Résumé",
+  "average": "Moyenne",
+  "speed": "Vitesse",
+  "pace": "Allure",
+  "cadence": "Cadence",
+  "heartRate": "Fréquence cardiaque",
+  "power": "Puissance",
+  "altitude": "Altitude"
 }

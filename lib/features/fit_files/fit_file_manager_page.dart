@@ -5,6 +5,7 @@ import '../../core/services/fit/fit_file_manager.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
 import '../../l10n/app_localizations.dart';
+import 'fit_file_detail_page.dart';
 
 /// Screen for managing unsynchronized FIT files
 class FitFileManagerPage extends StatefulWidget {
@@ -161,11 +162,8 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
     });
 
     try {
-      // Extract activity name from filename (remove timestamp and extension)
-      final baseName = fitFile.fileName
-          .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
-          .replaceAll('_', ' ');
-      final activityName = '$baseName - PowerTrain';
+      // Use activity name from the fit file info (already processed by the helper method)
+      final activityName = fitFile.activityName ?? FitFileManager.extractActivityNameFromFilename(fitFile.fileName);
 
       // For now, default to cycling - in the future this could be determined from the file
       const activityType = 'ride';
@@ -255,6 +253,17 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
         _selectedFiles.add(filePath);
       }
     });
+  }
+
+  void _navigateToDetail(FitFileInfo fitFile) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FitFileDetailPage(
+          fitFileInfo: fitFile,
+          fitFileManager: _fitFileManager,
+        ),
+      ),
+    );
   }
 
   void _selectAll() {
@@ -389,7 +398,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                       : (_) => _toggleFileSelection(fitFile.filePath),
                   ),
                   title: Text(
-                    fitFile.fileName,
+                    fitFile.activityName ?? FitFileManager.extractActivityNameFromFilename(fitFile.fileName),
                     style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 14,
@@ -400,18 +409,47 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat('MMM dd, yyyy - HH:mm').format(fitFile.creationDate),
+                        DateFormat.yMd(Localizations.localeOf(context).toString()).add_Hm().format(fitFile.creationDate),
                         style: TextStyle(
                           fontSize: 12,
                           color: isUploading ? Colors.grey : null,
                         ),
                       ),
-                      Text(
-                        fitFile.formattedSize,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isUploading ? Colors.grey : Colors.grey[600],
-                        ),
+                      Row(
+                        children: [
+                          if (fitFile.totalDistance != null)
+                            Text(
+                              '${(fitFile.totalDistance! / 1000).toStringAsFixed(1)}km',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isUploading ? Colors.grey : Colors.grey[600],
+                              ),
+                            ),
+                          if (fitFile.totalDistance != null && fitFile.totalTime != null)
+                            Text(
+                              ' • ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isUploading ? Colors.grey : Colors.grey[600],
+                              ),
+                            ),
+                          if (fitFile.totalTime != null)
+                            Text(
+                              _formatDuration(fitFile.totalTime!),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isUploading ? Colors.grey : Colors.grey[600],
+                              ),
+                            ),
+                          if (fitFile.totalDistance == null && fitFile.totalTime == null)
+                            Text(
+                              fitFile.formattedSize,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isUploading ? Colors.grey : Colors.grey[600],
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -466,6 +504,9 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                         ),
                   onTap: isUploading 
                     ? null 
+                    : () => _navigateToDetail(fitFile),
+                  onLongPress: isUploading 
+                    ? null 
                     : () => _toggleFileSelection(fitFile.filePath),
                   selected: isSelected,
                 ),
@@ -475,5 +516,19 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
         ),
       ],
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      return '${minutes}m ${seconds}s';
+    } else {
+      return '${seconds}s';
+    }
   }
 }

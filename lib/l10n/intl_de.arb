@@ -239,5 +239,15 @@
   "fitnessProfileTitle": "Fitnessprofil",
   "fitnessProfileSubtitle": "Ihre persönlichen Fitnessmetriken für genaue Trainingsziele",
   "enterFtpHint": "FTP eingeben",
-  "enterTimeHint": "Zeit eingeben (M:SS)"
+  "enterTimeHint": "Zeit eingeben (M:SS)",
+  "failedToLoadFitFileDetail": "Fehler beim Laden der FIT-Dateidetails: {error}",
+  "noDataAvailable": "Keine Daten verfügbar",
+  "summary": "Zusammenfassung",
+  "average": "Durchschnitt",
+  "speed": "Geschwindigkeit",
+  "pace": "Tempo",
+  "cadence": "Kadenz",
+  "heartRate": "Herzfrequenz",
+  "power": "Leistung",
+  "altitude": "Höhe"
 }

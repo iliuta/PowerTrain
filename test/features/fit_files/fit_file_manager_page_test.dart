@@ -71,9 +71,9 @@ void main() {
       // Wait for files to load
       await tester.pumpAndSettle();
 
-      // Should display the files
-      expect(find.text('Test_Workout_20241116_1209.fit'), findsOneWidget);
-      expect(find.text('Another_Workout_20241116_1210.fit'), findsOneWidget);
+      // Should display the files with extracted activity names
+      expect(find.text('Test Workout - PowerTrain'), findsOneWidget);
+      expect(find.text('Another Workout - PowerTrain'), findsOneWidget);
       expect(find.text('1.0KB'), findsOneWidget);
       expect(find.text('2.0KB'), findsOneWidget);
     });
@@ -237,7 +237,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // File should still be there
-      expect(find.text('Test_Workout_20241116_1209.fit'), findsOneWidget);
+      expect(find.text('Test Workout - PowerTrain'), findsOneWidget);
       // Should not show success message
       expect(find.text('Successfully deleted 1 file(s)'), findsNothing);
     });

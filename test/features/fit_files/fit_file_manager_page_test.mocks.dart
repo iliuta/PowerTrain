@@ -4,12 +4,13 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i6;
+import 'dart:io' as _i7;
 
-import 'package:flutter/material.dart' as _i8;
+import 'package:flutter/material.dart' as _i9;
 import 'package:ftms/core/services/fit/fit_file_manager.dart' as _i5;
 import 'package:ftms/core/services/strava/strava_activity_uploader.dart' as _i4;
 import 'package:ftms/core/services/strava/strava_oauth_handler.dart' as _i3;
-import 'package:ftms/core/services/strava/strava_service.dart' as _i7;
+import 'package:ftms/core/services/strava/strava_service.dart' as _i8;
 import 'package:ftms/core/services/strava/strava_token_manager.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -55,6 +56,26 @@ class MockFitFileManager extends _i1.Mock implements _i5.FitFileManager {
   }
 
   @override
+  _i6.Future<Map<String, dynamic>?> parseFitFileSessionData(_i7.File? file) =>
+      (super.noSuchMethod(
+            Invocation.method(#parseFitFileSessionData, [file]),
+            returnValue: _i6.Future<Map<String, dynamic>?>.value(),
+          )
+          as _i6.Future<Map<String, dynamic>?>);
+
+  @override
+  _i6.Future<List<_i5.FitFileInfo>> getAllFitFilesFromDirectory(
+    _i7.Directory? directory,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllFitFilesFromDirectory, [directory]),
+            returnValue: _i6.Future<List<_i5.FitFileInfo>>.value(
+              <_i5.FitFileInfo>[],
+            ),
+          )
+          as _i6.Future<List<_i5.FitFileInfo>>);
+
+  @override
   _i6.Future<List<_i5.FitFileInfo>> getAllFitFiles() =>
       (super.noSuchMethod(
             Invocation.method(#getAllFitFiles, []),
@@ -95,12 +116,20 @@ class MockFitFileManager extends _i1.Mock implements _i5.FitFileManager {
             returnValue: _i6.Future<int>.value(0),
           )
           as _i6.Future<int>);
+
+  @override
+  _i6.Future<_i5.FitFileDetail?> getFitFileDetail(String? filePath) =>
+      (super.noSuchMethod(
+            Invocation.method(#getFitFileDetail, [filePath]),
+            returnValue: _i6.Future<_i5.FitFileDetail?>.value(),
+          )
+          as _i6.Future<_i5.FitFileDetail?>);
 }
 
 /// A class which mocks [StravaService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockStravaService extends _i1.Mock implements _i7.StravaService {
+class MockStravaService extends _i1.Mock implements _i8.StravaService {
   MockStravaService() {
     _i1.throwOnMissingStub(this);
   }
@@ -139,7 +168,7 @@ class MockStravaService extends _i1.Mock implements _i7.StravaService {
           as _i4.StravaActivityUploader);
 
   @override
-  _i6.Future<bool> authenticate({_i8.BuildContext? context}) =>
+  _i6.Future<bool> authenticate({_i9.BuildContext? context}) =>
       (super.noSuchMethod(
             Invocation.method(#authenticate, [], {#context: context}),
             returnValue: _i6.Future<bool>.value(false),

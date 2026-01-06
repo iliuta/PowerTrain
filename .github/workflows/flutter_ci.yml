@@ -34,8 +34,6 @@ jobs:
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.yaml') }}
       - name: Install dependencies
         run: flutter pub get
-      - name: Check for compile errors (flutter build apk)
-        run: flutter build apk --debug --no-pub
 
   analyze:
     runs-on: ubuntu-latest

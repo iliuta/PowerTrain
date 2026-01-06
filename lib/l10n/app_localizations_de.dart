@@ -808,4 +808,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get enterTimeHint => 'Zeit eingeben (M:SS)';
+
+  @override
+  String failedToLoadFitFileDetail(Object error) {
+    return 'Fehler beim Laden der FIT-Dateidetails: $error';
+  }
+
+  @override
+  String get noDataAvailable => 'Keine Daten verfügbar';
+
+  @override
+  String get summary => 'Zusammenfassung';
+
+  @override
+  String get average => 'Durchschnitt';
+
+  @override
+  String get speed => 'Geschwindigkeit';
+
+  @override
+  String get pace => 'Tempo';
+
+  @override
+  String get altitude => 'Höhe';
 }

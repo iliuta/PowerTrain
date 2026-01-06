@@ -797,4 +797,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterTimeHint => 'Enter time (M:SS)';
+
+  @override
+  String failedToLoadFitFileDetail(Object error) {
+    return 'Failed to load FIT file detail: $error';
+  }
+
+  @override
+  String get noDataAvailable => 'No data available';
+
+  @override
+  String get summary => 'Summary';
+
+  @override
+  String get average => 'Average';
+
+  @override
+  String get speed => 'Speed';
+
+  @override
+  String get pace => 'Pace';
+
+  @override
+  String get altitude => 'Altitude';
 }
