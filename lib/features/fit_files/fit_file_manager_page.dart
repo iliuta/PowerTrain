@@ -5,6 +5,7 @@ import '../../core/services/fit/fit_file_manager.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
 import '../../l10n/app_localizations.dart';
+import 'fit_file_detail_page.dart';
 
 /// Screen for managing unsynchronized FIT files
 class FitFileManagerPage extends StatefulWidget {
@@ -254,6 +255,17 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
     });
   }
 
+  void _navigateToDetail(FitFileInfo fitFile) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FitFileDetailPage(
+          fitFileInfo: fitFile,
+          fitFileManager: _fitFileManager,
+        ),
+      ),
+    );
+  }
+
   void _selectAll() {
     setState(() {
       if (_selectedFiles.length == _fitFiles.length) {
@@ -491,6 +503,9 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
                           ],
                         ),
                   onTap: isUploading 
+                    ? null 
+                    : () => _navigateToDetail(fitFile),
+                  onLongPress: isUploading 
                     ? null 
                     : () => _toggleFileSelection(fitFile.filePath),
                   selected: isSelected,

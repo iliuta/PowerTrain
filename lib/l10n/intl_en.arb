@@ -239,5 +239,16 @@
   "fitnessProfileTitle": "Fitness Profile",
   "fitnessProfileSubtitle": "Your personal fitness metrics for accurate training targets",
   "enterFtpHint": "Enter FTP",
-  "enterTimeHint": "Enter time (M:SS)"
+  "enterTimeHint": "Enter time (M:SS)",
+  "failedToLoadFitFileDetail": "Failed to load FIT file detail: {error}",
+  "noDataAvailable": "No data available",
+  "summary": "Summary",
+  "dataPoints": "Data points",
+  "average": "Average",
+  "speed": "Speed",
+  "pace": "Pace",
+  "cadence": "Cadence",
+  "heartRate": "Heart Rate",
+  "power": "Power",
+  "altitude": "Altitude"
 }

@@ -1485,6 +1485,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter time (M:SS)'**
   String get enterTimeHint;
+
+  /// No description provided for @failedToLoadFitFileDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load FIT file detail: {error}'**
+  String failedToLoadFitFileDetail(Object error);
+
+  /// No description provided for @noDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get noDataAvailable;
+
+  /// No description provided for @summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get summary;
+
+  /// No description provided for @dataPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Data points'**
+  String get dataPoints;
+
+  /// No description provided for @average.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get average;
+
+  /// No description provided for @speed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get speed;
+
+  /// No description provided for @pace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get pace;
+
+  /// No description provided for @altitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Altitude'**
+  String get altitude;
 }
 
 class _AppLocalizationsDelegate

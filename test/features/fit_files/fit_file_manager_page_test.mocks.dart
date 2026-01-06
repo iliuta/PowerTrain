@@ -95,6 +95,14 @@ class MockFitFileManager extends _i1.Mock implements _i5.FitFileManager {
             returnValue: _i6.Future<int>.value(0),
           )
           as _i6.Future<int>);
+
+  @override
+  _i6.Future<_i5.FitFileDetail?> getFitFileDetail(String? filePath) =>
+      (super.noSuchMethod(
+            Invocation.method(#getFitFileDetail, [filePath]),
+            returnValue: _i6.Future<_i5.FitFileDetail?>.value(),
+          )
+          as _i6.Future<_i5.FitFileDetail?>);
 }
 
 /// A class which mocks [StravaService].
