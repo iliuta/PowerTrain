@@ -15,7 +15,7 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Warmup',
           duration: 5 * 60, // to seconds
-          targets: {'Instantaneous Pace': '75%', 'Stroke Rate': 20},
+          targets: {'Instantaneous Pace': '84%', 'Stroke Rate': 20},
         )
       ],
       repeat: 1,
@@ -36,7 +36,7 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Cooldown',
           duration: 5 * 60,
-          targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '84%', 'Stroke Rate': 18},
         ),
       ],
       repeat: 1,
@@ -58,7 +58,7 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Transition',
           duration: remainder * 60,
-          targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '87%', 'Stroke Rate': 18},
         ),
       ],
       repeat: 1,

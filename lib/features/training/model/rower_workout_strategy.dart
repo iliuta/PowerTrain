@@ -17,13 +17,13 @@ class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
     set.add(UnitTrainingInterval(
       title: 'Steady State',
       duration: (10 + remainder) * 60,
-      targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 20},
+      targets: {'Instantaneous Pace': '93%', 'Stroke Rate': 20},
     ));
     if (numCycles > 1) {
       set.add(UnitTrainingInterval(
         title: 'Paddle',
         duration: 2 * 60,
-        targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+        targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
       ));
     }
     return [GroupTrainingInterval(intervals: set, repeat: numCycles)];
@@ -51,7 +51,7 @@ class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Rest',
           duration: 2 * 60,
-          targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '88%', 'Stroke Rate': 18},
         ),
       ],
       repeat: numCycles,
@@ -80,7 +80,7 @@ class RowerSprintStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Rest',
           duration: 2 * 60,
-          targets: {'Instantaneous Pace': '65%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
         ),
       ],
       repeat: numCycles,
@@ -103,22 +103,22 @@ class RowerTechniqueStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Focus: Catch',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '80%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '87%', 'Stroke Rate': 18},
         ),
         UnitTrainingInterval(
           title: 'Focus: Finish',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 22},
+          targets: {'Instantaneous Pace': '93%', 'Stroke Rate': 22},
         ),
         UnitTrainingInterval(
           title: 'Focus: Flow',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '90%', 'Stroke Rate': 24},
+          targets: {'Instantaneous Pace': '98%', 'Stroke Rate': 24},
         ),
         UnitTrainingInterval(
           title: 'Recovery',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
         ),
       ],
       repeat: numCycles,
@@ -147,7 +147,7 @@ class RowerStrengthStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Rest',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
         ),
       ],
       repeat: numCycles,
@@ -175,7 +175,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
           UnitTrainingInterval(
             title: 'Pyramid Step',
             duration: time * 60,
-            targets: {'Instantaneous Pace': '${90 + (time * 3)}%', 'Stroke Rate': 24 + time},
+            targets: {'Instantaneous Pace': '${93 + (time * 3)}%', 'Stroke Rate': 24 + time},
           ),
         ],
         repeat: 1,
@@ -186,7 +186,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
             UnitTrainingInterval(
               title: 'Rest',
               duration: restTime * 60,
-              targets: {'Instantaneous Pace': '70%', 'Stroke Rate': 18},
+              targets: {'Instantaneous Pace': '83%', 'Stroke Rate': 18},
             ),
           ],
           repeat: 1,
