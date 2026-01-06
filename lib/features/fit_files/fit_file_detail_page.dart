@@ -108,14 +108,14 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
           const SizedBox(height: 24),
 
           // Graphs
-          if (_fitFileDetail!.dataPoints.any((p) => p.speed != null))
+          if (_fitFileDetail!.dataPoints.any((p) => p.speed != null && (_isRowingActivity() ? _convertSpeedToPace(p.speed!) > 0 : p.speed! > 0)))
             _buildGraphCard(
               title: _isRowingActivity() ? AppLocalizations.of(context)!.pace : AppLocalizations.of(context)!.speed,
               unit: _isRowingActivity() ? '/500m' : 'km/h',
               average: _fitFileDetail!.averageSpeed != null ? (_isRowingActivity() 
                   ? _convertSpeedToPace(_fitFileDetail!.averageSpeed!) 
                   : (_fitFileDetail!.averageSpeed! * 3.6)) : null,
-              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.speed != null).map((p) => _DataPoint(
+              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.speed != null && (_isRowingActivity() ? _convertSpeedToPace(p.speed!) > 0 : p.speed! > 0)).map((p) => _DataPoint(
                 timestamp: p.timestamp,
                 value: _isRowingActivity() ? _convertSpeedToPace(p.speed!) : (p.speed! * 3.6), // Convert m/s to pace or km/h
               )).toList(),
@@ -123,12 +123,12 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
               decimalPlaces: _isRowingActivity() ? 0 : 1, // Pace doesn't need decimals, speed does
             ),
 
-          if (_fitFileDetail!.dataPoints.any((p) => p.cadence != null))
+          if (_fitFileDetail!.dataPoints.any((p) => p.cadence != null && p.cadence! > 0))
             _buildGraphCard(
               title: AppLocalizations.of(context)!.cadence,
               unit: 'rpm',
               average: _fitFileDetail!.averageCadence,
-              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.cadence != null).map((p) => _DataPoint(
+              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.cadence != null && p.cadence! > 0).map((p) => _DataPoint(
                 timestamp: p.timestamp,
                 value: p.cadence!.toDouble(),
               )).toList(),
@@ -136,12 +136,12 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
               decimalPlaces: 0,
             ),
 
-          if (_fitFileDetail!.dataPoints.any((p) => p.heartRate != null))
+          if (_fitFileDetail!.dataPoints.any((p) => p.heartRate != null && p.heartRate! > 0))
             _buildGraphCard(
               title: AppLocalizations.of(context)!.heartRate,
               unit: 'bpm',
               average: _fitFileDetail!.averageHeartRate,
-              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.heartRate != null).map((p) => _DataPoint(
+              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.heartRate != null && p.heartRate! > 0).map((p) => _DataPoint(
                 timestamp: p.timestamp,
                 value: p.heartRate!.toDouble(),
               )).toList(),
@@ -149,12 +149,12 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
               decimalPlaces: 0,
             ),
 
-          if (_fitFileDetail!.dataPoints.any((p) => p.power != null))
+          if (_fitFileDetail!.dataPoints.any((p) => p.power != null && p.power! > 0))
             _buildGraphCard(
               title: AppLocalizations.of(context)!.power,
               unit: 'W',
               average: _fitFileDetail!.averagePower,
-              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.power != null).map((p) => _DataPoint(
+              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.power != null && p.power! > 0).map((p) => _DataPoint(
                 timestamp: p.timestamp,
                 value: p.power!.toDouble(),
               )).toList(),
