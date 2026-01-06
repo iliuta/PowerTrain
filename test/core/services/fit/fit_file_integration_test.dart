@@ -36,7 +36,7 @@ void main() {
       final manager = FitFileManager();
       
       // Test with rowing FIT file
-      final rowingFile = File('test_fit_output/Test_Rowing_Workout_20260106_1151.fit');
+      final rowingFile = File('test/test_fit_files/Test_Rowing_Workout_20260106_1205.fit');
       if (await rowingFile.exists()) {
         final detail = await manager.getFitFileDetail(rowingFile.path);
         expect(detail, isNotNull);
@@ -95,7 +95,6 @@ void main() {
       final rowingFile = File('test_fit_output/Test_Rowing_Workout_20260106_1151.fit');
       if (await rowingFile.exists()) {
         final sessionData = await manager.parseFitFileSessionData(rowingFile);
-        print('Rowing file session data: $sessionData');
         expect(sessionData, isNotNull);
         if (sessionData != null) {
           expect(sessionData['totalDistance'], isNotNull);
@@ -112,7 +111,6 @@ void main() {
       final cyclingFile = File('test_fit_output/Test_Cycling_Workout_20260106_1151.fit');
       if (await cyclingFile.exists()) {
         final sessionData = await manager.parseFitFileSessionData(cyclingFile);
-        print('Cycling file session data: $sessionData');
         expect(sessionData, isNotNull);
         if (sessionData != null) {
           expect(sessionData['totalDistance'], isNotNull);
@@ -164,7 +162,7 @@ void main() {
   group('FitFileManager getAllFitFilesFromDirectory', () {
     test('should list FIT files from test directory', () async {
       final manager = FitFileManager();
-      final testDir = Directory('test_fit_output');
+      final testDir = Directory('test/test_fit_files');
 
       final fitFiles = await manager.getAllFitFilesFromDirectory(testDir);
 
@@ -183,7 +181,7 @@ void main() {
       // Check that each file has required properties
       for (final fitFile in fitFiles) {
         expect(fitFile.fileName, endsWith('.fit'));
-        expect(fitFile.filePath, contains('test_fit_output'));
+        expect(fitFile.filePath, contains('test_fit_files'));
         expect(fitFile.creationDate, isNotNull);
         expect(fitFile.fileSizeBytes, greaterThan(0));
         expect(fitFile.activityName, isNotNull);
