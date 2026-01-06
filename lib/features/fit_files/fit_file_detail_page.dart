@@ -161,19 +161,6 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
               color: Colors.orange,
               decimalPlaces: 0,
             ),
-
-          if (_fitFileDetail!.dataPoints.any((p) => p.altitude != null))
-            _buildGraphCard(
-              title: AppLocalizations.of(context)!.altitude,
-              unit: 'm',
-              average: null, // Altitude average might not be meaningful
-              dataPoints: _fitFileDetail!.dataPoints.where((p) => p.altitude != null).map((p) => _DataPoint(
-                timestamp: p.timestamp,
-                value: p.altitude!,
-              )).toList(),
-              color: Colors.purple,
-              decimalPlaces: 1,
-            ),
         ],
       ),
     );
@@ -235,7 +222,7 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
                 ),
                 if (average != null)
                   Text(
-                    '${AppLocalizations.of(context)!.average}: ${_formatAverageValue(average, decimalPlaces, title)} $unit',
+                    '${AppLocalizations.of(context)!.average}: ${_formatAverageValue(average, decimalPlaces, unit)} $unit',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: color,
                       fontWeight: FontWeight.bold,
@@ -246,7 +233,7 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
             SizedBox(
               height: 200,
               child: LineChart(
-                _buildLineChartData(dataPoints, color, decimalPlaces, title),
+                _buildLineChartData(dataPoints, color, decimalPlaces, unit),
               ),
             ),
           ],
@@ -255,7 +242,7 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
     );
   }
 
-  LineChartData _buildLineChartData(List<_DataPoint> dataPoints, Color color, int decimalPlaces, String title) {
+  LineChartData _buildLineChartData(List<_DataPoint> dataPoints, Color color, int decimalPlaces, String unit) {
     final startTime = dataPoints.first.timestamp;
     final spots = dataPoints.map((point) {
       final secondsFromStart = point.timestamp.difference(startTime).inSeconds.toDouble();
@@ -273,7 +260,7 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
             showTitles: true,
             reservedSize: 40,
             getTitlesWidget: (value, meta) {
-              final formattedValue = _isRowingActivity() 
+              final formattedValue = unit == '/500m' 
                   ? _formatPace(value) 
                   : value.toStringAsFixed(decimalPlaces);
               return Text(
@@ -307,7 +294,7 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
         touchTooltipData: LineTouchTooltipData(
           getTooltipItems: (touchedSpots) {
             return touchedSpots.map((spot) {
-              final formattedValue = _isRowingActivity() 
+              final formattedValue = unit == '/500m' 
                   ? _formatPace(spot.y) 
                   : spot.y.toStringAsFixed(decimalPlaces);
               return LineTooltipItem(
@@ -375,8 +362,8 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
   }
 
   /// Format average value, handling pace formatting for rowing activities
-  String _formatAverageValue(double value, int decimalPlaces, String title) {
-    if (_isRowingActivity()) {
+  String _formatAverageValue(double value, int decimalPlaces, String unit) {
+    if (unit == '/500m') {
       return _formatPace(value);
     }
     return value.toStringAsFixed(decimalPlaces);
