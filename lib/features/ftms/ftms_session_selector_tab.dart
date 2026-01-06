@@ -10,8 +10,10 @@ import '../training/training_session_expansion_panel.dart';
 import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
-import '../training/model/training_session.dart';
 import '../training/widgets/edit_target_fields_widget.dart';
+import '../training/model/training_session.dart';
+import '../training/model/rower_workout_type.dart';
+import '../training/model/rower_training_session_generator.dart';
 import 'ftms_machine_features_tab.dart';
 import 'ftms_device_data_features_tab.dart';
 import '../../core/models/supported_resistance_level_range.dart';
@@ -38,6 +40,7 @@ class FTMSessionSelectorTab extends StatefulWidget {
 class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isFreeRideExpanded = false;
   bool _isTrainingSessionExpanded = false;
+  bool _isTrainingSessionGeneratorExpanded = false;
   bool _isMachineFeaturesExpanded = false;
   bool _isDeviceDataFeaturesExpanded = false;
   int _freeRideDurationMinutes = 20;
@@ -49,6 +52,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isResistanceLevelValid = true;
   bool _hasWarmup = true; // Default to true for rowers
   bool _hasCooldown = true; // Default to true for rowers
+  int _trainingSessionGeneratorDurationMinutes = 30; // Default 30 minutes, minimum 15
+  RowerWorkoutType _selectedWorkoutType = RowerWorkoutType.BASE_ENDURANCE;
+  int? _trainingSessionGeneratorResistanceLevel;
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?> _configs = {};
   bool _isLoadingSettings = true;
@@ -648,6 +654,209 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Training Session Generator Section (only for rowing machines)
+                if (_deviceDataType != null && DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower)
+                  Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          title: Text(AppLocalizations.of(context)!.trainingSessionGenerator),
+                          trailing: Icon(
+                            _isTrainingSessionGeneratorExpanded ? Icons.expand_less : Icons.expand_more,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _isTrainingSessionGeneratorExpanded = !_isTrainingSessionGeneratorExpanded;
+                            });
+                          },
+                        ),
+                        if (_isTrainingSessionGeneratorExpanded)
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                // Duration Field (time-based only, minimum 15 minutes)
+                                Text('Duration:'),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: _trainingSessionGeneratorDurationMinutes > 15
+                                          ? () {
+                                              setState(() {
+                                                _trainingSessionGeneratorDurationMinutes--;
+                                              });
+                                            }
+                                          : null,
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '$_trainingSessionGeneratorDurationMinutes min',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add),
+                                      onPressed: _trainingSessionGeneratorDurationMinutes < 120
+                                          ? () {
+                                              setState(() {
+                                                _trainingSessionGeneratorDurationMinutes++;
+                                              });
+                                            }
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                // Workout Type Selector
+                                Text('Workout Type:'),
+                                const SizedBox(height: 8),
+                                DropdownButton<RowerWorkoutType>(
+                                  value: _selectedWorkoutType,
+                                  onChanged: (RowerWorkoutType? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _selectedWorkoutType = newValue;
+                                      });
+                                    }
+                                  },
+                                  items: RowerWorkoutType.values.map<DropdownMenuItem<RowerWorkoutType>>((RowerWorkoutType value) {
+                                    return DropdownMenuItem<RowerWorkoutType>(
+                                      value: value,
+                                      child: Text(value.name.replaceAll('_', ' ').toLowerCase().replaceAllMapped(
+                                        RegExp(r'\b\w'),
+                                        (match) => match.group(0)!.toUpperCase(),
+                                      )),
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 16),
+                                // Resistance Level Field (only if supported)
+                                if (_supportedResistanceLevelRange != null)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 80,
+                                          child: Text(AppLocalizations.of(context)!.resistance),
+                                        ),
+                                        Expanded(
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.remove),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    if (_trainingSessionGeneratorResistanceLevel == null) {
+                                                      _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
+                                                    } else if (_trainingSessionGeneratorResistanceLevel! > _supportedResistanceLevelRange!.minResistanceLevel) {
+                                                      _trainingSessionGeneratorResistanceLevel = _trainingSessionGeneratorResistanceLevel! - _supportedResistanceLevelRange!.minIncrement;
+                                                      if (_trainingSessionGeneratorResistanceLevel! < _supportedResistanceLevelRange!.minResistanceLevel) {
+                                                        _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
+                                                      }
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                              SizedBox(
+                                                width: 100,
+                                                child: TextFormField(
+                                                  initialValue: _trainingSessionGeneratorResistanceLevel?.toString() ?? '',
+                                                  decoration: InputDecoration(
+                                                    hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
+                                                    hintStyle: const TextStyle(fontSize: 12.0),
+                                                    border: const OutlineInputBorder(),
+                                                    isDense: true,
+                                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                  ),
+                                                  keyboardType: TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    LengthLimitingTextInputFormatter(4),
+                                                  ],
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      if (value.isEmpty) {
+                                                        _trainingSessionGeneratorResistanceLevel = null;
+                                                      } else {
+                                                        final intValue = int.tryParse(value);
+                                                        if (intValue != null && 
+                                                            intValue >= _supportedResistanceLevelRange!.minResistanceLevel && 
+                                                            intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
+                                                            (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
+                                                          _trainingSessionGeneratorResistanceLevel = intValue;
+                                                        }
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.add),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    if (_trainingSessionGeneratorResistanceLevel == null) {
+                                                      _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
+                                                    } else if (_trainingSessionGeneratorResistanceLevel! < _supportedResistanceLevelRange!.maxResistanceLevel) {
+                                                      _trainingSessionGeneratorResistanceLevel = _trainingSessionGeneratorResistanceLevel! + _supportedResistanceLevelRange!.minIncrement;
+                                                      if (_trainingSessionGeneratorResistanceLevel! > _supportedResistanceLevelRange!.maxResistanceLevel) {
+                                                        _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
+                                                      }
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                const SizedBox(height: 16),
+                                // Start Button
+                                ElevatedButton(
+                                  onPressed: () {
+                                    final session = RowerTrainingSessionGenerator.generateTrainingSession(
+                                      _trainingSessionGeneratorDurationMinutes,
+                                      _selectedWorkoutType,
+                                    );
+                                    
+                                    // Log analytics event for training session generator
+                                    AnalyticsService().logTrainingSessionGenerated(
+                                      workoutType: _selectedWorkoutType.name,
+                                      duration: _trainingSessionGeneratorDurationMinutes,
+                                      resistanceLevel: _trainingSessionGeneratorResistanceLevel,
+                                    );
+                                    
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => TrainingSessionProgressScreen(
+                                          session: session,
+                                          ftmsDevice: widget.ftmsDevice,
+                                          gpxAssetPath: _selectedGpxAssetPath,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(AppLocalizations.of(context)!.start),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (_deviceDataType != null && DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower)
+                  const SizedBox(height: 16),
                 // Load Training Session Section
                 Card(
                   child: Column(

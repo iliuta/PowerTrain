@@ -133,6 +133,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadTrainingSession => 'Load Training Session';
 
   @override
+  String get trainingSessionGenerator => 'Training Session Generator';
+
+  @override
   String get deviceDataFeatures => 'Device Data Features';
 
   @override

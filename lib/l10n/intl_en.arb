@@ -35,6 +35,7 @@
   "coolDown": "Cool down",
   "start": "Start",
   "loadTrainingSession": "Load Training Session",
+  "trainingSessionGenerator": "Training Session Generator",
   "deviceDataFeatures": "Device Data Features",
   "machineFeatures": "Machine Features",
   "cyclingFtp": "Cycling FTP",

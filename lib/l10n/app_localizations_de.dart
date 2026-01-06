@@ -135,6 +135,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loadTrainingSession => 'Trainingseinheit laden';
 
   @override
+  String get trainingSessionGenerator => 'Trainingseinheiten-Generator';
+
+  @override
   String get deviceDataFeatures => 'Gerätedaten-Funktionen';
 
   @override

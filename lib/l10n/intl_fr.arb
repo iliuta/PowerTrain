@@ -35,6 +35,7 @@
   "coolDown": "Retour au calme",
   "start": "Démarrer",
   "loadTrainingSession": "Charger une session d'entraînement",
+  "trainingSessionGenerator": "Générateur de session d'entraînement",
   "deviceDataFeatures": "Fonctionnalités de l'appareil",
   "machineFeatures": "Fonctionnalités de la machine",
   "cyclingFtp": "FTP Vélo",

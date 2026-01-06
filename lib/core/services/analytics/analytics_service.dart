@@ -239,6 +239,22 @@ class AnalyticsService {
     );
   }
   
+  /// Track when a user generates a training session using the generator
+  Future<void> logTrainingSessionGenerated({
+    required String workoutType,
+    required int duration,
+    int? resistanceLevel,
+  }) async {
+    await _analytics?.logEvent(
+      name: 'training_session_generated',
+      parameters: {
+        'workout_type': workoutType,
+        'duration_minutes': duration,
+        if (resistanceLevel != null) 'resistance_level': resistanceLevel,
+      },
+    );
+  }
+  
   /// Track when a FIT file is saved
   Future<void> logFitFileSaved({
     required DeviceType machineType,

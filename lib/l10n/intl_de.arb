@@ -35,6 +35,7 @@
   "coolDown": "Abkühlen",
   "start": "Start",
   "loadTrainingSession": "Trainingseinheit laden",
+  "trainingSessionGenerator": "Trainingseinheiten-Generator",
   "deviceDataFeatures": "Gerätedaten-Funktionen",
   "machineFeatures": "Maschinenfunktionen",
   "cyclingFtp": "Radfahren FTP",

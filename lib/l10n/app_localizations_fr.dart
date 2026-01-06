@@ -134,6 +134,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loadTrainingSession => 'Charger une session d\'entraînement';
 
   @override
+  String get trainingSessionGenerator =>
+      'Générateur de session d\'entraînement';
+
+  @override
   String get deviceDataFeatures => 'Fonctionnalités de l\'appareil';
 
   @override

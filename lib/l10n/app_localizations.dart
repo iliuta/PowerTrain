@@ -316,6 +316,12 @@ abstract class AppLocalizations {
   /// **'Load Training Session'**
   String get loadTrainingSession;
 
+  /// No description provided for @trainingSessionGenerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Session Generator'**
+  String get trainingSessionGenerator;
+
   /// No description provided for @deviceDataFeatures.
   ///
   /// In en, this message translates to:
