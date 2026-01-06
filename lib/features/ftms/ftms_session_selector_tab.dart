@@ -55,6 +55,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   int _trainingSessionGeneratorDurationMinutes = 30; // Default 30 minutes, minimum 15
   RowerWorkoutType _selectedWorkoutType = RowerWorkoutType.BASE_ENDURANCE;
   int? _trainingSessionGeneratorResistanceLevel;
+  TextEditingController? _trainingSessionGeneratorResistanceController;
+  bool _isTrainingSessionGeneratorResistanceLevelValid = true;
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?> _configs = {};
   bool _isLoadingSettings = true;
@@ -78,6 +80,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     }
   }
 
+  void _updateTrainingSessionGeneratorResistanceController() {
+    if (_trainingSessionGeneratorResistanceController != null) {
+      _trainingSessionGeneratorResistanceController!.text = _trainingSessionGeneratorResistanceLevel?.toString() ?? '';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -88,11 +96,13 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     _loadUserSettings();
     _startFTMS();
     _resistanceController = TextEditingController();
+    _trainingSessionGeneratorResistanceController = TextEditingController();
   }
 
   @override
   void dispose() {
     _resistanceController?.dispose();
+    _trainingSessionGeneratorResistanceController?.dispose();
     super.dispose();
   }
 
@@ -130,12 +140,16 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         _supportedResistanceLevelRange = range;
         _isResistanceLevelValid = true;
         _updateResistanceController();
+        _isTrainingSessionGeneratorResistanceLevelValid = true;
+        _updateTrainingSessionGeneratorResistanceController();
       });
     } catch (e) {
       setState(() {
         _supportedResistanceLevelRange = null;
         _isResistanceLevelValid = true;
         _updateResistanceController();
+        _isTrainingSessionGeneratorResistanceLevelValid = true;
+        _updateTrainingSessionGeneratorResistanceController();
       });
     }
   }
@@ -764,18 +778,27 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                         _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
                                                       }
                                                     }
+                                                    _isTrainingSessionGeneratorResistanceLevelValid = true;
+                                                    _updateTrainingSessionGeneratorResistanceController();
                                                   });
                                                 },
                                               ),
                                               SizedBox(
                                                 width: 100,
                                                 child: TextFormField(
-                                                  initialValue: _trainingSessionGeneratorResistanceLevel?.toString() ?? '',
+                                                  controller: _trainingSessionGeneratorResistanceController,
                                                   decoration: InputDecoration(
                                                     hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
                                                     hintStyle: const TextStyle(fontSize: 12.0),
                                                     border: const OutlineInputBorder(),
+                                                    errorBorder: const OutlineInputBorder(
+                                                      borderSide: BorderSide(color: Colors.red),
+                                                    ),
+                                                    focusedErrorBorder: const OutlineInputBorder(
+                                                      borderSide: BorderSide(color: Colors.red, width: 2),
+                                                    ),
                                                     isDense: true,
+                                                    errorText: !_isTrainingSessionGeneratorResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
                                                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                                   ),
                                                   keyboardType: TextInputType.number,
@@ -787,6 +810,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                     setState(() {
                                                       if (value.isEmpty) {
                                                         _trainingSessionGeneratorResistanceLevel = null;
+                                                        _isTrainingSessionGeneratorResistanceLevelValid = true;
                                                       } else {
                                                         final intValue = int.tryParse(value);
                                                         if (intValue != null && 
@@ -794,6 +818,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                             intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
                                                             (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
                                                           _trainingSessionGeneratorResistanceLevel = intValue;
+                                                          _isTrainingSessionGeneratorResistanceLevelValid = true;
+                                                        } else {
+                                                          _isTrainingSessionGeneratorResistanceLevelValid = false;
                                                         }
                                                       }
                                                     });
@@ -812,6 +839,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                         _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
                                                       }
                                                     }
+                                                    _isTrainingSessionGeneratorResistanceLevelValid = true;
+                                                    _updateTrainingSessionGeneratorResistanceController();
                                                   });
                                                 },
                                               ),
@@ -824,10 +853,11 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                 const SizedBox(height: 16),
                                 // Start Button
                                 ElevatedButton(
-                                  onPressed: () {
+                                  onPressed: !_isTrainingSessionGeneratorResistanceLevelValid ? null : () {
                                     final session = RowerTrainingSessionGenerator.generateTrainingSession(
                                       _trainingSessionGeneratorDurationMinutes,
                                       _selectedWorkoutType,
+                                      _trainingSessionGeneratorResistanceLevel,
                                     );
                                     
                                     // Log analytics event for training session generator

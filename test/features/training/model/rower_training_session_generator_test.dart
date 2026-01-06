@@ -106,5 +106,45 @@ void main() {
       final remainder = session.intervals[2] as GroupTrainingInterval;
       expect((remainder.intervals[0]).duration, 120); // 2*60
     });
+
+    test('includes resistance level in all intervals when provided', () {
+      const resistanceLevel = 5;
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE, resistanceLevel);
+
+      expect(session.title, 'BASE_ENDURANCE - 30m');
+      expect(session.intervals.length, 3); // warmup, main, cooldown
+
+      // Check warmup includes resistance level
+      final warmup = session.intervals[0] as GroupTrainingInterval;
+      expect(warmup.intervals[0].targets?['Resistance Level'], resistanceLevel);
+
+      // Check main intervals include resistance level
+      final mainSet = session.intervals[1] as GroupTrainingInterval;
+      for (final interval in mainSet.intervals) {
+        expect(interval.targets?['Resistance Level'], resistanceLevel);
+      }
+
+      // Check cooldown includes resistance level
+      final cooldown = session.intervals[2] as GroupTrainingInterval;
+      expect(cooldown.intervals[0].targets?['Resistance Level'], resistanceLevel);
+    });
+
+    test('does not include resistance level when not provided', () {
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE);
+
+      // Check warmup does not include resistance level
+      final warmup = session.intervals[0] as GroupTrainingInterval;
+      expect(warmup.intervals[0].targets?.containsKey('Resistance Level'), false);
+
+      // Check main intervals do not include resistance level
+      final mainSet = session.intervals[1] as GroupTrainingInterval;
+      for (final interval in mainSet.intervals) {
+        expect(interval.targets?.containsKey('Resistance Level'), false);
+      }
+
+      // Check cooldown does not include resistance level
+      final cooldown = session.intervals[2] as GroupTrainingInterval;
+      expect(cooldown.intervals[0].targets?.containsKey('Resistance Level'), false);
+    });
   });
 }

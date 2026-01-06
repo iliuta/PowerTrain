@@ -2,14 +2,22 @@ import 'group_training_interval.dart';
 import 'unit_training_interval.dart';
 
 abstract class RowerWorkoutStrategy {
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime);
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]);
   int getCycleTime();
   bool handlesRemainderInternally();
 }
 
+Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets, [int? resistanceLevel]) {
+  final targets = Map<String, dynamic>.from(baseTargets);
+  if (resistanceLevel != null) {
+    targets['Resistance Level'] = resistanceLevel;
+  }
+  return targets;
+}
+
 class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 12;
     final numCycles = mainTime ~/ cycleTime;
     final remainder = mainTime % cycleTime;
@@ -17,13 +25,13 @@ class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
     set.add(UnitTrainingInterval(
       title: 'Steady State',
       duration: (10 + remainder) * 60,
-      targets: {'Instantaneous Pace': '93%', 'Stroke Rate': 20},
+      targets: _buildTargets({'Instantaneous Pace': '93%', 'Stroke Rate': 20}, resistanceLevel),
     ));
     if (numCycles > 1) {
       set.add(UnitTrainingInterval(
         title: 'Paddle',
         duration: 2 * 60,
-        targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
+        targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
       ));
     }
     return [GroupTrainingInterval(intervals: set, repeat: numCycles)];
@@ -38,7 +46,7 @@ class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
 
 class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 5;
     final numCycles = mainTime ~/ cycleTime;
     return [GroupTrainingInterval(
@@ -46,12 +54,12 @@ class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'VO2 Interval',
           duration: 3 * 60,
-          targets: {'Instantaneous Pace': '105%', 'Stroke Rate': 30},
+          targets: _buildTargets({'Instantaneous Pace': '105%', 'Stroke Rate': 30}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Rest',
           duration: 2 * 60,
-          targets: {'Instantaneous Pace': '88%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '88%', 'Stroke Rate': 18}, resistanceLevel),
         ),
       ],
       repeat: numCycles,
@@ -67,7 +75,7 @@ class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
 
 class RowerSprintStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 3;
     final numCycles = mainTime ~/ cycleTime;
     return [GroupTrainingInterval(
@@ -75,12 +83,12 @@ class RowerSprintStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Sprint',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '115%', 'Stroke Rate': 36},
+          targets: _buildTargets({'Instantaneous Pace': '115%', 'Stroke Rate': 36}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Rest',
           duration: 2 * 60,
-          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
         ),
       ],
       repeat: numCycles,
@@ -96,29 +104,29 @@ class RowerSprintStrategy implements RowerWorkoutStrategy {
 
 class RowerTechniqueStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final numCycles = mainTime ~/ 4;
     return [GroupTrainingInterval(
       intervals: [
         UnitTrainingInterval(
           title: 'Focus: Catch',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '87%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '87%', 'Stroke Rate': 18}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Focus: Finish',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '93%', 'Stroke Rate': 22},
+          targets: _buildTargets({'Instantaneous Pace': '93%', 'Stroke Rate': 22}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Focus: Flow',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '98%', 'Stroke Rate': 24},
+          targets: _buildTargets({'Instantaneous Pace': '98%', 'Stroke Rate': 24}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Recovery',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
         ),
       ],
       repeat: numCycles,
@@ -134,7 +142,7 @@ class RowerTechniqueStrategy implements RowerWorkoutStrategy {
 
 class RowerStrengthStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 3;
     final numCycles = mainTime ~/ cycleTime;
     return [GroupTrainingInterval(
@@ -142,12 +150,12 @@ class RowerStrengthStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Power Drive',
           duration: 2 * 60,
-          targets: {'Instantaneous Pace': '100%', 'Stroke Rate': 16},
+          targets: _buildTargets({'Instantaneous Pace': '100%', 'Stroke Rate': 16}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Rest',
           duration: 1 * 60,
-          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
         ),
       ],
       repeat: numCycles,
@@ -163,7 +171,7 @@ class RowerStrengthStrategy implements RowerWorkoutStrategy {
 
 class RowerPyramidStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final workTimes = [1, 2, 3, 2, 1];
     final totalWork = 9;
     final restTime = (mainTime - totalWork) ~/ 4;
@@ -175,7 +183,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
           UnitTrainingInterval(
             title: 'Pyramid Step',
             duration: time * 60,
-            targets: {'Instantaneous Pace': '${93 + (time * 3)}%', 'Stroke Rate': 24 + time},
+            targets: _buildTargets({'Instantaneous Pace': '${93 + (time * 3)}%', 'Stroke Rate': 24 + time}, resistanceLevel),
           ),
         ],
         repeat: 1,
@@ -186,7 +194,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
             UnitTrainingInterval(
               title: 'Rest',
               duration: restTime * 60,
-              targets: {'Instantaneous Pace': '83%', 'Stroke Rate': 18},
+              targets: _buildTargets({'Instantaneous Pace': '83%', 'Stroke Rate': 18}, resistanceLevel),
             ),
           ],
           repeat: 1,
@@ -205,29 +213,29 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
 
 class RowerRaceSimStrategy implements RowerWorkoutStrategy {
   @override
-  List<GroupTrainingInterval> generateMainIntervals(int mainTime) {
+  List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final q = mainTime ~/ 4;
     return [GroupTrainingInterval(
       intervals: [
         UnitTrainingInterval(
           title: 'Start/High 20',
           duration: q * 60,
-          targets: {'Instantaneous Pace': '110%', 'Stroke Rate': 34},
+          targets: _buildTargets({'Instantaneous Pace': '110%', 'Stroke Rate': 34}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Settle/Rhythm',
           duration: q * 60,
-          targets: {'Instantaneous Pace': '100%', 'Stroke Rate': 28},
+          targets: _buildTargets({'Instantaneous Pace': '100%', 'Stroke Rate': 28}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Third 500m',
           duration: q * 60,
-          targets: {'Instantaneous Pace': '102%', 'Stroke Rate': 30},
+          targets: _buildTargets({'Instantaneous Pace': '102%', 'Stroke Rate': 30}, resistanceLevel),
         ),
         UnitTrainingInterval(
           title: 'Sprint Finish',
           duration: q * 60,
-          targets: {'Instantaneous Pace': '112%', 'Stroke Rate': 36},
+          targets: _buildTargets({'Instantaneous Pace': '112%', 'Stroke Rate': 36}, resistanceLevel),
         ),
       ],
       repeat: 1,

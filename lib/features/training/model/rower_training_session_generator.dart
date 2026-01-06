@@ -5,7 +5,7 @@ import 'unit_training_interval.dart';
 import '../../../core/models/device_types.dart';
 
 class RowerTrainingSessionGenerator {
-  static TrainingSessionDefinition generateTrainingSession(int totalMin, RowerWorkoutType type) {
+  static TrainingSessionDefinition generateTrainingSession(int totalMin, RowerWorkoutType type, [int? resistanceLevel]) {
     final groups = <GroupTrainingInterval>[];
     final mainTime = totalMin - 10; // Excluding 5m Warmup and 5m Cooldown
 
@@ -15,7 +15,7 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Warmup',
           duration: 5 * 60, // to seconds
-          targets: {'Instantaneous Pace': '84%', 'Stroke Rate': 20},
+          targets: _buildTargets({'Instantaneous Pace': '84%', 'Stroke Rate': 20}, resistanceLevel),
         )
       ],
       repeat: 1,
@@ -23,11 +23,11 @@ class RowerTrainingSessionGenerator {
 
     // --- 2. MAIN SET LOGIC ---
     final strategy = type.strategy;
-    final mainIntervals = strategy.generateMainIntervals(mainTime);
+    final mainIntervals = strategy.generateMainIntervals(mainTime, resistanceLevel);
     groups.addAll(mainIntervals);
     if (!strategy.handlesRemainderInternally()) {
       final remainder = mainTime % strategy.getCycleTime();
-      _handleRemainder(remainder, groups);
+      _handleRemainder(remainder, groups, resistanceLevel);
     }
 
     // --- 3. FIXED COOLDOWN ---
@@ -36,7 +36,7 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Cooldown',
           duration: 5 * 60,
-          targets: {'Instantaneous Pace': '84%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '84%', 'Stroke Rate': 18}, resistanceLevel),
         ),
       ],
       repeat: 1,
@@ -51,14 +51,22 @@ class RowerTrainingSessionGenerator {
     );
   }
 
-  static void _handleRemainder(int remainder, List<GroupTrainingInterval> groups) {
+  static Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets, [int? resistanceLevel]) {
+    final targets = Map<String, dynamic>.from(baseTargets);
+    if (resistanceLevel != null) {
+      targets['Resistance Level'] = resistanceLevel;
+    }
+    return targets;
+  }
+
+  static void _handleRemainder(int remainder, List<GroupTrainingInterval> groups, [int? resistanceLevel]) {
     if (remainder <= 0) return;
     groups.add(GroupTrainingInterval(
       intervals: [
         UnitTrainingInterval(
           title: 'Transition',
           duration: remainder * 60,
-          targets: {'Instantaneous Pace': '87%', 'Stroke Rate': 18},
+          targets: _buildTargets({'Instantaneous Pace': '87%', 'Stroke Rate': 18}, resistanceLevel),
         ),
       ],
       repeat: 1,
