@@ -205,10 +205,6 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
                 '${AppLocalizations.of(context)!.durationLabel} ${_formatDuration(_fitFileDetail!.totalTime!)}',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-            Text(
-              '${AppLocalizations.of(context)!.dataPoints}: ${_fitFileDetail!.dataPoints.length}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
           ],
         ),
       ),

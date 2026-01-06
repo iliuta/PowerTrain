@@ -117,17 +117,44 @@ class FitFileManager {
     return Directory('${directory.path}/$_fitFilesDirName');
   }
 
-  /// Get all FIT files sorted by creation date (newest first)
-  Future<List<FitFileInfo>> getAllFitFiles() async {
+  /// Parse FIT file to extract session data (totalDistance, totalTime, activityName)
+  /// Returns a map with the extracted data, or null if parsing fails
+  /// This method is public for testing purposes
+  Future<Map<String, dynamic>?> parseFitFileSessionData(File file) async {
     try {
-      final fitDir = await _getFitFilesDirectory();
+      final messages = <dynamic>[];
+      final byteStream = file.openRead();
+      await for (final message in byteStream.transform(FitDecoder())) {
+        messages.add(message);
+      }
       
-      if (!await fitDir.exists()) {
-        logger.i('FIT files directory does not exist');
+      // Extract data from session message (contains activity summary)
+      final sessionMessages = messages.whereType<SessionMessage>();
+      
+      if (sessionMessages.isNotEmpty) {
+        final session = sessionMessages.first;
+        return {
+          'totalDistance': session.totalDistance,
+          'totalTime': session.totalTimerTime != null 
+              ? Duration(seconds: session.totalTimerTime!.toInt()) 
+              : null,
+        };
+      }
+    } catch (e) {
+      logger.w('Failed to parse FIT file ${file.path}: $e');
+    }
+    return null;
+  }
+
+  /// Get all FIT files from a specific directory (for testing purposes)
+  Future<List<FitFileInfo>> getAllFitFilesFromDirectory(Directory directory) async {
+    try {
+      if (!await directory.exists()) {
+        logger.i('Directory does not exist: ${directory.path}');
         return [];
       }
 
-      final files = await fitDir
+      final files = await directory
           .list()
           .where((entity) => entity is File && entity.path.endsWith('.fit'))
           .cast<File>()
@@ -139,48 +166,19 @@ class FitFileManager {
         try {
           final stat = await file.stat();
           final fileName = file.path.split('/').last;
-          
+
           // Parse FIT file to extract activity data
           String activityName = extractActivityNameFromFilename(fileName); // Default to filename-based name
           double? totalDistance;
           Duration? totalTime;
-          
-          try {
-            // Use FitDecoder to extract messages from the FIT file
-            final messages = <dynamic>[];
-            final byteStream = file.openRead();
-            await for (final message in byteStream.transform(FitDecoder())) {
-              messages.add(message);
-            }
-            
-            // Extract data from session message (contains activity summary)
-            final sessionMessages = messages.whereType<SessionMessage>();
-            
-            if (sessionMessages.isNotEmpty) {
-              final session = sessionMessages.first;
-              totalDistance = session.totalDistance;
-              if (session.totalTimerTime != null) {
-                totalTime = Duration(seconds: session.totalTimerTime!.toInt());
-              }
-              // Keep filename-based name as primary, but log if we found session data
-              try {
-                final sessionName = session.name;
-                // Check if session name is meaningful (not generic like "session")
-                final isMeaningfulName = sessionName.isNotEmpty && 
-                                        !sessionName.toLowerCase().contains('session') &&
-                                        sessionName != 'Unknown';
-                if (isMeaningfulName) {
-                  logger.i('Found meaningful session name in FIT file: $sessionName (keeping filename-based: $activityName)');
-                }
-              } catch (e) {
-                // Keep filename-based name
-              }
-            }
-          } catch (e) {
-            logger.w('Failed to parse FIT file ${file.path}: $e');
-            // Continue with filename-based activity name
+
+          // Try to parse session data from FIT file
+          final sessionData = await parseFitFileSessionData(file);
+          if (sessionData != null) {
+            totalDistance = sessionData['totalDistance'];
+            totalTime = sessionData['totalTime'];
           }
-          
+
           fitFiles.add(FitFileInfo(
             fileName: fileName,
             filePath: file.path,
@@ -198,8 +196,19 @@ class FitFileManager {
       // Sort by creation date (newest first)
       fitFiles.sort((a, b) => b.creationDate.compareTo(a.creationDate));
 
-      logger.i('Found ${fitFiles.length} FIT files');
+      logger.i('Found ${fitFiles.length} FIT files in ${directory.path}');
       return fitFiles;
+    } catch (e) {
+      logger.e('Failed to list FIT files from directory ${directory.path}: $e');
+      return [];
+    }
+  }
+
+  /// Get all FIT files sorted by creation date (newest first)
+  Future<List<FitFileInfo>> getAllFitFiles() async {
+    try {
+      final fitDir = await _getFitFilesDirectory();
+      return await getAllFitFilesFromDirectory(fitDir);
     } catch (e) {
       logger.e('Failed to list FIT files: $e');
       return [];

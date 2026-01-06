@@ -243,7 +243,6 @@
   "failedToLoadFitFileDetail": "Échec du chargement des détails du fichier FIT : {error}",
   "noDataAvailable": "Aucune donnée disponible",
   "summary": "Résumé",
-  "dataPoints": "Points de données",
   "average": "Moyenne",
   "speed": "Vitesse",
   "pace": "Allure",

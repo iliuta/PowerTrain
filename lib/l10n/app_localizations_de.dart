@@ -821,9 +821,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get summary => 'Zusammenfassung';
 
   @override
-  String get dataPoints => 'Datenpunkte';
-
-  @override
   String get average => 'Durchschnitt';
 
   @override

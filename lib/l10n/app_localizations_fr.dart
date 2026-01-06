@@ -820,9 +820,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get summary => 'Résumé';
 
   @override
-  String get dataPoints => 'Points de données';
-
-  @override
   String get average => 'Moyenne';
 
   @override

@@ -1504,12 +1504,6 @@ abstract class AppLocalizations {
   /// **'Summary'**
   String get summary;
 
-  /// No description provided for @dataPoints.
-  ///
-  /// In en, this message translates to:
-  /// **'Data points'**
-  String get dataPoints;
-
   /// No description provided for @average.
   ///
   /// In en, this message translates to:
