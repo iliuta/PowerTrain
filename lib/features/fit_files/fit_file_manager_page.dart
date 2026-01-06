@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/fit/fit_file_manager.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/utils/logger.dart';
@@ -13,12 +14,15 @@ class FitFileManagerPage extends StatefulWidget {
     super.key,
     FitFileManager? fitFileManager,
     StravaService? stravaService,
+    AnalyticsService? analyticsService,
   }) : 
     _fitFileManager = fitFileManager,
-    _stravaService = stravaService;
+    _stravaService = stravaService,
+    _analyticsService = analyticsService;
 
   final FitFileManager? _fitFileManager;
   final StravaService? _stravaService;
+  final AnalyticsService? _analyticsService;
 
   @override
   State<FitFileManagerPage> createState() => _FitFileManagerPageState();
@@ -27,6 +31,7 @@ class FitFileManagerPage extends StatefulWidget {
 class _FitFileManagerPageState extends State<FitFileManagerPage> {
   late final FitFileManager _fitFileManager;
   late final StravaService _stravaService;
+  late final AnalyticsService _analyticsService;
   
   List<FitFileInfo> _fitFiles = [];
   bool _isLoading = true;
@@ -39,6 +44,8 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
     super.initState();
     _fitFileManager = widget._fitFileManager ?? FitFileManager();
     _stravaService = widget._stravaService ?? StravaService();
+    _analyticsService = widget._analyticsService ?? AnalyticsService();
+    _analyticsService.logScreenView(screenName: 'fit_file_manager');
     _loadFitFiles();
   }
 
@@ -261,6 +268,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
         builder: (context) => FitFileDetailPage(
           fitFileInfo: fitFile,
           fitFileManager: _fitFileManager,
+          analyticsService: _analyticsService,
         ),
       ),
     );
