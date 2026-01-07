@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'user_settings_service.dart';
 
 /// Singleton service for playing sounds throughout the application.
 class SoundService {
@@ -41,11 +42,19 @@ class SoundService {
   SoundService._createForTesting(AudioPlayer audioPlayer) {
     _audioPlayer = audioPlayer;
   }
-
   /// Plays a sound from the assets directory.
   ///
   /// [soundPath] should be relative to the assets directory, e.g., 'sounds/beep.wav'
   Future<void> playSound(String soundPath) async {
+    // Get cached settings or load them
+    final settings = UserSettingsService.instance.getCachedSettings() ?? 
+        await UserSettingsService.instance.loadSettings();
+    
+    if (settings.soundEnabled == false) {
+      debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
+      return;
+    }
+
     try {
       await _audioPlayer.play(AssetSource(soundPath));
       debugPrint('🔔 Played sound: $soundPath');

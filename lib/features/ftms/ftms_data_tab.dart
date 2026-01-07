@@ -15,6 +15,7 @@ import '../../core/config/live_data_display_config.dart';
 import '../../core/widgets/ftms_live_data_display_widget.dart';
 import '../../core/services/ftms_data_processor.dart';
 import '../settings/model/user_settings.dart';
+import '../../core/services/user_settings_service.dart';
 
 class FTMSDataTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -43,7 +44,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   }
 
   Future<void> _loadUserSettings() async {
-    final settings = await UserSettings.loadDefault();
+    final settings = await UserSettingsService.instance.loadSettings();
     final configs = <DeviceType, LiveDataDisplayConfig?>{};
     for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
       configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);

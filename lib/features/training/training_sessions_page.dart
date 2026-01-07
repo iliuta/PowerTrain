@@ -5,6 +5,7 @@ import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/features/training/services/training_session_storage_service.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
+import 'package:ftms/core/services/user_settings_service.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'training_session_expansion_panel.dart';
 import 'training_session_progress_screen.dart';
@@ -45,7 +46,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
 
   Future<void> _loadUserSettings() async {
     try {
-      final userSettings = await UserSettings.loadDefault();
+      final userSettings = await UserSettingsService.instance.loadSettings();
       final configs = <DeviceType, LiveDataDisplayConfig?>{};
       for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
         configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);

@@ -168,7 +168,7 @@ void main() {
     });
 
     test('expand creates new instance with expanded intervals', () {
-      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false);
+      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false, soundEnabled: true);
       final config = createIndoorBikeConfig();
       
       final unitInterval = UnitTrainingInterval(
@@ -202,7 +202,7 @@ void main() {
     });
 
     test('expand handles GroupTrainingInterval', () {
-      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false);
+      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false, soundEnabled: true);
       final config = createIndoorBikeConfig();
       
       final unitInterval = UnitTrainingInterval(
@@ -246,7 +246,7 @@ void main() {
         duration: 90,
       );
       
-      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false);
+      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false, soundEnabled: true);
       
       // Create a session and expand it to get UnitTrainingInterval list
       final session = TrainingSessionDefinition(

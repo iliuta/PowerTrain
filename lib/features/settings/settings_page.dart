@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'model/user_settings.dart';
 import '../../core/utils/logger.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/services/user_settings_service.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/user_preferences_section.dart';
 
@@ -41,7 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadSettings() async {
     try {
-      final userSettings = await UserSettings.loadDefault();
+      final userSettings = await UserSettingsService.instance.loadSettings();
 
       setState(() {
         _userSettings = userSettings;
@@ -68,7 +69,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_userSettings == null) return;
 
     try {
-      await _userSettings!.save();
+      await UserSettingsService.instance.saveSettings(_userSettings!);
 
       setState(() {
         _hasChanges = false;

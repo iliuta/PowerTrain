@@ -10,6 +10,7 @@ import '../training/training_session_expansion_panel.dart';
 import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
+import '../../core/services/user_settings_service.dart';
 import '../training/widgets/edit_target_fields_widget.dart';
 import '../training/model/training_session.dart';
 import '../training/model/rower_workout_type.dart';
@@ -107,7 +108,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   }
 
   Future<void> _loadUserSettings() async {
-    final settings = await UserSettings.loadDefault();
+    final settings = await UserSettingsService.instance.loadSettings();
     final configs = <DeviceType, LiveDataDisplayConfig?>{};
     for (final deviceType in [DeviceType.rower, DeviceType.indoorBike]) {
       configs[deviceType] = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);

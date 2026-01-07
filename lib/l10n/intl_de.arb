@@ -44,6 +44,8 @@
   "per500m": "{value} pro 500m",
   "developerMode": "Entwicklermodus",
   "developerModeSubtitle": "Debugging-Optionen und Beta-Funktionen aktivieren",
+  "soundEnabled": "Tonbenachrichtigungen",
+  "soundEnabledSubtitle": "Tonbenachrichtigungen während des Trainings abspielen",
   "invalidFtp": "Bitte geben Sie einen gültigen FTP ein (50-1000 Watt)",
   "invalidTimeFormat": "Bitte geben Sie ein gültiges Zeitformat ein (M:SS)",
   "commandSent": "✅ Befehl {opcode} erfolgreich gesendet",
