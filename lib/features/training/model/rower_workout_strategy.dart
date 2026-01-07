@@ -1,10 +1,12 @@
 import 'group_training_interval.dart';
 import 'unit_training_interval.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 abstract class RowerWorkoutStrategy {
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]);
   int getCycleTime();
   bool handlesRemainderInternally();
+  String getLabel(AppLocalizations localizations);
 }
 
 Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets, [int? resistanceLevel]) {
@@ -43,6 +45,9 @@ class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => true;
+
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypeBaseEndurance;
 }
 
 class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
@@ -73,6 +78,9 @@ class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => false;
+
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypeVo2Max;
 }
 
 class RowerSprintStrategy implements RowerWorkoutStrategy {
@@ -103,6 +111,9 @@ class RowerSprintStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => false;
+
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypeSprint;
 }
 
 class RowerTechniqueStrategy implements RowerWorkoutStrategy {
@@ -142,8 +153,9 @@ class RowerTechniqueStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => false;
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypeTechnique;
 }
-
 class RowerStrengthStrategy implements RowerWorkoutStrategy {
   const RowerStrengthStrategy();
   @override
@@ -172,6 +184,9 @@ class RowerStrengthStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => false;
+
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypeStrength;
 }
 
 class RowerPyramidStrategy implements RowerWorkoutStrategy {
@@ -215,6 +230,9 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => true;
+
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypePyramid;
 }
 
 class RowerRaceSimStrategy implements RowerWorkoutStrategy {
@@ -254,4 +272,7 @@ class RowerRaceSimStrategy implements RowerWorkoutStrategy {
 
   @override
   bool handlesRemainderInternally() => true;
+
+  @override
+  String getLabel(AppLocalizations localizations) => localizations.workoutTypeRaceSim;
 }

@@ -744,7 +744,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   items: RowerWorkoutType.values.map<DropdownMenuItem<RowerWorkoutType>>((RowerWorkoutType value) {
                                     return DropdownMenuItem<RowerWorkoutType>(
                                       value: value,
-                                      child: Text(RowerWorkoutTypeExtension.getLabel(value, AppLocalizations.of(context)!)),
+                                      child: Text(value.strategy.getLabel(AppLocalizations.of(context)!)),
                                     );
                                   }).toList(),
                                 ),
