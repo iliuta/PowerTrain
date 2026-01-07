@@ -135,6 +135,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loadTrainingSession => 'Trainingseinheit laden';
 
   @override
+  String get trainingSessionGenerator => 'Trainingseinheiten-Generator';
+
+  @override
   String get deviceDataFeatures => 'Gerätedaten-Funktionen';
 
   @override
@@ -831,4 +834,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get altitude => 'Höhe';
+
+  @override
+  String get workoutTypeBaseEndurance => 'Grundlagenausdauer';
+
+  @override
+  String get workoutTypeVo2Max => 'VO2 Max';
+
+  @override
+  String get workoutTypeSprint => 'Sprint';
+
+  @override
+  String get workoutTypeTechnique => 'Technik';
+
+  @override
+  String get workoutTypeStrength => 'Kraft';
+
+  @override
+  String get workoutTypePyramid => 'Pyramide';
+
+  @override
+  String get workoutTypeRaceSim => 'Rennsimulation';
 }
