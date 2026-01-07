@@ -16,6 +16,7 @@ Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets, [int? resis
 }
 
 class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
+  const RowerBaseEnduranceStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 12;
@@ -45,6 +46,7 @@ class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
 }
 
 class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
+  const RowerVo2MaxStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 5;
@@ -74,6 +76,7 @@ class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
 }
 
 class RowerSprintStrategy implements RowerWorkoutStrategy {
+  const RowerSprintStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 3;
@@ -103,6 +106,7 @@ class RowerSprintStrategy implements RowerWorkoutStrategy {
 }
 
 class RowerTechniqueStrategy implements RowerWorkoutStrategy {
+  const RowerTechniqueStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final numCycles = mainTime ~/ 4;
@@ -141,6 +145,7 @@ class RowerTechniqueStrategy implements RowerWorkoutStrategy {
 }
 
 class RowerStrengthStrategy implements RowerWorkoutStrategy {
+  const RowerStrengthStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final cycleTime = 3;
@@ -170,6 +175,7 @@ class RowerStrengthStrategy implements RowerWorkoutStrategy {
 }
 
 class RowerPyramidStrategy implements RowerWorkoutStrategy {
+  const RowerPyramidStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final workTimes = [1, 2, 3, 2, 1];
@@ -212,6 +218,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
 }
 
 class RowerRaceSimStrategy implements RowerWorkoutStrategy {
+  const RowerRaceSimStrategy();
   @override
   List<GroupTrainingInterval> generateMainIntervals(int mainTime, [int? resistanceLevel]) {
     final q = mainTime ~/ 4;

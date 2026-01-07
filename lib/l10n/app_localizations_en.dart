@@ -823,4 +823,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get altitude => 'Altitude';
+
+  @override
+  String get workoutTypeBaseEndurance => 'Base Endurance';
+
+  @override
+  String get workoutTypeVo2Max => 'VO2 Max';
+
+  @override
+  String get workoutTypeSprint => 'Sprint';
+
+  @override
+  String get workoutTypeTechnique => 'Technique';
+
+  @override
+  String get workoutTypeStrength => 'Strength';
+
+  @override
+  String get workoutTypePyramid => 'Pyramid';
+
+  @override
+  String get workoutTypeRaceSim => 'Race Simulation';
 }

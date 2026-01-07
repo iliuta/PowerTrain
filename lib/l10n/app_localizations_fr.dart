@@ -834,4 +834,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get altitude => 'Altitude';
+
+  @override
+  String get workoutTypeBaseEndurance => 'Endurance de base';
+
+  @override
+  String get workoutTypeVo2Max => 'VO2 Max';
+
+  @override
+  String get workoutTypeSprint => 'Sprint';
+
+  @override
+  String get workoutTypeTechnique => 'Technique';
+
+  @override
+  String get workoutTypeStrength => 'Force';
+
+  @override
+  String get workoutTypePyramid => 'Pyramide';
+
+  @override
+  String get workoutTypeRaceSim => 'Simulation de course';
 }

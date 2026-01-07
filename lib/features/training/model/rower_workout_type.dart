@@ -1,32 +1,42 @@
 import 'rower_workout_strategy.dart';
+import 'package:ftms/l10n/app_localizations.dart';
 
 enum RowerWorkoutType {
-  BASE_ENDURANCE,
-  VO2_MAX,
-  SPRINT,
-  TECHNIQUE,
-  STRENGTH,
-  PYRAMID,
-  RACE_SIM,
+  BASE_ENDURANCE(RowerBaseEnduranceStrategy()),
+  VO2_MAX(RowerVo2MaxStrategy()),
+  SPRINT(RowerSprintStrategy()),
+  TECHNIQUE(RowerTechniqueStrategy()),
+  STRENGTH(RowerStrengthStrategy()),
+  PYRAMID(RowerPyramidStrategy()),
+  RACE_SIM(RowerRaceSimStrategy()),
+  ;
+
+  const RowerWorkoutType(this.strategy);
+
+  final RowerWorkoutStrategy strategy;
 }
 
 extension RowerWorkoutTypeExtension on RowerWorkoutType {
-  RowerWorkoutStrategy get strategy {
-    switch (this) {
+  static String getLabel(RowerWorkoutType type, AppLocalizations localizations) {
+    switch (type) {
       case RowerWorkoutType.BASE_ENDURANCE:
-        return RowerBaseEnduranceStrategy();
+        return localizations.workoutTypeBaseEndurance;
       case RowerWorkoutType.VO2_MAX:
-        return RowerVo2MaxStrategy();
+        return localizations.workoutTypeVo2Max;
       case RowerWorkoutType.SPRINT:
-        return RowerSprintStrategy();
+        return localizations.workoutTypeSprint;
       case RowerWorkoutType.TECHNIQUE:
-        return RowerTechniqueStrategy();
+        return localizations.workoutTypeTechnique;
       case RowerWorkoutType.STRENGTH:
-        return RowerStrengthStrategy();
+        return localizations.workoutTypeStrength;
       case RowerWorkoutType.PYRAMID:
-        return RowerPyramidStrategy();
+        return localizations.workoutTypePyramid;
       case RowerWorkoutType.RACE_SIM:
-        return RowerRaceSimStrategy();
+        return localizations.workoutTypeRaceSim;
     }
+  }
+
+  static RowerWorkoutStrategy getStrategy(String key) {
+    return RowerWorkoutType.values.firstWhere((e) => e.name == key).strategy;
   }
 }

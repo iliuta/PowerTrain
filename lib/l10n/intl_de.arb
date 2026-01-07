@@ -250,5 +250,12 @@
   "cadence": "Kadenz",
   "heartRate": "Herzfrequenz",
   "power": "Leistung",
-  "altitude": "Höhe"
+  "altitude": "Höhe",
+  "workoutTypeBaseEndurance": "Grundlagenausdauer",
+  "workoutTypeVo2Max": "VO2 Max",
+  "workoutTypeSprint": "Sprint",
+  "workoutTypeTechnique": "Technik",
+  "workoutTypeStrength": "Kraft",
+  "workoutTypePyramid": "Pyramide",
+  "workoutTypeRaceSim": "Rennsimulation"
 }

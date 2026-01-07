@@ -1533,6 +1533,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Altitude'**
   String get altitude;
+
+  /// No description provided for @workoutTypeBaseEndurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Base Endurance'**
+  String get workoutTypeBaseEndurance;
+
+  /// No description provided for @workoutTypeVo2Max.
+  ///
+  /// In en, this message translates to:
+  /// **'VO2 Max'**
+  String get workoutTypeVo2Max;
+
+  /// No description provided for @workoutTypeSprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sprint'**
+  String get workoutTypeSprint;
+
+  /// No description provided for @workoutTypeTechnique.
+  ///
+  /// In en, this message translates to:
+  /// **'Technique'**
+  String get workoutTypeTechnique;
+
+  /// No description provided for @workoutTypeStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength'**
+  String get workoutTypeStrength;
+
+  /// No description provided for @workoutTypePyramid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pyramid'**
+  String get workoutTypePyramid;
+
+  /// No description provided for @workoutTypeRaceSim.
+  ///
+  /// In en, this message translates to:
+  /// **'Race Simulation'**
+  String get workoutTypeRaceSim;
 }
 
 class _AppLocalizationsDelegate
