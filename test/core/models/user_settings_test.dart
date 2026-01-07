@@ -10,6 +10,7 @@ class TestableUserSettings extends UserSettings {
     required super.cyclingFtp,
     required super.rowingFtp,
     required super.developerMode,
+    required super.soundEnabled,
   });
 
   static Future<UserSettings> loadFromAsset(String assetPath) async {
@@ -174,6 +175,7 @@ void main() {
         cyclingFtp: 220,
         rowingFtp: '1:55',
         developerMode: true,
+        soundEnabled: false,
       );
 
       final json = settings.toJson();
@@ -182,6 +184,7 @@ void main() {
         'cyclingFtp': 220,
         'rowingFtp': '1:55',
         'developerMode': true,
+        'soundEnabled': false,
       });
     });
 
@@ -190,6 +193,7 @@ void main() {
         cyclingFtp: 180,
         rowingFtp: '1:45',
         developerMode: false,
+        soundEnabled: true,
       );
 
       SharedPreferences.setMockInitialValues({});
@@ -203,6 +207,7 @@ void main() {
       expect(savedMap['cyclingFtp'], 180);
       expect(savedMap['rowingFtp'], '1:45');
       expect(savedMap['developerMode'], false);
+      expect(savedMap['soundEnabled'], true);
     });
 
     group('getSettingValue', () {
@@ -210,6 +215,7 @@ void main() {
         cyclingFtp: 200,
         rowingFtp: '2:00',
         developerMode: true,
+        soundEnabled: false,
       );
 
       test('returns cyclingFtp as int', () {
@@ -225,6 +231,7 @@ void main() {
           cyclingFtp: 200,
           rowingFtp: '120.5',
           developerMode: false,
+          soundEnabled: true,
         );
         expect(settingsWithNumeric.getSettingValue('rowingFtp'), 120.5);
       });

@@ -1,10 +1,12 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import '../../features/settings/model/user_settings.dart';
 
 /// Singleton service for playing sounds throughout the application.
 class SoundService {
   static SoundService? _instance;
   late AudioPlayer _audioPlayer;
+  UserSettings? _userSettings;
 
   SoundService._internal() {
     _audioPlayer = AudioPlayer();
@@ -33,6 +35,11 @@ class SoundService {
   /// Get the singleton instance of SoundService.
   static SoundService get instance => _instance ??= SoundService._internal();
 
+  /// Set the user settings for sound control
+  void setUserSettings(UserSettings settings) {
+    _userSettings = settings;
+  }
+
   /// Initialize SoundService with a custom AudioPlayer (primarily for testing).
   static void initialize(AudioPlayer audioPlayer) {
     _instance = SoundService._createForTesting(audioPlayer);
@@ -46,6 +53,11 @@ class SoundService {
   ///
   /// [soundPath] should be relative to the assets directory, e.g., 'sounds/beep.wav'
   Future<void> playSound(String soundPath) async {
+    if (_userSettings?.soundEnabled == false) {
+      debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
+      return;
+    }
+
     try {
       await _audioPlayer.play(AssetSource(soundPath));
       debugPrint('🔔 Played sound: $soundPath');

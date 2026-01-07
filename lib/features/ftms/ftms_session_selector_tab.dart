@@ -117,6 +117,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       _configs = configs;
       _isLoadingSettings = false;
     });
+    // Sound settings are now handled directly in playSound calls
   }
 
   Future<void> _loadConfigForFtmsDeviceType(DeviceDataType ftmsMachineType) async {

@@ -10,6 +10,7 @@ import 'training_session_expansion_panel.dart';
 import 'training_session_progress_screen.dart';
 import 'add_training_session_page.dart';
 import 'model/training_session.dart';
+import 'package:ftms/core/services/sound_service.dart';
 
 /// A dedicated page for browsing and selecting training sessions
 class TrainingSessionsPage extends StatefulWidget {
@@ -54,6 +55,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
         _userSettings = userSettings;
         _configs = configs;
       });
+      SoundService.instance.setUserSettings(userSettings);
       await _filterAvailableDeviceTypes();
       _loadSessions();
     } catch (e) {

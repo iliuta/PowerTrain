@@ -11,6 +11,7 @@ import 'model/training_session.dart';
 import 'model/expanded_training_session_definition.dart';
 import 'training_session_controller.dart';
 import 'widgets/training_session_scaffold.dart';
+import '../../core/services/sound_service.dart';
 
 /// Main screen for displaying training session progress
 class TrainingSessionProgressScreen extends StatefulWidget {
@@ -54,6 +55,7 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
     setState(() {
       _userSettings = settings;
     });
+    SoundService.instance.setUserSettings(settings);
   }
 
   Future<void> _loadGpxFile() async {

@@ -165,6 +165,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enable debugging options and beta features';
 
   @override
+  String get soundEnabled => 'Sound Alerts';
+
+  @override
+  String get soundEnabledSubtitle => 'Play sound notifications during workouts';
+
+  @override
   String get invalidFtp => 'Please enter a valid FTP (50-1000 watts)';
 
   @override

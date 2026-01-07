@@ -109,7 +109,7 @@ void main() {
     });
 
     test('expandTargets creates new instance with expanded targets', () {
-      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false);
+      final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false, soundEnabled: true);
       final config = createIndoorBikeConfig();
       
       final unitInterval = UnitTrainingInterval(

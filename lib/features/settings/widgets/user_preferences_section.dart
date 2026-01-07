@@ -58,6 +58,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         _buildCyclingFtpField(),
         _buildRowingFtpField(),
         const Divider(),
+        _buildSoundEnabledField(),
         _buildDeveloperModeField(),
       ],
     );
@@ -156,6 +157,36 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
     );
   }
 
+  Widget _buildSoundEnabledField() {
+    return ListTile(
+      leading: const Icon(Icons.volume_up, color: Colors.green),
+      title: Text(AppLocalizations.of(context)!.soundEnabled),
+      subtitle: Text(AppLocalizations.of(context)!.soundEnabledSubtitle),
+      trailing: Switch(
+        value: widget.userSettings.soundEnabled,
+        onChanged: (bool value) {
+          widget.onChanged(UserSettings(
+            cyclingFtp: widget.userSettings.cyclingFtp,
+            rowingFtp: widget.userSettings.rowingFtp,
+            developerMode: widget.userSettings.developerMode,
+            soundEnabled: value,
+          ));
+          HapticFeedback.lightImpact();
+        },
+      ),
+      onTap: () {
+        final newValue = !widget.userSettings.soundEnabled;
+        widget.onChanged(UserSettings(
+          cyclingFtp: widget.userSettings.cyclingFtp,
+          rowingFtp: widget.userSettings.rowingFtp,
+          developerMode: widget.userSettings.developerMode,
+          soundEnabled: newValue,
+        ));
+        HapticFeedback.lightImpact();
+      },
+    );
+  }
+
   Widget _buildDeveloperModeField() {
     return ListTile(
       leading: const Icon(Icons.developer_mode, color: Colors.orange),
@@ -168,6 +199,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
             cyclingFtp: widget.userSettings.cyclingFtp,
             rowingFtp: widget.userSettings.rowingFtp,
             developerMode: value,
+            soundEnabled: widget.userSettings.soundEnabled,
           ));
           HapticFeedback.lightImpact();
         },
@@ -178,6 +210,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
           cyclingFtp: widget.userSettings.cyclingFtp,
           rowingFtp: widget.userSettings.rowingFtp,
           developerMode: newValue,
+          soundEnabled: widget.userSettings.soundEnabled,
         ));
         HapticFeedback.lightImpact();
       },
@@ -206,6 +239,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         cyclingFtp: value,
         rowingFtp: widget.userSettings.rowingFtp,
         developerMode: widget.userSettings.developerMode,
+        soundEnabled: widget.userSettings.soundEnabled,
       ));
       HapticFeedback.lightImpact();
       setState(() {
@@ -227,6 +261,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         cyclingFtp: widget.userSettings.cyclingFtp,
         rowingFtp: value,
         developerMode: widget.userSettings.developerMode,
+        soundEnabled: widget.userSettings.soundEnabled,
       ));
       HapticFeedback.lightImpact();
       setState(() {

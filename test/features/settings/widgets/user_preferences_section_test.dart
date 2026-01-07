@@ -14,6 +14,7 @@ void main() {
       cyclingFtp: 250,
       rowingFtp: '1:45',
       developerMode: false,
+      soundEnabled: true,
     );
 
     capturedSettings = testSettings;
@@ -55,11 +56,19 @@ void main() {
       expect(find.text('Developer Mode'), findsOneWidget);
       expect(find.text('Enable debugging options and beta features'), findsOneWidget);
 
-      // Check developer mode switch is off
-      final switchFinder = find.byType(Switch);
-      expect(switchFinder, findsOneWidget);
-      final switchWidget = tester.widget<Switch>(switchFinder);
-      expect(switchWidget.value, false);
+      // Check sound alerts
+      expect(find.text('Sound Alerts'), findsOneWidget);
+      expect(find.text('Play sound notifications during workouts'), findsOneWidget);
+
+      // Check switches - there should be 2 now (developer mode and sound alerts)
+      expect(find.byType(Switch), findsNWidgets(2));
+
+      // Check developer mode switch is off (second switch)
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches[1].value, false); // developer mode switch
+
+      // Check sound alerts switch is on (first switch)
+      expect(switches[0].value, true); // sound alerts switch
     });
 
     testWidgets('should enter cycling FTP edit mode when tapped', (WidgetTester tester) async {
@@ -279,14 +288,16 @@ void main() {
     testWidgets('should toggle developer mode via switch', (WidgetTester tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Tap the switch
-      await tester.tap(find.byType(Switch));
+      // Find the developer mode switch specifically (it's the second switch)
+      final switches = find.byType(Switch);
+      await tester.tap(switches.at(1)); // developer mode switch
       await tester.pump();
 
       // Should call onChanged with developer mode enabled
       expect(capturedSettings.cyclingFtp, 250);
       expect(capturedSettings.rowingFtp, '1:45');
       expect(capturedSettings.developerMode, true);
+      expect(capturedSettings.soundEnabled, true);
     });
 
     testWidgets('should toggle developer mode via list tile tap', (WidgetTester tester) async {
@@ -308,6 +319,7 @@ void main() {
         cyclingFtp: 300,
         rowingFtp: '2:00',
         developerMode: true,
+        soundEnabled: false,
       );
 
       // Rebuild widget
@@ -317,9 +329,12 @@ void main() {
       expect(find.text('300 watts'), findsOneWidget);
       expect(find.text('2:00 per 500m'), findsOneWidget);
 
-      // Switch should be on
-      final switchWidget = tester.widget<Switch>(find.byType(Switch));
-      expect(switchWidget.value, true);
+      // Developer mode switch should be on (second switch)
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches[1].value, true); // developer mode switch
+
+      // Sound alerts switch should be off (first switch)
+      expect(switches[0].value, false); // sound alerts switch
     });
 
     testWidgets('should handle keyboard submission for cycling FTP', (WidgetTester tester) async {

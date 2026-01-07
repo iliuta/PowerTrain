@@ -370,6 +370,18 @@ abstract class AppLocalizations {
   /// **'Enable debugging options and beta features'**
   String get developerModeSubtitle;
 
+  /// No description provided for @soundEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound Alerts'**
+  String get soundEnabled;
+
+  /// No description provided for @soundEnabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound notifications during workouts'**
+  String get soundEnabledSubtitle;
+
   /// No description provided for @invalidFtp.
   ///
   /// In en, this message translates to:

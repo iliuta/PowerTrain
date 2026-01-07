@@ -19,6 +19,7 @@ void main() {
         cyclingFtp: 200,
         rowingFtp: '2:00/500m',
         developerMode: false,
+        soundEnabled: true,
       );
 
       config = LiveDataDisplayConfig(

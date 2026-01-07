@@ -167,6 +167,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Activer les options de débogage et les fonctionnalités bêta';
 
   @override
+  String get soundEnabled => 'Alertes sonores';
+
+  @override
+  String get soundEnabledSubtitle =>
+      'Jouer les notifications sonores pendant les entraînements';
+
+  @override
   String get invalidFtp => 'Veuillez saisir un FTP valide (50-1000 watts)';
 
   @override

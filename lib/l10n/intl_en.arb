@@ -44,6 +44,8 @@
   "per500m": "{value} per 500m",
   "developerMode": "Developer Mode",
   "developerModeSubtitle": "Enable debugging options and beta features",
+  "soundEnabled": "Sound Alerts",
+  "soundEnabledSubtitle": "Play sound notifications during workouts",
   "invalidFtp": "Please enter a valid FTP (50-1000 watts)",
   "invalidTimeFormat": "Please enter a valid time format (M:SS)",
   "commandSent": "✅ Command {opcode} sent successfully",

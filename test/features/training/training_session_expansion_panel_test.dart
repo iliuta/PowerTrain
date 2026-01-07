@@ -25,6 +25,7 @@ void main() {
       cyclingFtp: 250,
       rowingFtp: '2:00',
       developerMode: false,
+      soundEnabled: true,
     );
   }
 

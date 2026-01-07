@@ -6,6 +6,7 @@ import '../../core/utils/logger.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/user_preferences_section.dart';
+import '../../core/services/sound_service.dart';
 
 /// Comprehensive settings page for the FTMS application
 class SettingsPage extends StatefulWidget {
@@ -47,6 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _userSettings = userSettings;
         _isLoading = false;
       });
+      SoundService.instance.setUserSettings(userSettings);
     } catch (e) {
       logger.e('Failed to load settings: $e');
       setState(() {
@@ -102,6 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _userSettings = newSettings;
       _hasChanges = true;
     });
+    SoundService.instance.setUserSettings(newSettings);
   }
 
   Future<bool> _onWillPop() async {

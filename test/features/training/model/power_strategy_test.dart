@@ -4,7 +4,7 @@ import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/model/target_power_strategy.dart';
 
 void main() {
-  final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false);
+  final userSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:00', developerMode: false, soundEnabled: true);
 
   group('IndoorBikeTargetPowerStrategy', () {
     final strategy = IndoorBikeTargetPowerStrategy();
@@ -54,15 +54,15 @@ void main() {
       expect(strategy.resolvePower(null, userSettings), null);
     });
     test('returns original value if rowingFtp is not parseable', () {
-      final badSettings = UserSettings(cyclingFtp: 250, rowingFtp: 'bad', developerMode: false);
+      final badSettings = UserSettings(cyclingFtp: 250, rowingFtp: 'bad', developerMode: false, soundEnabled: true);
       expect(strategy.resolvePower('95%', badSettings), '95%');
     });
     test('returns original value if rowingFtp is missing colon', () {
-      final badSettings = UserSettings(cyclingFtp: 250, rowingFtp: '200', developerMode: false);
+      final badSettings = UserSettings(cyclingFtp: 250, rowingFtp: '200', developerMode: false, soundEnabled: true);
       expect(strategy.resolvePower('95%', badSettings), '95%');
     });
     test('returns original value if rowingFtp has non-numeric', () {
-      final badSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:xx', developerMode: false);
+      final badSettings = UserSettings(cyclingFtp: 250, rowingFtp: '2:xx', developerMode: false, soundEnabled: true);
       expect(strategy.resolvePower('95%', badSettings), '95%');
     });
   });

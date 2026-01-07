@@ -15,6 +15,7 @@ import '../../core/config/live_data_display_config.dart';
 import '../../core/widgets/ftms_live_data_display_widget.dart';
 import '../../core/services/ftms_data_processor.dart';
 import '../settings/model/user_settings.dart';
+import '../../core/services/sound_service.dart';
 
 class FTMSDataTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -53,6 +54,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
       _configs = configs;
       _isLoadingSettings = false;
     });
+    SoundService.instance.setUserSettings(settings);
   }
 
   Future<void> _loadConfigForFtmsDeviceType(

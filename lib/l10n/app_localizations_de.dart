@@ -167,6 +167,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Debugging-Optionen und Beta-Funktionen aktivieren';
 
   @override
+  String get soundEnabled => 'Tonbenachrichtigungen';
+
+  @override
+  String get soundEnabledSubtitle =>
+      'Tonbenachrichtigungen während des Trainings abspielen';
+
+  @override
   String get invalidFtp =>
       'Bitte geben Sie einen gültigen FTP ein (50-1000 Watt)';
 
