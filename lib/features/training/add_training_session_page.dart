@@ -15,6 +15,7 @@ import 'model/group_training_interval.dart';
 import 'model/training_interval.dart';
 import 'model/training_session.dart';
 import '../../features/settings/model/user_settings.dart';
+import '../../core/services/user_settings_service.dart';
 
 /// A page for creating new training sessions or editing existing ones
 class AddTrainingSessionPage extends StatefulWidget {
@@ -69,7 +70,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     try {
       // Use injected dependencies if provided (for testing), otherwise load from static methods
       final config = widget.config ?? await LiveDataDisplayConfig.loadForFtmsMachineType(widget.machineType);
-      final userSettings = widget.userSettings ?? await UserSettings.loadDefault();
+      final userSettings = widget.userSettings ?? await UserSettingsService.instance.loadSettings();
 
       setState(() {
         _config = config;

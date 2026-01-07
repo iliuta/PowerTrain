@@ -7,11 +7,11 @@ import '../../core/config/live_data_display_config.dart';
 import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
 import '../settings/model/user_settings.dart';
+import '../../core/services/user_settings_service.dart';
 import 'model/training_session.dart';
 import 'model/expanded_training_session_definition.dart';
 import 'training_session_controller.dart';
 import 'widgets/training_session_scaffold.dart';
-import '../../core/services/sound_service.dart';
 
 /// Main screen for displaying training session progress
 class TrainingSessionProgressScreen extends StatefulWidget {
@@ -51,11 +51,10 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
   }
 
   Future<void> _loadUserSettings() async {
-    final settings = await UserSettings.loadDefault();
+    final settings = await UserSettingsService.instance.loadSettings();
     setState(() {
       _userSettings = settings;
     });
-    SoundService.instance.setUserSettings(settings);
   }
 
   Future<void> _loadGpxFile() async {

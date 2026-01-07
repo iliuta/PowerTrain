@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
+import 'package:ftms/core/services/user_settings_service.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'model/training_session.dart';
@@ -232,7 +233,7 @@ class _TrainingSessionExpansionPanelListState
 
   Future<ExpandedTrainingSessionDefinition> _getExpandedSession(
       TrainingSessionDefinition session, LiveDataDisplayConfig? config) async {
-    final userSettings = await UserSettings.loadDefault();
+    final userSettings = await UserSettingsService.instance.loadSettings();
     return session.expand(userSettings: userSettings, config: config);
   }
 

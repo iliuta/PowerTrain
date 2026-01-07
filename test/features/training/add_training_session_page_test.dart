@@ -24,9 +24,6 @@ import 'add_training_session_page_test.mocks.dart';
 Future<LiveDataDisplayConfig?> loadConfigWrapper(DeviceType deviceType) =>
     LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
 
-Future<UserSettings> loadUserSettingsWrapper() =>
-    UserSettings.loadDefault();
-
 // Mock classes
 class MockUserSettings extends mocktail.Mock implements UserSettings {}
 
