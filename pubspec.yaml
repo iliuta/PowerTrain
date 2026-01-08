@@ -112,6 +112,7 @@ flutter:
     - assets/gpx/
     - assets/gpx/rower/
     - assets/gpx/indoorBike/
+    - assets/icons/
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

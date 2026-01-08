@@ -116,11 +116,21 @@ class _TrainingSessionAppBarState extends State<TrainingSessionAppBar> {
               IconButton(
                 onPressed: _toggleMetronomeSound,
                 icon: _metronomeSoundEnabled
-                    ? const Icon(Icons.music_note)
+                    ? Image.asset(
+                        'assets/icons/metronome.png',
+                        width: 24,
+                        height: 24,
+                        color: Colors.blue,
+                      )
                     : Stack(
                         alignment: Alignment.center,
                         children: [
-                          const Icon(Icons.music_note),
+                          Image.asset(
+                            'assets/icons/metronome.png',
+                            width: 24,
+                            height: 24,
+                            color: Colors.grey,
+                          ),
                           const Icon(
                             Icons.close,
                             size: 16,
@@ -129,7 +139,6 @@ class _TrainingSessionAppBarState extends State<TrainingSessionAppBar> {
                         ],
                       ),
                 tooltip: _metronomeSoundEnabled ? 'Disable Metronome' : 'Enable Metronome',
-                color: _metronomeSoundEnabled ? Colors.blue : Colors.grey,
               ),
               // Alerts sound toggle button
               IconButton(

@@ -56,19 +56,13 @@ void main() {
       expect(find.text('Developer Mode'), findsOneWidget);
       expect(find.text('Enable debugging options and beta features'), findsOneWidget);
 
-      // Check sound alerts
-      expect(find.text('Sound Alerts'), findsOneWidget);
-      expect(find.text('Play sound notifications during workouts'), findsOneWidget);
-
       // Check switches - there should be 2 now (developer mode and sound alerts)
-      expect(find.byType(Switch), findsNWidgets(2));
+      expect(find.byType(Switch), findsNWidgets(1));
 
       // Check developer mode switch is off (second switch)
       final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-      expect(switches[1].value, false); // developer mode switch
+      expect(switches[0].value, false); // developer mode switch
 
-      // Check sound alerts switch is on (first switch)
-      expect(switches[0].value, true); // sound alerts switch
     });
 
     testWidgets('should enter cycling FTP edit mode when tapped', (WidgetTester tester) async {
@@ -290,14 +284,13 @@ void main() {
 
       // Find the developer mode switch specifically (it's the second switch)
       final switches = find.byType(Switch);
-      await tester.tap(switches.at(1)); // developer mode switch
+      await tester.tap(switches.at(0)); // developer mode switch
       await tester.pump();
 
       // Should call onChanged with developer mode enabled
       expect(capturedSettings.cyclingFtp, 250);
       expect(capturedSettings.rowingFtp, '1:45');
       expect(capturedSettings.developerMode, true);
-      expect(capturedSettings.soundEnabled, true);
     });
 
     testWidgets('should toggle developer mode via list tile tap', (WidgetTester tester) async {
@@ -331,10 +324,8 @@ void main() {
 
       // Developer mode switch should be on (second switch)
       final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-      expect(switches[1].value, true); // developer mode switch
+      expect(switches[0].value, true); // developer mode switch
 
-      // Sound alerts switch should be off (first switch)
-      expect(switches[0].value, false); // sound alerts switch
     });
 
     testWidgets('should handle keyboard submission for cycling FTP', (WidgetTester tester) async {

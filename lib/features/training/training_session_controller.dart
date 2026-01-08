@@ -21,7 +21,6 @@ import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/services/sound_service.dart';
-import '../../core/services/user_settings_service.dart';
 import '../../core/utils/logger.dart';
 
 class TrainingSessionController extends ChangeNotifier
@@ -573,10 +572,6 @@ class TrainingSessionController extends ChangeNotifier
   void _startMetronome(double target) {
     _stopMetronome();
     if (!_state.isRunning) return;
-
-    // Check if metronome sound is enabled (use cached settings for performance)
-    final settings = UserSettingsService.instance.getCachedSettings();
-    if (settings == null || !settings.metronomeSoundEnabled) return;
 
     // Use double frequency for alternating high/low ticks
     final periodSeconds = 60 / target / 2; // Half the period for double frequency
