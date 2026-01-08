@@ -54,6 +54,7 @@ class TrainingSessionController extends ChangeNotifier
   late LiveDataDisplayConfig? _displayConfig;
   Timer? _metronomeTimer;
   double? _currentMetronomeTarget;
+  int _metronomeTickCount = 0; // Counter for alternating high/low sounds
 
   // For detecting activity to trigger session auto-start and auto-pause
   double? _lastActivityValue;
@@ -571,15 +572,20 @@ class TrainingSessionController extends ChangeNotifier
   void _startMetronome(double target) {
     _stopMetronome();
     if (!_state.isRunning) return;
-    final periodSeconds = 60 / target;
+    // Use double frequency for alternating high/low ticks
+    final periodSeconds = 60 / target / 2; // Half the period for double frequency
+    _metronomeTickCount = 0; // Reset counter
     _metronomeTimer = Timer.periodic(Duration(milliseconds: (periodSeconds * 1000).round()), (_) {
-      _soundService?.playSound('sounds/beep.wav');
+      _metronomeTickCount++;
+      final soundFile = _metronomeTickCount.isOdd ? 'sounds/tick_high.wav' : 'sounds/tick_low.wav';
+      _soundService?.playSound(soundFile);
     });
   }
 
   void _stopMetronome() {
     _metronomeTimer?.cancel();
     _metronomeTimer = null;
+    _metronomeTickCount = 0; // Reset counter
   }
 
   // ============ Recording and Strava ============
