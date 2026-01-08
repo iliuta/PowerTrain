@@ -50,6 +50,11 @@ class TrainingSessionController extends ChangeNotifier
   GpxRouteTracker? _gpxRouteTracker;
   final String? _gpxFilePath;
 
+  // Metronome for target cadence/stroke rate
+  late LiveDataDisplayConfig? _displayConfig;
+  Timer? _metronomeTimer;
+  double? _currentMetronomeTarget;
+
   // For detecting activity to trigger session auto-start and auto-pause
   double? _lastActivityValue;
   int _inactivityCounter = 0;
@@ -85,6 +90,10 @@ class TrainingSessionController extends ChangeNotifier
     // Initialize sound service (singleton)
     _soundService = SoundService.instance;
     _dataRecorder = dataRecorder;
+
+    // Load display config for metronome
+    _displayConfig = null;
+    LiveDataDisplayConfig.loadForFtmsMachineType(session.ftmsMachineType).then((config) => _displayConfig = config);
 
     // Ensure wakelock stays enabled during training sessions
     _enableWakeLock();
@@ -447,12 +456,16 @@ class TrainingSessionController extends ChangeNotifier
   @override
   void onStartTimer() {
     _timer ??= Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
+    if (_currentMetronomeTarget != null) {
+      _startMetronome(_currentMetronomeTarget!);
+    }
   }
 
   @override
   void onStopTimer() {
     _timer?.cancel();
     _timer = null;
+    _stopMetronome();
   }
 
   @override
@@ -469,6 +482,24 @@ class TrainingSessionController extends ChangeNotifier
     final power = newInterval.targets?['Instantaneous Power'];
     if (power != null) {
       setPowerWithControl(power);
+    }
+
+    // Update metronome
+    _stopMetronome(); // Always stop the old metronome first
+    if (_displayConfig != null) {
+      final metronomeFields = _displayConfig!.fields.where((f) => f.metronome && f.availableAsTarget);
+      if (metronomeFields.isNotEmpty) {
+        final metronomeField = metronomeFields.first;
+        final target = newInterval.targets?[metronomeField.name];
+        _currentMetronomeTarget = target?.toDouble();
+        if (_currentMetronomeTarget != null) {
+          _startMetronome(_currentMetronomeTarget!);
+        }
+      } else {
+        _currentMetronomeTarget = null;
+      }
+    } else {
+      _currentMetronomeTarget = null;
     }
   }
 
@@ -535,6 +566,20 @@ class TrainingSessionController extends ChangeNotifier
     } catch (e) {
       debugPrint('🔔 Failed to play warning sound: $e');
     }
+  }
+
+  void _startMetronome(double target) {
+    _stopMetronome();
+    if (!_state.isRunning) return;
+    final periodSeconds = 60 / target;
+    _metronomeTimer = Timer.periodic(Duration(milliseconds: (periodSeconds * 1000).round()), (_) {
+      _soundService?.playSound('sounds/beep.wav');
+    });
+  }
+
+  void _stopMetronome() {
+    _metronomeTimer?.cancel();
+    _metronomeTimer = null;
   }
 
   // ============ Recording and Strava ============
@@ -760,6 +805,7 @@ class TrainingSessionController extends ChangeNotifier
     _ftmsSub.cancel();
     _connectionStateSub.cancel();
     onStopTimer();
+    _stopMetronome();
 
     if (!_state.hasEnded) {
       Future.microtask(() async {

@@ -44,6 +44,10 @@ class LiveDataFieldConfig {
   /// even if the device disconnects and reconnects (which might reset the device's counter).
   /// This is particularly useful for fields like calories, distance, and duration.
   final bool isCumulative;
+  /// Whether this field should trigger a metronome sound when used as a target.
+  /// When true and the field is availableAsTarget, the app will play a tick sound
+  /// synchronized with the target value (e.g., for stroke rate, play a tick per stroke).
+  final bool metronome;
 
   LiveDataFieldConfig({
     required this.name,
@@ -60,6 +64,7 @@ class LiveDataFieldConfig {
     this.userSetting,
     this.targetRange = 0.1,
     this.isCumulative = false,
+    this.metronome = false,
   });
   /// Computes the target interval range for a given target value.
   /// Returns a record with (lower, upper) bounds based on the targetRange percentage.
@@ -118,6 +123,7 @@ class LiveDataFieldConfig {
       userSetting: json['userSetting'] as String?,
       targetRange: json['targetRange'] as double? ?? 0.1,
       isCumulative: json['isCumulative'] as bool? ?? false,
+      metronome: json['metronome'] as bool? ?? false,
     );
   }
 }

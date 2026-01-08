@@ -35,7 +35,8 @@
       "min": 15,
       "max": 40,
       "availableAsTarget": true,
-      "targetRange": 0.08
+      "targetRange": 0.08,
+      "metronome": true
     },
     {
       "name": "Instantaneous Power",
