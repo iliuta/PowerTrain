@@ -34,6 +34,7 @@ void main() {
           'rowingFtp': '2:00',
           'developerMode': true,
           'soundEnabled': false,
+          'metronomeSoundEnabled': true,
         });
         SharedPreferences.setMockInitialValues({'user_settings': settingsJson});
 
@@ -55,6 +56,7 @@ void main() {
           'rowingFtp': '2:00',
           'developerMode': true,
           'soundEnabled': false,
+          'metronomeSoundEnabled': true,
         });
         SharedPreferences.setMockInitialValues({'user_settings': settingsJson});
 
@@ -63,6 +65,7 @@ void main() {
         expect(settings.rowingFtp, '2:00');
         expect(settings.developerMode, true);
         expect(settings.soundEnabled, false);
+        expect(settings.metronomeSoundEnabled, true);
       });
 
       test('loads from asset when SharedPreferences is empty', () async {
@@ -70,6 +73,9 @@ void main() {
         final defaultJson = jsonEncode({
           'cyclingFtp': 300,
           'rowingFtp': '2:10',
+          'developerMode': false,
+          'soundEnabled': true,
+          'metronomeSoundEnabled': true,
         });
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMessageHandler(
@@ -87,6 +93,9 @@ void main() {
         final settings = await UserSettingsService.instance.loadSettings();
         expect(settings.cyclingFtp, 300);
         expect(settings.rowingFtp, '2:10');
+        expect(settings.developerMode, false);
+        expect(settings.soundEnabled, true);
+        expect(settings.metronomeSoundEnabled, true);
       });
 
       test('returns sensible defaults when both SharedPreferences and asset fail', () async {
@@ -99,6 +108,7 @@ void main() {
         expect(settings.rowingFtp, '2:10'); // Loads from asset defaults
         expect(settings.developerMode, false);
         expect(settings.soundEnabled, true);
+        expect(settings.metronomeSoundEnabled, true);
       });
     });
 
@@ -109,6 +119,7 @@ void main() {
           rowingFtp: '1:45',
           developerMode: false,
           soundEnabled: true,
+          metronomeSoundEnabled: false,
         );
         SharedPreferences.setMockInitialValues({});
 
@@ -123,6 +134,7 @@ void main() {
         expect(savedMap['rowingFtp'], '1:45');
         expect(savedMap['developerMode'], false);
         expect(savedMap['soundEnabled'], true);
+        expect(savedMap['metronomeSoundEnabled'], false);
       });
 
       test('updates cache after saving', () async {
@@ -131,6 +143,7 @@ void main() {
           rowingFtp: '1:45',
           developerMode: false,
           soundEnabled: true,
+          metronomeSoundEnabled: false,
         );
         SharedPreferences.setMockInitialValues({});
 
@@ -140,6 +153,7 @@ void main() {
         expect(cached, isNotNull);
         expect(cached!.cyclingFtp, 180);
         expect(cached.rowingFtp, '1:45');
+        expect(cached.metronomeSoundEnabled, false);
       });
 
       test('throws exception if save fails', () async {
@@ -148,6 +162,7 @@ void main() {
           rowingFtp: '1:45',
           developerMode: false,
           soundEnabled: true,
+          metronomeSoundEnabled: false,
         );
         // Create a scenario where SharedPreferences would fail
         // (by using a mock that throws)
@@ -171,6 +186,9 @@ void main() {
         final settingsJson = jsonEncode({
           'cyclingFtp': 250,
           'rowingFtp': '2:00',
+          'developerMode': false,
+          'soundEnabled': true,
+          'metronomeSoundEnabled': true,
         });
         SharedPreferences.setMockInitialValues({'user_settings': settingsJson});
 
@@ -179,6 +197,7 @@ void main() {
         final cached = UserSettingsService.instance.getCachedSettings();
         expect(cached, isNotNull);
         expect(cached!.cyclingFtp, 250);
+        expect(cached.metronomeSoundEnabled, true);
       });
 
       test('returns cached settings after saveSettings', () async {
@@ -187,6 +206,7 @@ void main() {
           rowingFtp: '2:15',
           developerMode: true,
           soundEnabled: false,
+          metronomeSoundEnabled: false,
         );
         SharedPreferences.setMockInitialValues({});
 
@@ -196,6 +216,7 @@ void main() {
         expect(cached, isNotNull);
         expect(cached!.cyclingFtp, 200);
         expect(cached.developerMode, true);
+        expect(cached.metronomeSoundEnabled, false);
       });
     });
 
@@ -204,6 +225,9 @@ void main() {
         final settingsJson = jsonEncode({
           'cyclingFtp': 250,
           'rowingFtp': '2:00',
+          'developerMode': false,
+          'soundEnabled': true,
+          'metronomeSoundEnabled': true,
         });
         SharedPreferences.setMockInitialValues({'user_settings': settingsJson});
 
@@ -223,6 +247,7 @@ void main() {
           'rowingFtp': '2:15',
           'developerMode': false,
           'soundEnabled': true,
+          'metronomeSoundEnabled': false,
         };
         
         SharedPreferences.setMockInitialValues({
@@ -266,6 +291,9 @@ void main() {
         final settingsJson = jsonEncode({
           'cyclingFtp': 250,
           'rowingFtp': '2:00',
+          'developerMode': false,
+          'soundEnabled': true,
+          'metronomeSoundEnabled': true,
         });
         SharedPreferences.setMockInitialValues({'user_settings': settingsJson});
 
@@ -282,6 +310,7 @@ void main() {
         for (final settings in results) {
           expect(settings.cyclingFtp, 250);
           expect(settings.rowingFtp, '2:00');
+          expect(settings.metronomeSoundEnabled, true);
         }
       });
     });
@@ -294,6 +323,9 @@ void main() {
         final defaultJson = jsonEncode({
           'cyclingFtp': 300,
           'rowingFtp': '2:10',
+          'developerMode': false,
+          'soundEnabled': true,
+          'metronomeSoundEnabled': true,
         });
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMessageHandler(
@@ -310,6 +342,7 @@ void main() {
         // Should fall back to asset
         final settings = await UserSettingsService.instance.loadSettings();
         expect(settings.cyclingFtp, 300);
+        expect(settings.metronomeSoundEnabled, true);
       });
 
       test('preserves settings across multiple operations', () async {
@@ -318,6 +351,7 @@ void main() {
           rowingFtp: '1:45',
           developerMode: false,
           soundEnabled: true,
+          metronomeSoundEnabled: false,
         );
         SharedPreferences.setMockInitialValues({});
 
@@ -327,11 +361,109 @@ void main() {
         // Load settings
         final loaded = await UserSettingsService.instance.loadSettings();
         expect(loaded.cyclingFtp, 180);
+        expect(loaded.metronomeSoundEnabled, false);
 
         // Clear and load again (should reload from SharedPreferences)
         UserSettingsService.instance.clearCache();
         final reloaded = await UserSettingsService.instance.loadSettings();
         expect(reloaded.cyclingFtp, 180);
+        expect(reloaded.metronomeSoundEnabled, false);
+      });
+    });
+
+    group('setSoundEnabled', () {
+      test('updates soundEnabled setting and saves to SharedPreferences', () async {
+        // Start with sound disabled
+        final initialSettings = UserSettings(
+          cyclingFtp: 200,
+          rowingFtp: '2:00',
+          developerMode: false,
+          soundEnabled: false,
+          metronomeSoundEnabled: true,
+        );
+        SharedPreferences.setMockInitialValues({});
+        await UserSettingsService.instance.saveSettings(initialSettings);
+
+        // Enable sound
+        await UserSettingsService.instance.setSoundEnabled(true);
+
+        // Verify the setting was updated in cache
+        final cached = UserSettingsService.instance.getCachedSettings();
+        expect(cached!.soundEnabled, true);
+
+        // Verify it was saved to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final savedJson = prefs.getString('user_settings');
+        final savedMap = json.decode(savedJson!) as Map<String, dynamic>;
+        expect(savedMap['soundEnabled'], true);
+      });
+
+      test('can disable sound setting', () async {
+        // Start with sound enabled
+        final initialSettings = UserSettings(
+          cyclingFtp: 200,
+          rowingFtp: '2:00',
+          developerMode: false,
+          soundEnabled: true,
+          metronomeSoundEnabled: true,
+        );
+        SharedPreferences.setMockInitialValues({});
+        await UserSettingsService.instance.saveSettings(initialSettings);
+
+        // Disable sound
+        await UserSettingsService.instance.setSoundEnabled(false);
+
+        // Verify the setting was updated
+        final cached = UserSettingsService.instance.getCachedSettings();
+        expect(cached!.soundEnabled, false);
+      });
+    });
+
+    group('setMetronomeSoundEnabled', () {
+      test('updates metronomeSoundEnabled setting and saves to SharedPreferences', () async {
+        // Start with metronome sound disabled
+        final initialSettings = UserSettings(
+          cyclingFtp: 200,
+          rowingFtp: '2:00',
+          developerMode: false,
+          soundEnabled: true,
+          metronomeSoundEnabled: false,
+        );
+        SharedPreferences.setMockInitialValues({});
+        await UserSettingsService.instance.saveSettings(initialSettings);
+
+        // Enable metronome sound
+        await UserSettingsService.instance.setMetronomeSoundEnabled(true);
+
+        // Verify the setting was updated in cache
+        final cached = UserSettingsService.instance.getCachedSettings();
+        expect(cached!.metronomeSoundEnabled, true);
+
+        // Verify it was saved to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final savedJson = prefs.getString('user_settings');
+        final savedMap = json.decode(savedJson!) as Map<String, dynamic>;
+        expect(savedMap['metronomeSoundEnabled'], true);
+      });
+
+      test('can disable metronome sound setting', () async {
+        // Start with metronome sound enabled
+        final initialSettings = UserSettings(
+          cyclingFtp: 200,
+          rowingFtp: '2:00',
+          developerMode: false,
+          soundEnabled: true,
+          metronomeSoundEnabled: true,
+        );
+        SharedPreferences.setMockInitialValues({});
+        await UserSettingsService.instance.saveSettings(initialSettings);
+
+        // Disable metronome sound
+        await UserSettingsService.instance.setMetronomeSoundEnabled(false);
+
+        // Verify the setting was updated
+        final cached = UserSettingsService.instance.getCachedSettings();
+        expect(cached!.metronomeSoundEnabled, false);
       });
     });
   });

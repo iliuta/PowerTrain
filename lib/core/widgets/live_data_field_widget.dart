@@ -71,7 +71,7 @@ class _LiveDataFieldWidgetState extends State<LiveDataFieldWidget> {
 
     // Play sound and flash if just went out of range
     if (isOutOfRange && !_wasOutOfRange) {
-      _soundService.playSound('sounds/disappointing_beep.wav');
+      _soundService.playDissapointingBeep();
       _backgroundColor = Colors.red.withValues(alpha: 0.3);
       _flashTimer?.cancel();
       _flashTimer = Timer(const Duration(milliseconds: 300), () {

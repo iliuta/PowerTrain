@@ -3,12 +3,14 @@ class UserSettings {
   final String rowingFtp;
   final bool developerMode;
   final bool soundEnabled;
+  final bool metronomeSoundEnabled;
 
   const UserSettings({
     required this.cyclingFtp,
     required this.rowingFtp,
     required this.developerMode,
     required this.soundEnabled,
+    this.metronomeSoundEnabled = true,
   });
 
   factory UserSettings.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class UserSettings {
       rowingFtp: json['rowingFtp'] as String,
       developerMode: json['developerMode'] as bool? ?? false,
       soundEnabled: json['soundEnabled'] as bool? ?? true,
+      metronomeSoundEnabled: json['metronomeSoundEnabled'] as bool? ?? true,
     );
   }
 
@@ -26,6 +29,7 @@ class UserSettings {
       'rowingFtp': rowingFtp,
       'developerMode': developerMode,
       'soundEnabled': soundEnabled,
+      'metronomeSoundEnabled': metronomeSoundEnabled,
     };
   }
 
@@ -47,6 +51,8 @@ class UserSettings {
         return developerMode;
       case 'soundEnabled':
         return soundEnabled;
+      case 'metronomeSoundEnabled':
+        return metronomeSoundEnabled;
       default:
         return null;
     }

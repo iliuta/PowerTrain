@@ -21,6 +21,7 @@ import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/services/sound_service.dart';
+import '../../core/services/user_settings_service.dart';
 import '../../core/utils/logger.dart';
 
 class TrainingSessionController extends ChangeNotifier
@@ -563,7 +564,7 @@ class TrainingSessionController extends ChangeNotifier
     }
 
     try {
-      await _soundService!.playSound('sounds/beep.wav');
+      await _soundService!.playBeep();
     } catch (e) {
       debugPrint('🔔 Failed to play warning sound: $e');
     }
@@ -572,13 +573,17 @@ class TrainingSessionController extends ChangeNotifier
   void _startMetronome(double target) {
     _stopMetronome();
     if (!_state.isRunning) return;
+
+    // Check if metronome sound is enabled (use cached settings for performance)
+    final settings = UserSettingsService.instance.getCachedSettings();
+    if (settings == null || !settings.metronomeSoundEnabled) return;
+
     // Use double frequency for alternating high/low ticks
     final periodSeconds = 60 / target / 2; // Half the period for double frequency
     _metronomeTickCount = 0; // Reset counter
     _metronomeTimer = Timer.periodic(Duration(milliseconds: (periodSeconds * 1000).round()), (_) {
       _metronomeTickCount++;
-      final soundFile = _metronomeTickCount.isOdd ? 'sounds/tick_high.wav' : 'sounds/tick_low.wav';
-      _soundService?.playSound(soundFile);
+      _metronomeTickCount.isOdd ? _soundService?.playTickHigh() : _soundService?.playTickLow();
     });
   }
 

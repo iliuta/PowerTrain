@@ -2,5 +2,6 @@
   "cyclingFtp": 264,
   "rowingFtp": "2:27",
   "developerMode": false,
-  "soundEnabled": true
+  "soundEnabled": true,
+  "metronomeSoundEnabled": true
 }
