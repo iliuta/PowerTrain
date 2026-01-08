@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import '../../../core/config/live_data_display_config.dart';
+import '../../settings/model/user_settings.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../training_session_controller.dart';
 import '../managers/session_snackbar_manager.dart';
@@ -15,6 +16,7 @@ class TrainingSessionScaffold extends StatefulWidget {
   final TrainingSessionController controller;
   final LiveDataDisplayConfig? config;
   final BluetoothDevice ftmsDevice;
+  final UserSettings userSettings;
 
   const TrainingSessionScaffold({
     super.key,
@@ -22,6 +24,7 @@ class TrainingSessionScaffold extends StatefulWidget {
     required this.controller,
     this.config,
     required this.ftmsDevice,
+    required this.userSettings,
   });
 
   @override
@@ -114,6 +117,7 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
               controller: widget.controller,
               onBackPressed: _onBackPressed,
               onStopPressed: _onStopPressed,
+              userSettings: widget.userSettings,
             ),
             body: TrainingSessionBody(
               session: widget.controller.session,

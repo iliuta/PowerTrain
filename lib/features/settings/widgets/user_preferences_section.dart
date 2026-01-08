@@ -58,7 +58,6 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         _buildCyclingFtpField(),
         _buildRowingFtpField(),
         const Divider(),
-        _buildSoundEnabledField(),
         _buildDeveloperModeField(),
       ],
     );
@@ -154,36 +153,6 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
               onPressed: () => _startEditing('rowingFtp'),
             ),
       onTap: isEditing ? null : () => _startEditing('rowingFtp'),
-    );
-  }
-
-  Widget _buildSoundEnabledField() {
-    return ListTile(
-      leading: const Icon(Icons.volume_up, color: Colors.green),
-      title: Text(AppLocalizations.of(context)!.soundEnabled),
-      subtitle: Text(AppLocalizations.of(context)!.soundEnabledSubtitle),
-      trailing: Switch(
-        value: widget.userSettings.soundEnabled,
-        onChanged: (bool value) {
-          widget.onChanged(UserSettings(
-            cyclingFtp: widget.userSettings.cyclingFtp,
-            rowingFtp: widget.userSettings.rowingFtp,
-            developerMode: widget.userSettings.developerMode,
-            soundEnabled: value,
-          ));
-          HapticFeedback.lightImpact();
-        },
-      ),
-      onTap: () {
-        final newValue = !widget.userSettings.soundEnabled;
-        widget.onChanged(UserSettings(
-          cyclingFtp: widget.userSettings.cyclingFtp,
-          rowingFtp: widget.userSettings.rowingFtp,
-          developerMode: widget.userSettings.developerMode,
-          soundEnabled: newValue,
-        ));
-        HapticFeedback.lightImpact();
-      },
     );
   }
 

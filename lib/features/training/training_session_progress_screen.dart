@@ -116,6 +116,7 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
                     controller: controller,
                     config: snapshot.data,
                     ftmsDevice: widget.ftmsDevice,
+                    userSettings: _userSettings!,
                   );
                 },
               ),

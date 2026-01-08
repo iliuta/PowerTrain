@@ -42,19 +42,59 @@ class SoundService {
   SoundService._createForTesting(AudioPlayer audioPlayer) {
     _audioPlayer = audioPlayer;
   }
-  /// Plays a sound from the assets directory.
-  ///
-  /// [soundPath] should be relative to the assets directory, e.g., 'sounds/beep.wav'
-  Future<void> playSound(String soundPath) async {
+
+  Future<void> playDissapointingBeep() async {
     // Get cached settings or load them
-    final settings = UserSettingsService.instance.getCachedSettings() ?? 
-        await UserSettingsService.instance.loadSettings();
-    
+    final settings = await UserSettingsService.instance.loadSettings();
+    var soundPath = 'sounds/disappointing_beep.wav';
+
     if (settings.soundEnabled == false) {
       debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
       return;
     }
+    playSound(soundPath);
+  }
 
+  Future<void> playTickHigh() async {
+    // Get cached settings or load them
+    final settings = await UserSettingsService.instance.loadSettings();
+    var soundPath = 'sounds/tick_high.wav';
+
+    if (settings.metronomeSoundEnabled == false) {
+      debugPrint('🔔 Metronome sound disabled, skipping sound: $soundPath');
+      return;
+    }
+    playSound(soundPath);
+  }
+
+  Future<void> playTickLow() async {
+    // Get cached settings or load them
+    final settings = await UserSettingsService.instance.loadSettings();
+    var soundPath = 'sounds/tick_high.wav';
+
+    if (settings.metronomeSoundEnabled == false) {
+      debugPrint('🔔 Metronome sound disabled, skipping sound: $soundPath');
+      return;
+    }
+    playSound(soundPath);
+  }
+
+  Future<void> playBeep() async {
+    // Get cached settings or load them
+    final settings = await UserSettingsService.instance.loadSettings();
+    var soundPath = 'sounds/beep.wav';
+
+    if (settings.soundEnabled == false) {
+      debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
+      return;
+    }
+    playSound(soundPath);
+  }
+
+  /// Plays a sound from the assets directory.
+  ///
+  /// [soundPath] should be relative to the assets directory, e.g., 'sounds/beep.wav'
+  Future<void> playSound(String soundPath) async {
     try {
       await _audioPlayer.play(AssetSource(soundPath));
       debugPrint('🔔 Played sound: $soundPath');

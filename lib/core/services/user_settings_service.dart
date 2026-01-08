@@ -61,6 +61,7 @@ class UserSettingsService {
           rowingFtp: '2:00',
           developerMode: false,
           soundEnabled: true,
+          metronomeSoundEnabled: true,
         );
         return _cachedSettings!;
       }
@@ -89,6 +90,34 @@ class UserSettingsService {
   void clearCache() {
     _cachedSettings = null;
     logger.d('User settings cache cleared');
+  }
+
+  /// Update the soundEnabled setting.
+  Future<void> setSoundEnabled(bool enabled) async {
+    final currentSettings = await loadSettings();
+    final updatedSettings = UserSettings(
+      cyclingFtp: currentSettings.cyclingFtp,
+      rowingFtp: currentSettings.rowingFtp,
+      developerMode: currentSettings.developerMode,
+      soundEnabled: enabled,
+      metronomeSoundEnabled: currentSettings.metronomeSoundEnabled,
+    );
+    await saveSettings(updatedSettings);
+    logger.d('Sound enabled setting updated to: $enabled');
+  }
+
+  /// Update the metronomeSoundEnabled setting.
+  Future<void> setMetronomeSoundEnabled(bool enabled) async {
+    final currentSettings = await loadSettings();
+    final updatedSettings = UserSettings(
+      cyclingFtp: currentSettings.cyclingFtp,
+      rowingFtp: currentSettings.rowingFtp,
+      developerMode: currentSettings.developerMode,
+      soundEnabled: currentSettings.soundEnabled,
+      metronomeSoundEnabled: enabled,
+    );
+    await saveSettings(updatedSettings);
+    logger.d('Metronome sound enabled setting updated to: $enabled');
   }
   
   static Future<UserSettings> _loadFromAsset() async {
