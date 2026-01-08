@@ -122,10 +122,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get resistance => 'Résistance :';
 
   @override
-  String get warmUp => 'Échauffement';
+  String get warmUp => 'Échauf.';
 
   @override
-  String get coolDown => 'Retour au calme';
+  String get coolDown => 'Ret. au calme';
 
   @override
   String get start => 'Démarrer';

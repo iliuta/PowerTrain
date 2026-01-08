@@ -5,15 +5,21 @@ import 'user_settings_service.dart';
 /// Singleton service for playing sounds throughout the application.
 class SoundService {
   static SoundService? _instance;
-  late AudioPlayer _audioPlayer;
+  late AudioPlayer _disappointingBeepPlayer;
+  late AudioPlayer _beepPlayer;
+  late AudioPlayer _tickPlayer;
 
   SoundService._internal() {
-    _audioPlayer = AudioPlayer();
-    _configureAudioContext();
+    _disappointingBeepPlayer = AudioPlayer();
+    _beepPlayer = AudioPlayer();
+    _tickPlayer = AudioPlayer();
+    _configureAudioContext(_disappointingBeepPlayer);
+    _configureAudioContext(_beepPlayer);
+    _configureAudioContext(_tickPlayer);
   }
 
-  void _configureAudioContext() {
-    _audioPlayer.setAudioContext(
+  void _configureAudioContext(AudioPlayer player) {
+    player.setAudioContext(
       AudioContext(
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.playback,
@@ -40,7 +46,9 @@ class SoundService {
   }
 
   SoundService._createForTesting(AudioPlayer audioPlayer) {
-    _audioPlayer = audioPlayer;
+    _disappointingBeepPlayer = audioPlayer;
+    _beepPlayer = audioPlayer;
+    _tickPlayer = audioPlayer;
   }
 
   Future<void> playDissapointingBeep() async {
@@ -52,7 +60,7 @@ class SoundService {
       debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
       return;
     }
-    playSound(soundPath);
+    playSound(soundPath, _disappointingBeepPlayer);
   }
 
   Future<void> playTickHigh() async {
@@ -64,19 +72,19 @@ class SoundService {
       debugPrint('🔔 Metronome sound disabled, skipping sound: $soundPath');
       return;
     }
-    playSound(soundPath);
+    playSound(soundPath, _tickPlayer);
   }
 
   Future<void> playTickLow() async {
     // Get cached settings or load them
     final settings = await UserSettingsService.instance.loadSettings();
-    var soundPath = 'sounds/tick_high.wav';
+    var soundPath = 'sounds/tick_low.wav';
 
     if (settings.metronomeSoundEnabled == false) {
       debugPrint('🔔 Metronome sound disabled, skipping sound: $soundPath');
       return;
     }
-    playSound(soundPath);
+    playSound(soundPath, _tickPlayer);
   }
 
   Future<void> playBeep() async {
@@ -88,15 +96,15 @@ class SoundService {
       debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
       return;
     }
-    playSound(soundPath);
+    playSound(soundPath, _beepPlayer);
   }
 
   /// Plays a sound from the assets directory.
   ///
   /// [soundPath] should be relative to the assets directory, e.g., 'sounds/beep.wav'
-  Future<void> playSound(String soundPath) async {
+  Future<void> playSound(String soundPath, AudioPlayer player) async {
     try {
-      await _audioPlayer.play(AssetSource(soundPath));
+      await player.play(AssetSource(soundPath));
       debugPrint('🔔 Played sound: $soundPath');
     } catch (e) {
       debugPrint('🔔 Failed to play sound ($soundPath): $e');
@@ -105,7 +113,9 @@ class SoundService {
 
   /// Disposes the audio player resource.
   void dispose() {
-    _audioPlayer.dispose();
+    _disappointingBeepPlayer.dispose();
+    _beepPlayer.dispose();
+    _tickPlayer.dispose();
     _instance = null;
   }
 }
