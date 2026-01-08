@@ -116,17 +116,17 @@ void main() {
 
       // Check warmup includes resistance level
       final warmup = session.intervals[0] as GroupTrainingInterval;
-      expect(warmup.intervals[0].targets?['Resistance Level'], resistanceLevel);
+      expect(warmup.intervals[0].resistanceLevel, resistanceLevel);
 
       // Check main intervals include resistance level
       final mainSet = session.intervals[1] as GroupTrainingInterval;
       for (final interval in mainSet.intervals) {
-        expect(interval.targets?['Resistance Level'], resistanceLevel);
+        expect(interval.resistanceLevel, resistanceLevel);
       }
 
       // Check cooldown includes resistance level
       final cooldown = session.intervals[2] as GroupTrainingInterval;
-      expect(cooldown.intervals[0].targets?['Resistance Level'], resistanceLevel);
+      expect(cooldown.intervals[0].resistanceLevel, resistanceLevel);
     });
 
     test('does not include resistance level when not provided', () {
