@@ -15,7 +15,8 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Warmup',
           duration: 5 * 60, // to seconds
-          targets: _buildTargets({'Instantaneous Pace': '84%', 'Stroke Rate': 20}, resistanceLevel),
+          targets: _buildTargets({'Instantaneous Pace': '84%', 'Stroke Rate': 20}),
+          resistanceLevel: resistanceLevel,
         )
       ],
       repeat: 1,
@@ -36,7 +37,8 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Cooldown',
           duration: 5 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '84%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: _buildTargets({'Instantaneous Pace': '84%', 'Stroke Rate': 18}),
+          resistanceLevel: resistanceLevel,
         ),
       ],
       repeat: 1,
@@ -51,11 +53,8 @@ class RowerTrainingSessionGenerator {
     );
   }
 
-  static Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets, [int? resistanceLevel]) {
+  static Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets) {
     final targets = Map<String, dynamic>.from(baseTargets);
-    if (resistanceLevel != null) {
-      targets['Resistance Level'] = resistanceLevel;
-    }
     return targets;
   }
 
@@ -66,7 +65,8 @@ class RowerTrainingSessionGenerator {
         UnitTrainingInterval(
           title: 'Transition',
           duration: remainder * 60,
-          targets: _buildTargets({'Instantaneous Pace': '87%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: _buildTargets({'Instantaneous Pace': '87%', 'Stroke Rate': 18}),
+          resistanceLevel: resistanceLevel,
         ),
       ],
       repeat: 1,
