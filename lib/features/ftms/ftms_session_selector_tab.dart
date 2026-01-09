@@ -855,6 +855,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                     final session = RowerTrainingSessionGenerator.generateTrainingSession(
                                       _trainingSessionGeneratorDurationMinutes,
                                       _selectedWorkoutType,
+                                      AppLocalizations.of(context)!,
                                       _trainingSessionGeneratorResistanceLevel,
                                     );
                                     

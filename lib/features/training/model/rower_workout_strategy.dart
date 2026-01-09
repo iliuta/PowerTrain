@@ -9,14 +9,6 @@ abstract class RowerWorkoutStrategy {
   String getLabel(AppLocalizations localizations);
 }
 
-Map<String, dynamic> _buildTargets(Map<String, dynamic> baseTargets, [int? resistanceLevel]) {
-  final targets = Map<String, dynamic>.from(baseTargets);
-  if (resistanceLevel != null) {
-    targets['Resistance Level'] = resistanceLevel;
-  }
-  return targets;
-}
-
 class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
   const RowerBaseEnduranceStrategy();
   @override
@@ -28,14 +20,14 @@ class RowerBaseEnduranceStrategy implements RowerWorkoutStrategy {
     set.add(UnitTrainingInterval(
       title: 'Steady State',
       duration: (10 + remainder) * 60,
-      targets: _buildTargets({'Instantaneous Pace': '93%', 'Stroke Rate': 20}, resistanceLevel),
+      targets: {'Instantaneous Pace': '93%', 'Stroke Rate': 20},
       resistanceLevel: resistanceLevel,
     ));
     if (numCycles > 1) {
       set.add(UnitTrainingInterval(
         title: 'Paddle',
         duration: 2 * 60,
-        targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
+        targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
         resistanceLevel: resistanceLevel,
       ));
     }
@@ -63,13 +55,13 @@ class RowerVo2MaxStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'VO2 Interval',
           duration: 3 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '105%', 'Stroke Rate': 30}, resistanceLevel),
+          targets: {'Instantaneous Pace': '105%', 'Stroke Rate': 30},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Rest',
           duration: 2 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '88%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: {'Instantaneous Pace': '88%', 'Stroke Rate': 18},
           resistanceLevel: resistanceLevel,
         ),
       ],
@@ -98,13 +90,13 @@ class RowerSprintStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Sprint',
           duration: 1 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '115%', 'Stroke Rate': 36}, resistanceLevel),
+          targets: {'Instantaneous Pace': '115%', 'Stroke Rate': 36},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Rest',
           duration: 2 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
           resistanceLevel: resistanceLevel,
         ),
       ],
@@ -132,25 +124,25 @@ class RowerTechniqueStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Focus: Catch',
           duration: 1 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '87%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: {'Instantaneous Pace': '87%', 'Stroke Rate': 18},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Focus: Finish',
           duration: 1 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '93%', 'Stroke Rate': 22}, resistanceLevel),
+          targets: {'Instantaneous Pace': '93%', 'Stroke Rate': 22},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Focus: Flow',
           duration: 1 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '98%', 'Stroke Rate': 24}, resistanceLevel),
+          targets: {'Instantaneous Pace': '98%', 'Stroke Rate': 24},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Recovery',
           duration: 1 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
           resistanceLevel: resistanceLevel,
         ),
       ],
@@ -177,13 +169,13 @@ class RowerStrengthStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Power Drive',
           duration: 2 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '100%', 'Stroke Rate': 16}, resistanceLevel),
+          targets: {'Instantaneous Pace': '100%', 'Stroke Rate': 16},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Rest',
           duration: 1 * 60,
-          targets: _buildTargets({'Instantaneous Pace': '85%', 'Stroke Rate': 18}, resistanceLevel),
+          targets: {'Instantaneous Pace': '85%', 'Stroke Rate': 18},
           resistanceLevel: resistanceLevel,
         ),
       ],
@@ -216,7 +208,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
           UnitTrainingInterval(
             title: 'Pyramid Step',
             duration: time * 60,
-            targets: _buildTargets({'Instantaneous Pace': '${93 + (time * 3)}%', 'Stroke Rate': 24 + time}, resistanceLevel),
+            targets: {'Instantaneous Pace': '${93 + (time * 3)}%', 'Stroke Rate': 24 + time},
             resistanceLevel: resistanceLevel,
           ),
         ],
@@ -228,7 +220,7 @@ class RowerPyramidStrategy implements RowerWorkoutStrategy {
             UnitTrainingInterval(
               title: 'Rest',
               duration: restTime * 60,
-              targets: _buildTargets({'Instantaneous Pace': '83%', 'Stroke Rate': 18}, resistanceLevel),
+              targets: {'Instantaneous Pace': '83%', 'Stroke Rate': 18},
               resistanceLevel: resistanceLevel,
             ),
           ],
@@ -259,25 +251,25 @@ class RowerRaceSimStrategy implements RowerWorkoutStrategy {
         UnitTrainingInterval(
           title: 'Start/High 20',
           duration: q * 60,
-          targets: _buildTargets({'Instantaneous Pace': '110%', 'Stroke Rate': 34}, resistanceLevel),
+          targets: {'Instantaneous Pace': '110%', 'Stroke Rate': 34},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Settle/Rhythm',
           duration: q * 60,
-          targets: _buildTargets({'Instantaneous Pace': '100%', 'Stroke Rate': 28}, resistanceLevel),
+          targets: {'Instantaneous Pace': '100%', 'Stroke Rate': 28},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Third 500m',
           duration: q * 60,
-          targets: _buildTargets({'Instantaneous Pace': '102%', 'Stroke Rate': 30}, resistanceLevel),
+          targets: {'Instantaneous Pace': '102%', 'Stroke Rate': 30},
           resistanceLevel: resistanceLevel,
         ),
         UnitTrainingInterval(
           title: 'Sprint Finish',
           duration: q * 60,
-          targets: _buildTargets({'Instantaneous Pace': '112%', 'Stroke Rate': 36}, resistanceLevel),
+          targets: {'Instantaneous Pace': '112%', 'Stroke Rate': 36},
           resistanceLevel: resistanceLevel,
         ),
       ],

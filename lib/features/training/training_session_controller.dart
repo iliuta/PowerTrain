@@ -58,8 +58,12 @@ class TrainingSessionController extends ChangeNotifier
 
   // For detecting activity to trigger session auto-start and auto-pause
   double? _lastActivityValue;
+  double? _lastResumeCheckValue; // Separate tracking for resume detection
   int _inactivityCounter = 0;
   static const int _inactivityThresholdSeconds = 5; // seconds of inactivity before auto-pause
+  int _activityResumeCounter = 0; // Counter for detecting consistent activity before resume
+  static const int _activityResumeThresholdSeconds = 2; // seconds of activity before auto-resume
+  bool _isAttemptingResume = false; // Flag to track if we're in the middle of a resume attempt
 
   // Strava upload tracking
   String? lastGeneratedFitFile;
@@ -335,8 +339,9 @@ class TrainingSessionController extends ChangeNotifier
   bool _detectInactivity(double currentValue, String paramName) {
     // Pace-based detection (rower): very high pace value means not rowing
     // When stopped, pace typically goes to max value (e.g., 999 or very high)
+    // Using 350 (5:50/500m) as threshold with hysteresis
     if (paramName == 'Instantaneous Pace') {
-      return currentValue == 0 || currentValue > 300; // More than 5:00/500m is considered stopped
+      return currentValue == 0 || currentValue > 350; // More than 5:50/500m is considered stopped
     }
 
     // Speed-based detection: speed below threshold means not moving
@@ -353,6 +358,45 @@ class TrainingSessionController extends ChangeNotifier
     return false;
   }
 
+  /// Detects if the user has resumed exercising after a pause.
+  /// Uses transition logic similar to _detectActivity for reliable resume detection.
+  /// Requires the last value to avoid false positives on first reading.
+  bool _detectActivityResume(double currentValue, double? lastValue, String paramName) {
+    // If no last value, can't detect transition yet
+    if (lastValue == null) return false;
+
+    // Pace-based detection (rower): transition from inactive to active range
+    // When resuming, pace should move from 0/high to normal rowing range
+    // Using 280 (4:40/500m) as active threshold with hysteresis (lower than pause threshold of 350)
+    if (paramName == 'Instantaneous Pace') {
+      final wasInactive = lastValue == 0 || lastValue > 350;
+      final isNowActive = currentValue > 0 && currentValue <= 280;
+      // Also detect significant pace improvement while already in borderline range
+      final isImproving = lastValue > 280 && lastValue <= 350 && currentValue <= 280;
+      debugPrint('🔍 Pace resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive, isImproving=$isImproving');
+      return (wasInactive && isNowActive) || isImproving;
+    }
+
+    // Speed-based detection: speed increases above threshold
+    if (paramName == 'Instantaneous Speed') {
+      final wasInactive = lastValue < 3.0;
+      final isNowActive = currentValue >= 4.0; // Hysteresis: resume at 4.0, pause at 3.0
+      debugPrint('🔍 Speed resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive');
+      return wasInactive && isNowActive;
+    }
+
+    // Power-based detection: power increases above threshold
+    if (paramName == 'Instantaneous Power') {
+      final wasInactive = lastValue < 5.0;
+      final isNowActive = currentValue >= 8.0; // Hysteresis: resume at 8.0, pause at 5.0
+      debugPrint('🔍 Power resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive');
+      return wasInactive && isNowActive;
+    }
+
+    // Unknown parameter - use simple change detection
+    return currentValue > lastValue;
+  }
+
   /// Checks if user has become inactive while session is running
   void _checkForInactivity(Map<String, LiveDataFieldValue> data) {
     // Find the first available activity indicator
@@ -366,7 +410,10 @@ class TrainingSessionController extends ChangeNotifier
       }
     }
 
-    if (activityParam == null) return;
+    if (activityParam == null) {
+      debugPrint('⚠️ No activity indicator found for inactivity check');
+      return;
+    }
 
     final currentValue = activityParam.getScaledValue().toDouble();
     final isInactive = _detectInactivity(currentValue, usedParamName!);
@@ -374,12 +421,18 @@ class TrainingSessionController extends ChangeNotifier
     if (isInactive) {
       _inactivityCounter++;
       if (_inactivityCounter >= _inactivityThresholdSeconds) {
-        debugPrint('⏸️ Inactivity detected! Auto-pausing session ($usedParamName: $currentValue)');
+        debugPrint('⏸️ Inactivity detected! Auto-pausing session ($usedParamName: $currentValue, counter: $_inactivityCounter/$_inactivityThresholdSeconds)');
         _state.onInactivityDetected();
         _inactivityCounter = 0;
+        _lastResumeCheckValue = currentValue; // Initialize with current inactive value for transition detection
+      } else {
+        debugPrint('⏱️ Inactivity counter: $_inactivityCounter/$_inactivityThresholdSeconds ($usedParamName: $currentValue)');
       }
     } else {
       // Reset counter when activity is detected
+      if (_inactivityCounter > 0) {
+        debugPrint('✅ Activity detected, resetting inactivity counter (was $_inactivityCounter)');
+      }
       _inactivityCounter = 0;
     }
 
@@ -399,18 +452,54 @@ class TrainingSessionController extends ChangeNotifier
       }
     }
 
-    if (activityParam == null) return;
+    if (activityParam == null) {
+      debugPrint('⚠️ No activity indicator found for resume check');
+      return;
+    }
 
     final currentValue = activityParam.getScaledValue().toDouble();
-    final isActive = !_detectInactivity(currentValue, usedParamName!);
+    
+    // Check if currently active based on parameter type
+    bool isCurrentlyActive;
+    if (usedParamName == 'Instantaneous Pace') {
+      isCurrentlyActive = currentValue > 0 && currentValue <= 350; // Use pause threshold for active check
+    } else if (usedParamName == 'Instantaneous Speed') {
+      isCurrentlyActive = currentValue >= 3.0; // Use pause threshold
+    } else if (usedParamName == 'Instantaneous Power') {
+      isCurrentlyActive = currentValue >= 5.0; // Use pause threshold
+    } else {
+      isCurrentlyActive = currentValue > 0;
+    }
 
-    if (isActive) {
-      debugPrint('▶️ Activity resumed! Auto-resuming session ($usedParamName: $currentValue)');
+    // Detect transition from inactive to active
+    final activityTransitionDetected = _detectActivityResume(currentValue, _lastResumeCheckValue, usedParamName!);
+
+    if (activityTransitionDetected) {
+      // Start or reset resume attempt
+      _isAttemptingResume = true;
+      _activityResumeCounter = 1;
+      debugPrint('⏱️ Activity resume started: $_activityResumeCounter/$_activityResumeThresholdSeconds ($usedParamName: $currentValue)');
+    } else if (_isAttemptingResume && isCurrentlyActive) {
+      // Continue counting sustained activity
+      _activityResumeCounter++;
+      debugPrint('⏱️ Activity resume counter: $_activityResumeCounter/$_activityResumeThresholdSeconds ($usedParamName: $currentValue)');
+    } else if (_isAttemptingResume && !isCurrentlyActive) {
+      // Activity not sustained
+      debugPrint('❌ Activity not sustained, resetting resume counter (was $_activityResumeCounter)');
+      _isAttemptingResume = false;
+      _activityResumeCounter = 0;
+    }
+
+    // Check if resume threshold reached
+    if (_activityResumeCounter >= _activityResumeThresholdSeconds) {
+      debugPrint('▶️ Activity resumed! Auto-resuming session ($usedParamName: last=$_lastResumeCheckValue, current=$currentValue)');
       _inactivityCounter = 0;
+      _activityResumeCounter = 0;
+      _isAttemptingResume = false;
       _state.onActivityResumed();
     }
 
-    _lastActivityValue = currentValue;
+    _lastResumeCheckValue = currentValue;
   }
 
   void _recordDataPoint(Map<String, LiveDataFieldValue> data) {

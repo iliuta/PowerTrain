@@ -3,13 +3,44 @@ import 'package:ftms/features/training/model/rower_workout_type.dart';
 import 'package:ftms/features/training/model/rower_training_session_generator.dart';
 import 'package:ftms/features/training/model/group_training_interval.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/l10n/app_localizations.dart';
+
+// Mock AppLocalizations for testing
+class MockAppLocalizations implements AppLocalizations {
+  @override
+  String get workoutTypeBaseEndurance => 'Base Endurance';
+
+  @override
+  String get workoutTypeVo2Max => 'VO2 Max';
+
+  @override
+  String get workoutTypeSprint => 'Sprint';
+
+  @override
+  String get workoutTypeTechnique => 'Technique';
+
+  @override
+  String get workoutTypeStrength => 'Strength';
+
+  @override
+  String get workoutTypePyramid => 'Pyramid';
+
+  @override
+  String get workoutTypeRaceSim => 'Race Simulation';
+
+  // Implement other required methods with dummy implementations
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
+  final mockLocalizations = MockAppLocalizations();
+
   group('RowerTrainingSessionGenerator', () {
     test('generates BASE_ENDURANCE session correctly', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE, mockLocalizations);
 
-      expect(session.title, 'BASE_ENDURANCE - 30m');
+      expect(session.title, 'Base Endurance - 30m');
       expect(session.ftmsMachineType, DeviceType.rower);
       expect(session.isCustom, true);
       expect(session.isDistanceBased, false);
@@ -36,7 +67,7 @@ void main() {
     });
 
     test('generates VO2_MAX session with remainder', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(25, RowerWorkoutType.VO2_MAX);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(25, RowerWorkoutType.VO2_MAX, mockLocalizations);
 
       expect(session.intervals.length, 3); // warmup, main, cooldown
 
@@ -45,7 +76,7 @@ void main() {
     });
 
     test('generates SPRINT session', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.SPRINT);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.SPRINT, mockLocalizations);
 
       final mainSet = session.intervals[1] as GroupTrainingInterval;
       expect(mainSet.repeat, 3); // 10/3 = 3
@@ -55,7 +86,7 @@ void main() {
     });
 
     test('generates TECHNIQUE session', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.TECHNIQUE);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.TECHNIQUE, mockLocalizations);
 
       final mainSet = session.intervals[1] as GroupTrainingInterval;
       expect(mainSet.repeat, 2); // 10/4 = 2
@@ -65,7 +96,7 @@ void main() {
     });
 
     test('generates STRENGTH session', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.STRENGTH);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.STRENGTH, mockLocalizations);
 
       final mainSet = session.intervals[1] as GroupTrainingInterval;
       expect(mainSet.repeat, 3); // 10/3 = 3
@@ -73,7 +104,7 @@ void main() {
     });
 
     test('generates PYRAMID session', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.PYRAMID);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.PYRAMID, mockLocalizations);
 
       expect(session.intervals.length, 11); // warmup + 5 work + 4 rest + cooldown
 
@@ -87,7 +118,7 @@ void main() {
     });
 
     test('generates RACE_SIM session', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.RACE_SIM);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(20, RowerWorkoutType.RACE_SIM, mockLocalizations);
 
       final mainSet = session.intervals[1] as GroupTrainingInterval;
       expect(mainSet.repeat, 1);
@@ -99,7 +130,7 @@ void main() {
     });
 
     test('handles remainder correctly for VO2_MAX', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(27, RowerWorkoutType.VO2_MAX); // 17 main, 17/5=3*5=15, remainder=2
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(27, RowerWorkoutType.VO2_MAX, mockLocalizations); // 17 main, 17/5=3*5=15, remainder=2
 
       expect(session.intervals.length, 4); // warmup, main, remainder, cooldown
 
@@ -109,9 +140,9 @@ void main() {
 
     test('includes resistance level in all intervals when provided', () {
       const resistanceLevel = 5;
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE, resistanceLevel);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE, mockLocalizations, resistanceLevel);
 
-      expect(session.title, 'BASE_ENDURANCE - 30m');
+      expect(session.title, 'Base Endurance - 30m');
       expect(session.intervals.length, 3); // warmup, main, cooldown
 
       // Check warmup includes resistance level
@@ -130,7 +161,7 @@ void main() {
     });
 
     test('does not include resistance level when not provided', () {
-      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE);
+      final session = RowerTrainingSessionGenerator.generateTrainingSession(30, RowerWorkoutType.BASE_ENDURANCE, mockLocalizations);
 
       // Check warmup does not include resistance level
       final warmup = session.intervals[0] as GroupTrainingInterval;

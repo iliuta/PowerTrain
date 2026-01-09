@@ -3,9 +3,10 @@ import 'rower_workout_type.dart';
 import 'group_training_interval.dart';
 import 'unit_training_interval.dart';
 import '../../../core/models/device_types.dart';
+import '../../../l10n/app_localizations.dart';
 
 class RowerTrainingSessionGenerator {
-  static TrainingSessionDefinition generateTrainingSession(int totalMin, RowerWorkoutType type, [int? resistanceLevel]) {
+  static TrainingSessionDefinition generateTrainingSession(int totalMin, RowerWorkoutType type, AppLocalizations localizations, [int? resistanceLevel]) {
     final groups = <GroupTrainingInterval>[];
     final mainTime = totalMin - 10; // Excluding 5m Warmup and 5m Cooldown
 
@@ -45,7 +46,7 @@ class RowerTrainingSessionGenerator {
     ));
 
     return TrainingSessionDefinition(
-      title: '${type.name} - ${totalMin}m',
+      title: '${type.strategy.getLabel(localizations)} - ${totalMin}m',
       ftmsMachineType: DeviceType.rower,
       intervals: groups,
       isCustom: true,

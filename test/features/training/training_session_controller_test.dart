@@ -748,12 +748,14 @@ void main() {
 
         expect(controller.state.status, SessionStatus.pausedByInactivity);
 
-        // Resume activity with power above threshold
-        final activeData = MockDeviceData([
-          MockParameter('Instantaneous Power', 50),
-        ]);
-        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
-        await Future.delayed(const Duration(milliseconds: 50));
+        // Resume activity with power above threshold - need 2 consecutive seconds
+        for (int i = 0; i < 2; i++) {
+          final activeData = MockDeviceData([
+            MockParameter('Instantaneous Power', 50),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+          await Future.delayed(const Duration(seconds: 1));
+        }
 
         expect(controller.state.status, SessionStatus.running);
         expect(controller.state.isPaused, false);
@@ -840,7 +842,7 @@ void main() {
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
-          await Future.delayed(const Duration(milliseconds: 50));
+          await Future.delayed(const Duration(milliseconds: 1000));
         }
 
         expect(controller.state.status, SessionStatus.pausedByInactivity);
@@ -848,12 +850,14 @@ void main() {
         // Clear interactions
         clearInteractions(mockFtmsService);
 
-        // Resume with activity
-        final activeData = MockDeviceData([
-          MockParameter('Instantaneous Power', 50),
-        ]);
-        ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
-        await Future.delayed(const Duration(milliseconds: 200));
+        // Resume with activity - need 2 consecutive seconds for auto-resume
+        for (int i = 0; i < 2; i++) {
+          final activeData = MockDeviceData([
+            MockParameter('Instantaneous Power', 50),
+          ]);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
+          await Future.delayed(const Duration(seconds: 1));
+        }
 
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.startOrResume)).called(1);
