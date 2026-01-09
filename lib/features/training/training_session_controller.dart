@@ -29,7 +29,7 @@ class TrainingSessionController extends ChangeNotifier
   final BluetoothDevice ftmsDevice;
   late final FTMSService _ftmsService;
   late final Stream<DeviceData?> _ftmsStream;
-  late final StreamSubscription<DeviceData?> _ftmsSub;
+  StreamSubscription<DeviceData?>? _ftmsSub;
   late final StreamSubscription<BluetoothConnectionState> _connectionStateSub;
   Timer? _timer;
 
@@ -49,6 +49,10 @@ class TrainingSessionController extends ChangeNotifier
   // GPX route tracker for map display
   GpxRouteTracker? _gpxRouteTracker;
   final String? _gpxFilePath;
+
+  // Initialization completion tracking
+  late Future<void> _initialized;
+  late Completer<void> _initializationCompleter;
 
   // Metronome for target cadence/stroke rate
   late LiveDataDisplayConfig? _displayConfig;
@@ -96,6 +100,10 @@ class TrainingSessionController extends ChangeNotifier
     _soundService = SoundService.instance;
     _dataRecorder = dataRecorder;
 
+    // Set up initialization tracking
+    _initializationCompleter = Completer<void>();
+    _initialized = _initializationCompleter.future;
+
     // Load display config for metronome
     _displayConfig = null;
     LiveDataDisplayConfig.loadForFtmsMachineType(session.ftmsMachineType).then((config) => _displayConfig = config);
@@ -103,12 +111,27 @@ class TrainingSessionController extends ChangeNotifier
     // Ensure wakelock stays enabled during training sessions
     _enableWakeLock();
 
-    _ftmsStream = ftmsBloc.ftmsDeviceDataControllerStream;
-    _ftmsSub = _ftmsStream.listen(_onFtmsData);
     _connectionStateSub =
         ftmsDevice.connectionState.listen(_onConnectionStateChanged);
-    _initFTMS();
-    _initDataRecording();
+    _performInitialization();
+  }
+
+  /// Performs async initialization and completes the initialized future when done
+  Future<void> _performInitialization() async {
+    try {
+      await Future.wait([
+        _initFTMS(),
+        _initDataRecording(),
+      ]);
+      if (!_initializationCompleter.isCompleted) {
+        _initializationCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initializationCompleter.isCompleted) {
+        _initializationCompleter.completeError(e);
+      }
+      debugPrint('Initialization error: $e');
+    }
   }
 
   void _enableWakeLock() {
@@ -127,27 +150,53 @@ class TrainingSessionController extends ChangeNotifier
   /// GPX route tracker for displaying current position on map
   GpxRouteTracker? get gpxRouteTracker => _gpxRouteTracker;
 
+  /// Future that completes when FTMS and data recording initialization is complete
+  /// Tests should await this to ensure the controller is fully initialized
+  Future<void> get initialized => _initialized;
+
   // ============ Initialization ============
 
-  void _initFTMS() {
-    // Request control after a short delay, then start session and set initial resistance if needed
-    Future.delayed(const Duration(seconds: 2), () async {
-      if (_disposed) return;
-      await resetWithControl();
-      await startOrResumeWithControl();
-      final firstInterval =
-          _state.intervals.isNotEmpty ? _state.intervals[0] : null;
-      if (firstInterval != null) {
-        final firstResistance = firstInterval.resistanceLevel;
-        if (firstResistance != null) {
-          await setResistanceWithControl(firstResistance);
-        }
-        final firstPower = firstInterval.targets?['Instantaneous Power'];
-        if (firstPower != null) {
-          await setPowerWithControl(firstPower);
-        }
+  Future<void> _initFTMS() async {
+    _dataProcessor.reset();
+
+    if (_disposed) return;
+    
+    // Execute operations concurrently where possible
+    await Future.wait([
+      resetWithControl(),
+      startOrResumeWithControl(),
+    ]);
+
+    // Some FTMS devices need a brief pause/resume cycle to properly start calculating averages
+    // This ensures Average Speed, Average Power, and Total Distance start working correctly
+    await Future.delayed(const Duration(milliseconds: 200));
+    await stopOrPauseWithControl();
+    await Future.delayed(const Duration(milliseconds: 200));
+    await startOrResumeWithControl();
+
+    // Handle conditional operations that depend on the above
+    final firstInterval = _state.intervals.isNotEmpty ? _state.intervals[0] : null;
+    if (firstInterval != null) {
+      final operations = <Future<void>>[];
+
+      final firstResistance = firstInterval.resistanceLevel;
+      if (firstResistance != null) {
+        operations.add(setResistanceWithControl(firstResistance));
       }
-    });
+
+      final firstPower = firstInterval.targets?['Instantaneous Power'];
+      if (firstPower != null) {
+        await setPowerWithControl(firstPower);
+      }
+
+      if (operations.isNotEmpty) {
+        await Future.wait(operations);
+      }
+    }
+
+    // Always set up FTMS data stream subscription after device initialization
+    _ftmsStream = ftmsBloc.ftmsDeviceDataControllerStream;
+    _ftmsSub = _ftmsStream.listen(_onFtmsData);
   }
 
   Future<void> _initDataRecording() async {
@@ -897,7 +946,7 @@ class TrainingSessionController extends ChangeNotifier
   @override
   void dispose() {
     _disposed = true;
-    _ftmsSub.cancel();
+    _ftmsSub?.cancel();
     _connectionStateSub.cancel();
     onStopTimer();
     _stopMetronome();
@@ -917,59 +966,70 @@ class TrainingSessionController extends ChangeNotifier
 
   // ============ FTMS commands ============
 
+  /// Executes an FTMS command with retry logic for reliability
+  Future<void> _executeWithRetry(Future<void> Function() command, String operationName) async {
+    const int maxRetries = 5;
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await command();
+        return; // Success, exit
+      } catch (e) {
+        debugPrint('Failed to $operationName (attempt ${attempt + 1}/$maxRetries): $e');
+        if (attempt == maxRetries - 1) {
+          debugPrint('All retries failed for $operationName');
+          // Don't rethrow - FTMS commands should fail silently to not disrupt the session
+          return;
+        }
+        await Future.delayed(const Duration(milliseconds: 500)); // Wait before retry
+      }
+    }
+  }
+
   Future<void> setPowerWithControl(dynamic power) async {
-    try {
+    await _executeWithRetry(() async {
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
       await _ftmsService.writeCommand(
           MachineControlPointOpcodeType.setTargetPower,
           power: power);
-    } catch (e) {
-      debugPrint('Failed to set power: $e');
-    }
+    }, 'setPowerWithControl');
   }
 
   Future<void> stopOrPauseWithControl() async {
-    try {
+    await _executeWithRetry(() async {
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.stopOrPause);
-    } catch (e) {
-      debugPrint('Failed to stop/pause: $e');
-    }
+    }, 'stopOrPauseWithControl');
   }
 
   Future<void> setResistanceWithControl(int resistance) async {
-    try {
+    await _executeWithRetry(() async {
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
       await _ftmsService.writeCommand(
           MachineControlPointOpcodeType.setTargetResistanceLevel,
           resistanceLevel: resistance);
-    } catch (e) {
-      debugPrint('Failed to set resistance: $e');
-    }
+    }, 'setResistanceWithControl');
   }
 
   Future<void> startOrResumeWithControl() async {
-    try {
+    await _executeWithRetry(() async {
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.startOrResume);
       logger.i('📤 Requested control and sent startOrResume command');
-    } catch (e) {
-      logger.e('Failed to request control/send resume command: $e');
-    }
+    }, 'startOrResumeWithControl');
   }
 
   Future<void> resetWithControl() async {
-    try {
+    await _executeWithRetry(() async {
       await _ftmsService
           .writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
@@ -980,9 +1040,7 @@ class TrainingSessionController extends ChangeNotifier
         await Future.delayed(const Duration(milliseconds: 100));
       }
       await _ftmsService.writeCommand(MachineControlPointOpcodeType.reset);
-    } catch (e) {
-      debugPrint('Failed to reset: $e');
-    }
+    }, 'resetWithControl');
   }
 
   // ============ Analytics Helpers ============

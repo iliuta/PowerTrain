@@ -111,12 +111,38 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
               ),
               child: Consumer<TrainingSessionController>(
                 builder: (context, controller, _) {
-                  return TrainingSessionScaffold(
-                    session: expandedSession,
-                    controller: controller,
-                    config: snapshot.data,
-                    ftmsDevice: widget.ftmsDevice,
-                    userSettings: _userSettings!,
+                  return FutureBuilder<void>(
+                    future: controller.initialized,
+                    builder: (context, initSnapshot) {
+                      // Show loading while initialization is in progress
+                      if (initSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Scaffold(
+                          body: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      // Show error if initialization failed
+                      if (initSnapshot.hasError) {
+                        return Scaffold(
+                          body: Center(
+                            child: Text(
+                              'Failed to initialize training session: ${initSnapshot.error}',
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Initialization complete, build the scaffold
+                      return TrainingSessionScaffold(
+                        session: expandedSession,
+                        controller: controller,
+                        config: snapshot.data,
+                        ftmsDevice: widget.ftmsDevice,
+                        userSettings: _userSettings!,
+                      );
+                    },
                   );
                 },
               ),

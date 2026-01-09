@@ -139,7 +139,6 @@ void main() {
     late ExpandedTrainingSessionDefinition session;
     late MockBluetoothDevice mockDevice;
     late MockFTMSService mockFtmsService;
-    late StreamController<DeviceData?> ftmsStreamController;
     late MockAudioPlayer mockAudioPlayer;
 
     setUp(() {
@@ -175,9 +174,6 @@ void main() {
       mockFtmsService = MockFTMSService();
       mockAudioPlayer = MockAudioPlayer();
       
-      // Set up the FTMS stream controller
-      ftmsStreamController = StreamController<DeviceData?>.broadcast();
-      
       // Mock the device connection state - default to connected
       when(mockDevice.connectionState).thenAnswer((_) => 
           Stream.value(BluetoothConnectionState.connected));
@@ -199,7 +195,6 @@ void main() {
     });
 
     tearDown(() {
-      ftmsStreamController.close();
       // Reset SoundService after each test
       SoundService.instance.dispose();
     });
@@ -250,8 +245,8 @@ void main() {
           enableFitFileGeneration: false,
         );
 
-        // Wait for initialization to complete (longer delay for all async operations)
-        await Future.delayed(const Duration(milliseconds: 3000));
+        // Wait for initialization to complete
+        await controller.initialized;
 
         // Verify that the FTMS commands were called at least once
         verify(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel'))).called(greaterThanOrEqualTo(1));
@@ -277,6 +272,12 @@ void main() {
       });
 
       Future<void> startSession() async {
+        // Ensure initialization is complete before starting
+        await controller.initialized;
+        
+        // Clear interactions that happened during initialization
+        clearInteractions(mockFtmsService);
+        
         // Simulate starting the session by sending FTMS data changes
         final initialData = MockDeviceData([
           MockParameter('Instantaneous Power', 100),
@@ -551,6 +552,8 @@ void main() {
       });
 
       test('processes FTMS data and starts timer when values change', () async {
+        await controller.initialized;
+        
         // Create mock device data with changing values
         final initialData = MockDeviceData([
           MockParameter('Instantaneous Power', 100),
@@ -578,6 +581,8 @@ void main() {
       });
 
       test('does not start timer if values have not changed', () async {
+        await controller.initialized;
+        
         final sameData1 = MockDeviceData([
           MockParameter('Instantaneous Power', 100),
         ]);
@@ -601,6 +606,8 @@ void main() {
       });
 
       test('continues recording data when timer is already active', () async {
+        await controller.initialized;
+        
         // Start the session
         final initialData = MockDeviceData([
           MockParameter('Instantaneous Power', 100),
@@ -629,6 +636,8 @@ void main() {
       });
 
       test('ignores data when session is paused', () async {
+        await controller.initialized;
+        
         // Start and pause session
         final initialData = MockDeviceData([
           MockParameter('Instantaneous Power', 100),
@@ -664,6 +673,8 @@ void main() {
           ftmsService: mockFtmsService,
           enableFitFileGeneration: false,
         );
+
+        await controller.initialized;
         
         // Wait for controller initialization
         await Future.delayed(const Duration(milliseconds: 100));
@@ -674,6 +685,8 @@ void main() {
       });
 
       Future<void> startSession() async {
+        await controller.initialized;
+        
         // Start session with active power
         final initialData = MockDeviceData([
           MockParameter('Instantaneous Power', 50),
@@ -891,6 +904,8 @@ void main() {
           ftmsService: mockFtmsService,
           enableFitFileGeneration: false,
         );
+
+        await controller.initialized;
         
         await Future.delayed(const Duration(milliseconds: 100));
       });
@@ -1004,6 +1019,8 @@ void main() {
           ftmsService: mockFtmsService,
           enableFitFileGeneration: false,
         );
+
+        await controller.initialized;
 
         // Initial state
         expect(controller.state.status, SessionStatus.created);
@@ -1171,6 +1188,7 @@ void main() {
           ftmsService: mockFtmsService,
           enableFitFileGeneration: false,
         );
+        await controller.initialized;
 
         // Wait for any pending data from previous tests to be processed
         await Future.delayed(const Duration(milliseconds: 100));
@@ -1247,6 +1265,8 @@ void main() {
           enableFitFileGeneration: false,
         );
 
+        await controller.initialized;
+
         // Initial state
         expect(controller.state.status, SessionStatus.created);
         expect(controller.state.hasEnded, false);
@@ -1304,6 +1324,10 @@ void main() {
           ftmsService: mockFtmsService,
           enableFitFileGeneration: false,
         );
+        await controller.initialized;
+
+        // Wait for FTMS initialization to complete (with buffer for async operations)
+        await Future.delayed(const Duration(milliseconds: 200));
 
         // Start the session
         final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
@@ -1361,6 +1385,7 @@ void main() {
         when(mockDataRecorder.stopRecording()).thenReturn(null);
         when(mockDataRecorder.recordDataPoint(ftmsParams: anyNamed('ftmsParams'))).thenReturn(null);
         when(mockDataRecorder.generateFitFile()).thenAnswer((_) async => fitFilePath);
+        when(mockDataRecorder.getStatistics()).thenReturn({});
 
         final controller = TrainingSessionController(
           session: shortSession,
@@ -1369,6 +1394,8 @@ void main() {
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
         );
+
+        await controller.initialized;
 
         // Start the session (rower uses Instantaneous Pace as primary activity indicator)
         final initialData = MockDeviceData([MockParameter('Instantaneous Pace', 240)]);
@@ -1429,6 +1456,7 @@ void main() {
           ftmsService: mockFtmsService,
           enableFitFileGeneration: false,
         );
+        await controller.initialized;
 
         // Start the session
         final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
@@ -1569,6 +1597,7 @@ void main() {
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
         );
+        await controller.initialized;
 
         // First send data to establish baseline
         final initialData = MockDeviceData([
@@ -1916,6 +1945,9 @@ void main() {
         );
 
         // Simulate a complete workout
+        // Ensure initialization is complete before starting
+        await controller.initialized;
+        
         expect(controller.state.hasEnded, isFalse);
         expect(controller.lastGeneratedFitFile, isNull);
         expect(controller.stravaUploadAttempted, isFalse);
@@ -1951,7 +1983,7 @@ void main() {
         controller.stopSession();
         // User chooses to save via dialog
         await controller.saveRecording();
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 500));
 
         // Verify complete flow
         expect(controller.state.hasEnded, isTrue);
