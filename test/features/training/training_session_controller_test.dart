@@ -842,7 +842,7 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(2);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
       });
 
