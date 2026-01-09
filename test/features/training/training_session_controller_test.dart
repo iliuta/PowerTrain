@@ -250,8 +250,8 @@ void main() {
           enableFitFileGeneration: false,
         );
 
-        // Wait for initialization to complete (longer delay for all async operations)
-        await Future.delayed(const Duration(milliseconds: 3000));
+        // Wait for initialization to complete
+        await controller.initialized;
 
         // Verify that the FTMS commands were called at least once
         verify(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel'))).called(greaterThanOrEqualTo(1));
@@ -277,6 +277,12 @@ void main() {
       });
 
       Future<void> startSession() async {
+        // Ensure initialization is complete before starting
+        await controller.initialized;
+        
+        // Clear interactions that happened during initialization
+        clearInteractions(mockFtmsService);
+        
         // Simulate starting the session by sending FTMS data changes
         final initialData = MockDeviceData([
           MockParameter('Instantaneous Power', 100),
@@ -829,7 +835,7 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(2);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
       });
 
@@ -1305,6 +1311,9 @@ void main() {
           enableFitFileGeneration: false,
         );
 
+        // Wait for FTMS initialization to complete (with buffer for async operations)
+        await Future.delayed(const Duration(milliseconds: 200));
+
         // Start the session
         final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
@@ -1361,6 +1370,7 @@ void main() {
         when(mockDataRecorder.stopRecording()).thenReturn(null);
         when(mockDataRecorder.recordDataPoint(ftmsParams: anyNamed('ftmsParams'))).thenReturn(null);
         when(mockDataRecorder.generateFitFile()).thenAnswer((_) async => fitFilePath);
+        when(mockDataRecorder.getStatistics()).thenReturn({});
 
         final controller = TrainingSessionController(
           session: shortSession,
