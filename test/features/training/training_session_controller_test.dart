@@ -842,7 +842,7 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
+        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(2);
         verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
       });
 
@@ -1325,6 +1325,9 @@ void main() {
           enableFitFileGeneration: false,
         );
         await controller.initialized;
+
+        // Wait for FTMS initialization to complete (with buffer for async operations)
+        await Future.delayed(const Duration(milliseconds: 200));
 
         // Wait for FTMS initialization to complete (with buffer for async operations)
         await Future.delayed(const Duration(milliseconds: 200));

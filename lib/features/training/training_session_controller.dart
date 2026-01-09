@@ -160,7 +160,7 @@ class TrainingSessionController extends ChangeNotifier
     _dataProcessor.reset();
 
     if (_disposed) return;
-    
+
     // Execute operations concurrently where possible
     await Future.wait([
       resetWithControl(),
