@@ -32,6 +32,7 @@
   "targets": "Objectifs :",
   "resistance": "Résistance :",
   "warmUp": "Échauf.",
+  "warmingUpMachine": "La machine finit son café...",
   "coolDown": "Ret. au calme",
   "start": "Démarrer",
   "loadTrainingSession": "Charger une session d'entraînement",

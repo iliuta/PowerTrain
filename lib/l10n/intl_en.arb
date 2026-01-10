@@ -32,6 +32,7 @@
   "targets": "Targets:",
   "resistance": "Resistance:",
   "warmUp": "Warm up",
+  "warmingUpMachine": "Machine is finishing its coffee...",
   "coolDown": "Cool down",
   "start": "Start",
   "loadTrainingSession": "Load Training Session",

@@ -124,6 +124,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get warmUp => 'Warm up';
 
   @override
+  String get warmingUpMachine => 'Machine is finishing its coffee...';
+
+  @override
   String get coolDown => 'Cool down';
 
   @override

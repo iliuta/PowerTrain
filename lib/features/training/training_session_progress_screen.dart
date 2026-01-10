@@ -116,9 +116,30 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
                     builder: (context, initSnapshot) {
                       // Show loading while initialization is in progress
                       if (initSnapshot.connectionState == ConnectionState.waiting) {
-                        return const Scaffold(
+                        return Scaffold(
                           body: Center(
-                            child: CircularProgressIndicator(),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                const Icon(
+                                  Icons.local_cafe,
+                                  size: 48,
+                                  color: Colors.brown,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  AppLocalizations.of(context)!.warmingUpMachine,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       }
