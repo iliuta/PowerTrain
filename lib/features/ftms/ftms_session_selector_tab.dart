@@ -23,6 +23,7 @@ import 'widgets/gpx_map_preview_widget.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
 import '../../core/services/gpx/gpx_data.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/services/device_data_merger.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -48,6 +49,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isFreeRideDistanceBased = false;
   int _freeRideDistanceMeters = 5000; // 5km default
   final Map<String, dynamic> _freeRideTargets = {};
+  DeviceDataMerger? _dataMerger;
   int? _freeRideResistanceLevel;
   TextEditingController? _resistanceController;
   bool _isResistanceLevelValid = true;
@@ -175,14 +177,21 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   }
 
   void _startFTMS() async {
+    // Initialize packet merger for handling split packets
+    _dataMerger = DeviceDataMerger(
+      onMergedData: (DeviceData mergedData) {
+        ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
+        // Load config when we get the first data
+        if (_deviceDataType == null) {
+          _loadConfigForFtmsDeviceType(mergedData.deviceDataType);
+        }
+      },
+    );
+    
     await FTMS.useDeviceDataCharacteristic(
       widget.ftmsDevice,
       (DeviceData data) {
-        ftmsBloc.ftmsDeviceDataControllerSink.add(data);
-        // Load config when we get the first data
-        if (_deviceDataType == null) {
-          _loadConfigForFtmsDeviceType(data.deviceDataType);
-        }
+        _dataMerger?.processPacket(data);
       },
     );
   }
