@@ -9,6 +9,7 @@ import 'bt_device_navigation_registry.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
 import '../../bloc/ftms_bloc.dart';
+import '../device_data_merger.dart';
 
 /// Service for FTMS (Fitness Machine Service) devices
 class Ftms extends BTDevice {
@@ -17,6 +18,7 @@ class Ftms extends BTDevice {
   Ftms._internal();
 
   DeviceType? _deviceType;
+  DeviceDataMerger? _dataMerger;
 
   @override
   String get deviceTypeName => 'FTMS';
@@ -182,20 +184,28 @@ class Ftms extends BTDevice {
     try {
       logger.i('🔧 FTMS: Starting machine type detection for ${device.platformName}');
       
-      // Listen to FTMS data stream to detect machine type
-      FTMS.useDeviceDataCharacteristic(
-        device,
-        (DeviceData data) {
-          // Extract machine type from device data
-          final machineType = DeviceType.fromFtms(data.deviceDataType);
+      // Initialize packet merger for handling split packets (e.g., Yosuda rower)
+      _dataMerger = DeviceDataMerger(
+        onMergedData: (DeviceData mergedData) {
+          // Extract machine type from merged device data
+          final machineType = DeviceType.fromFtms(mergedData.deviceDataType);
           
           logger.i('🔧 FTMS: Detected machine type: $machineType');
           
           // Update this device's machine type
           updateDeviceType(machineType);
           
-          // Also forward to the global FTMS bloc for other consumers
-          ftmsBloc.ftmsDeviceDataControllerSink.add(data);
+          // Forward merged data to the global FTMS bloc for other consumers
+          ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
+        },
+      );
+      
+      // Listen to FTMS data stream and process through merger
+      FTMS.useDeviceDataCharacteristic(
+        device,
+        (DeviceData data) {
+          // Process packet through merger to handle split packets
+          _dataMerger?.processPacket(data);
         },
       );
     } catch (e) {
