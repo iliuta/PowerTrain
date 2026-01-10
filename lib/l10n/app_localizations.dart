@@ -298,6 +298,12 @@ abstract class AppLocalizations {
   /// **'Warm up'**
   String get warmUp;
 
+  /// No description provided for @warmingUpMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine is finishing its coffee...'**
+  String get warmingUpMachine;
+
   /// No description provided for @coolDown.
   ///
   /// In en, this message translates to:

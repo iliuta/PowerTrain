@@ -111,12 +111,59 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
               ),
               child: Consumer<TrainingSessionController>(
                 builder: (context, controller, _) {
-                  return TrainingSessionScaffold(
-                    session: expandedSession,
-                    controller: controller,
-                    config: snapshot.data,
-                    ftmsDevice: widget.ftmsDevice,
-                    userSettings: _userSettings!,
+                  return FutureBuilder<void>(
+                    future: controller.initialized,
+                    builder: (context, initSnapshot) {
+                      // Show loading while initialization is in progress
+                      if (initSnapshot.connectionState == ConnectionState.waiting) {
+                        return Scaffold(
+                          body: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                const Icon(
+                                  Icons.local_cafe,
+                                  size: 48,
+                                  color: Colors.brown,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  AppLocalizations.of(context)!.warmingUpMachine,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Show error if initialization failed
+                      if (initSnapshot.hasError) {
+                        return Scaffold(
+                          body: Center(
+                            child: Text(
+                              'Failed to initialize training session: ${initSnapshot.error}',
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Initialization complete, build the scaffold
+                      return TrainingSessionScaffold(
+                        session: expandedSession,
+                        controller: controller,
+                        config: snapshot.data,
+                        ftmsDevice: widget.ftmsDevice,
+                        userSettings: _userSettings!,
+                      );
+                    },
                   );
                 },
               ),

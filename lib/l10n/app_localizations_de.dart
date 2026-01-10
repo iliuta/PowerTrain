@@ -126,6 +126,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get warmUp => 'Aufwärmen';
 
   @override
+  String get warmingUpMachine =>
+      'Die Maschine trinkt noch kurz ihren Kaffee...';
+
+  @override
   String get coolDown => 'Abkühlen';
 
   @override

@@ -81,13 +81,11 @@ class FTMSService {
     // Enable notifications/indications FIRST (critical!)
     if (controlChar.properties.indicate && !controlChar.isNotifying) {
       await controlChar.setNotifyValue(true);
-      await Future.delayed(Duration(milliseconds: 100));
     } else if (controlChar.properties.notify && !controlChar.isNotifying) {
       await controlChar.setNotifyValue(true);
-      await Future.delayed(Duration(milliseconds: 100));
     }
 
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(Duration(milliseconds: 100));
   }
 
   /// Reads the Supported Resistance Level Range characteristic (UUID: 2AD6)
