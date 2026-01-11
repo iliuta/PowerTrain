@@ -16,8 +16,6 @@ import '../../core/widgets/ftms_live_data_display_widget.dart';
 import '../../core/services/ftms_data_processor.dart';
 import '../settings/model/user_settings.dart';
 import '../../core/services/user_settings_service.dart';
-import '../../core/services/device_data_merger.dart';
-
 class FTMSDataTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
 
@@ -32,7 +30,6 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   LiveDataDisplayConfig? _config;
   String? _configError;
   final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
-  DeviceDataMerger? _dataMerger;
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   bool _isLoadingSettings = true;
@@ -89,22 +86,9 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   void _startFTMS() async {
     if (!_started) {
       _started = true;
-      
-      // Initialize packet merger for handling split packets (e.g., Yosuda rower)
-      _dataMerger = DeviceDataMerger(
-        onMergedData: (DeviceData mergedData) {
-          // Forward merged data to the FTMS bloc
-          ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
-        },
-      );
-      
-      await FTMS.useDeviceDataCharacteristic(
-        widget.ftmsDevice,
-        (DeviceData data) {
-          // Process packet through merger to handle split packets
-          _dataMerger?.processPacket(data);
-        },
-      );
+      // Data is already merged at the source (ftms.dart service)
+      // and forwarded through ftmsBloc.ftmsDeviceDataControllerStream
+      // No need to create a second merger here - it would override ftms.dart's subscription
     }
   }
 

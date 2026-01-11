@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/bloc/ftms_bloc.dart';
 import '../../l10n/app_localizations.dart';
-import '../../core/services/device_data_merger.dart';
 
 class FTMSDeviceDataFeaturesTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -14,33 +13,10 @@ class FTMSDeviceDataFeaturesTab extends StatefulWidget {
 }
 
 class FTMSDeviceDataFeaturesTabState extends State<FTMSDeviceDataFeaturesTab> {
-  bool _started = false;
-  DeviceDataMerger? _dataMerger;
-
   @override
   void initState() {
     super.initState();
-    _startFTMS();
-  }
-
-  void _startFTMS() async {
-    if (!_started) {
-      _started = true;
-      
-      // Initialize packet merger for handling split packets
-      _dataMerger = DeviceDataMerger(
-        onMergedData: (DeviceData mergedData) {
-          ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
-        },
-      );
-      
-      await FTMS.useDeviceDataCharacteristic(
-        widget.ftmsDevice,
-        (DeviceData data) {
-          _dataMerger?.processPacket(data);
-        },
-      );
-    }
+    // Data is already merged at the source (ftms.dart service) and forwarded through ftmsBloc
   }
 
   Widget _buildDataFeature(String featureName, bool isSupported, dynamic value) {

@@ -17,7 +17,6 @@ Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
 
   // Get connected devices
   final connectedDevices = SupportedBTDeviceManager().allConnectedDevices;
-  logger.i('🔧 scanResultsToWidget: Found ${connectedDevices.length} connected devices');
 
   // Create a set of connected device IDs for quick lookup
   final connectedDeviceIds =

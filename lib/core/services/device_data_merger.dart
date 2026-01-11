@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:ftms/core/utils/logger.dart';
 
 /// Service for merging split FTMS device data packets using the "More Data" flag.
 /// 
@@ -34,42 +35,51 @@ class DeviceDataMerger {
     
     // Check if this packet has the "More Data" flag set
     final hasMoreData = _hasMoreDataFlag(data);
+    logger.d('📦 Merger: Packet #$_packetCount received, More Data flag: $hasMoreData');
     
     if (_bufferedData == null) {
       // First packet
       if (hasMoreData) {
         // More data is coming - buffer this packet and start timeout
+        logger.d('📦 Merger: Buffering packet (More Data flag set)');
         _bufferedData = data;
         _startTimeoutTimer();
       } else {
         // No more data - emit immediately (single-packet device)
+        logger.d('📦 Merger: Emitting single packet (no More Data flag)');
         onMergedData(data);
       }
     } else {
       // We have a buffered packet - merge this one with it
       try {
+        logger.d('📦 Merger: Merging packet (buffered: 1, incoming More Data: $hasMoreData)');
         _bufferedData!.merge(data);
         _mergedPacketCount++;
         
         if (hasMoreData) {
           // Still more data coming - keep buffering
+          logger.d('📦 Merger: More data expected, resetting timeout');
           _resetTimeoutTimer();
         } else {
           // This is the last packet - emit merged data
+          logger.d('📦 Merger: Last packet received, emitting merged data');
           _cancelTimeoutTimer();
           _emitAndClear();
         }
       } catch (e) {
         // Merge failed (different device types or other error)
+        logger.w('⚠️ Merger: Merge failed: $e, emitting buffered data');
         // Emit buffered data and start fresh with new packet
         _cancelTimeoutTimer();
         _emitAndClear();
         
         // Process the new packet
         if (hasMoreData) {
+          logger.d('📦 Merger: Buffering new packet after merge failure');
           _bufferedData = data;
           _startTimeoutTimer();
         } else {
+          logger.d('📦 Merger: Emitting new packet after merge failure');
           onMergedData(data);
         }
       }
@@ -81,17 +91,21 @@ class DeviceDataMerger {
     try {
       final features = data.getDeviceDataFeatures();
       // DeviceDataFlag.moreDataFlag is the More Data flag (Bit 0)
-      return features[DeviceDataFlag.moreDataFlag] == true;
+      final moreData = features[DeviceDataFlag.moreDataFlag] ?? false;
+      return moreData;
     } catch (e) {
       // If we can't read the flag, assume no more data (fail-safe)
+      logger.d('⚠️ Merger: Exception reading More Data flag: $e');
       return false;
     }
   }
   
   void _startTimeoutTimer() {
+    logger.d('⏱️ Merger: Starting fallback timeout (${fallbackTimeout.inMilliseconds}ms)');
     _timeoutTimer = Timer(fallbackTimeout, () {
       // Timeout expired - emit buffered data even without More Data flag cleared
       // This handles devices that don't properly implement the flag
+      logger.d('⏱️ Merger: Fallback timeout expired, emitting buffered data');
       _emitAndClear();
     });
   }
