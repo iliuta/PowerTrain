@@ -30,10 +30,10 @@ def generate_tick(frequency, output_file, volume=0.6):
     wave = wave * envelope
 
     # Add a small amount of filtered noise for mechanical texture
-    noise = 0.05 * np.random.normal(0, 1, len(wave))
+    #noise = 0.05 * np.random.normal(0, 1, len(wave))
     # Simple low-pass filter simulation (rough)
-    noise_filtered = np.convolve(noise, np.ones(5)/5, mode='same')
-    wave += noise_filtered * envelope
+    #noise_filtered = np.convolve(noise, np.ones(5)/5, mode='same')
+    #wave += noise_filtered * envelope
 
     # Normalize
     wave = wave / np.max(np.abs(wave)) * volume
@@ -46,9 +46,9 @@ def generate_tick(frequency, output_file, volume=0.6):
     print(f"Mechanical tick sound generated: {output_file}")
 
 # Generate higher tick (for metronome)
-generate_tick(frequency=400, output_file="assets/sounds/tick_high.wav", volume=0.5)
+generate_tick(frequency=400, output_file="assets/sounds/tick_high.wav", volume=1.5)
 
 # Generate lower tick (for metronome)
-generate_tick(frequency=250, output_file="assets/sounds/tick_low.wav", volume=0.5)
+generate_tick(frequency=250, output_file="assets/sounds/tick_low.wav", volume=1.5)
 
 print("Metronome tick sounds generated: tick_high.wav and tick_low.wav")
