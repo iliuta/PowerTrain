@@ -10,7 +10,6 @@ import 'bt_device_navigation_registry.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
 import '../../bloc/ftms_bloc.dart';
-import '../device_data_merger.dart';
 import '../ftms_service.dart';
 
 /// Service for FTMS (Fitness Machine Service) devices
@@ -20,7 +19,6 @@ class Ftms extends BTDevice {
   Ftms._internal();
 
   DeviceType? _deviceType;
-  DeviceDataMerger? _dataMerger;
   final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
 
   @override
@@ -203,20 +201,12 @@ class Ftms extends BTDevice {
 
       await FTMSService(device).requestControlOnly();
       
-      // Initialize packet merger for handling split packets (e.g., Yosuda rower)
-      _dataMerger = DeviceDataMerger(
-        onMergedData: (DeviceData mergedData) {
-          // Forward merged data to the global FTMS bloc for other consumers
-          ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
-        },
-      );
-      
-      // Listen to FTMS data stream and process through merger
+      // Listen to FTMS data stream (flutter_ftms already handles packet merging)
       FTMS.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
-          // Process packet through merger to handle split packets
-          _dataMerger?.processPacket(data);
+          // Forward merged data to the global FTMS bloc for other consumers
+          ftmsBloc.ftmsDeviceDataControllerSink.add(data);
         },
       );
     } catch (e) {

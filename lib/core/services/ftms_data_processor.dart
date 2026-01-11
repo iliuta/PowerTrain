@@ -8,9 +8,8 @@ import 'devices/cadence_service.dart';
 /// Service for processing FTMS device data with averaging capabilities.
 /// Can be used by both FTMSDataTab and training sessions.
 /// 
-/// Note: Split packet handling (like Yosuda rower) is done upstream by 
-/// DeviceDataMerger before data reaches this processor, so this service
-/// always receives complete, merged DeviceData packets.
+/// Note: Packet merging (for split packets) is handled by flutter_ftms,
+/// so this service always receives complete DeviceData packets.
 class FtmsDataProcessor {
   final ValueAveragingService _averagingService = ValueAveragingService();
   final HeartRateService _heartRateService = HeartRateService();
