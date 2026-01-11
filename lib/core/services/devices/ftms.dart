@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
@@ -20,6 +21,7 @@ class Ftms extends BTDevice {
 
   DeviceType? _deviceType;
   DeviceDataMerger? _dataMerger;
+  final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
 
   @override
   String get deviceTypeName => 'FTMS';
@@ -30,9 +32,13 @@ class Ftms extends BTDevice {
   /// Device type (for FTMS devices)
   DeviceType? get deviceType => _deviceType;
 
+  /// Stream of device type changes
+  Stream<DeviceType> get deviceTypeStream => _deviceTypeController.stream;
+
   /// Update device type (for FTMS devices)
   void updateDeviceType(DeviceType deviceType) {
     _deviceType = deviceType;
+    _deviceTypeController.add(deviceType);
     notifyDevicesChanged();
     
     // Save the machine type to preferences
@@ -157,7 +163,7 @@ class Ftms extends BTDevice {
       // Check if device is still connected before starting machine type detection
       if (device.isConnected) {
         logger.i('🔧 FTMS: Starting machine type detection');
-        detectFtmsMachineTypeAndConnectToDataStream(device);
+        _detectFtmsMachineTypeAndConnectToDataStream(device);
         
         // Listen for connection state changes to handle both disconnection and reconnection
         device.connectionState.listen((state) {
@@ -181,7 +187,7 @@ class Ftms extends BTDevice {
   }
 
   /// Start listening to FTMS device data to detect and store machine type
-  Future<void> detectFtmsMachineTypeAndConnectToDataStream(BluetoothDevice device) async {
+  Future<void> _detectFtmsMachineTypeAndConnectToDataStream(BluetoothDevice device) async {
     try {
       logger.i('🔧 FTMS: Starting machine type detection for ${device.platformName}');
       try {
@@ -227,7 +233,7 @@ class Ftms extends BTDevice {
       
       logger.i('🔧 FTMS: Re-establishing data stream after reconnection');
       
-      await detectFtmsMachineTypeAndConnectToDataStream(device);
+      await _detectFtmsMachineTypeAndConnectToDataStream(device);
 
       logger.i('🔧 FTMS: Data stream re-established after reconnection');
       await FTMSService(device).requestControlOnly();

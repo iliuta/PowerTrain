@@ -179,11 +179,9 @@ void main() {
           Stream.value(BluetoothConnectionState.connected));
       
       // Mock the ftmsService writeCommand method
-      when(mockFtmsService.writeCommand(any))
+      when(mockFtmsService.setResistanceWithControl(any))
           .thenAnswer((_) async {});
-      when(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel')))
-          .thenAnswer((_) async {});
-      when(mockFtmsService.writeCommand(any, power: anyNamed('power')))
+      when(mockFtmsService.setPowerWithControl(any))
           .thenAnswer((_) async {});
       
       // Mock the audio player methods
@@ -383,8 +381,7 @@ void main() {
 
         // Should not send any commands
         await Future.delayed(Duration(milliseconds: 100));
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl));
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause));
+        verifyNever(mockFtmsService.stopOrPauseWithControl());
       });
 
       test('resumeSession does nothing if not paused', () async {
@@ -399,8 +396,7 @@ void main() {
 
         // Should not send any commands
         await Future.delayed(Duration(milliseconds: 100));
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl));
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.startOrResume));
+        verifyNever(mockFtmsService.startOrResumeWithControl());
       });
 
       test('stopSession does nothing if already completed', () async {
