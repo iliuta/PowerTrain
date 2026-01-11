@@ -24,6 +24,7 @@
   "connectedAsAthlete": "Connecté en tant que {athleteName}",
   "failedLoadTrainingSessions": "Échec du chargement des sessions d'entraînement.",
   "noTrainingSessionsFound": "Aucune session d'entraînement trouvée pour ce type de machine.",
+  "couldNotRetrieveDeviceInformation": "Impossible de récupérer les informations de l'appareil. Veuillez vérifier votre connexion et réessayer.",
   "noFtmsDataFound": "Aucune donnée !",
   "goBack": "Retour",
   "freeRide": "Sortie libre",

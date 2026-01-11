@@ -101,6 +101,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune session d\'entraînement trouvée pour ce type de machine.';
 
   @override
+  String get couldNotRetrieveDeviceInformation =>
+      'Impossible de récupérer les informations de l\'appareil. Veuillez vérifier votre connexion et réessayer.';
+
+  @override
   String get noFtmsDataFound => 'Aucune donnée !';
 
   @override

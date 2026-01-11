@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/services/gpx/gpx_route_tracker.dart';
 
 /// A map widget that displays the GPX route with high transparency
@@ -110,7 +111,7 @@ class _RouteMapWidgetState extends State<RouteMapWidget> {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.ftms',
+              userAgentPackageName: 'com.iliuta.ftms',
               maxZoom: 19,
             ),
             // Draw the route as a polyline
@@ -173,6 +174,14 @@ class _RouteMapWidgetState extends State<RouteMapWidget> {
                     ),
                 ],
               ),
+            RichAttributionWidget(
+              attributions: [
+                TextSourceAttribution(
+                  'OpenStreetMap contributors',
+                  onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+                ),
+              ],
+            ),
           ],
         ),
       ),

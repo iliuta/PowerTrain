@@ -70,6 +70,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   List<GpxData>? _gpxFiles;
   String? _selectedGpxAssetPath;
   StreamSubscription<DeviceType>? _deviceTypeSubscription;
+  String? _errorMessage;
 
   int get _freeRideDistanceIncrement {
     if (_deviceType == null) return 1000; // default to 1km
@@ -188,13 +189,29 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   }
 
   void _startDeviceTypeSubscription() {
+    bool hasReceivedValue = false;
     _deviceTypeSubscription = Ftms().deviceTypeStream.listen((deviceType) {
+      hasReceivedValue = true;
       setState(() {
         _deviceType = deviceType;
         _loadConfigForDeviceType(_deviceType!);
       });
       _deviceTypeSubscription?.cancel();
       _deviceTypeSubscription = null;
+    });
+
+    // Timeout after 5 seconds if no device type is received
+    Future.delayed(const Duration(seconds: 15), () {
+      if (!hasReceivedValue && _deviceTypeSubscription != null) {
+        _deviceTypeSubscription?.cancel();
+        _deviceTypeSubscription = null;
+        // Handle timeout: display error message
+        if (_deviceType == null) {
+          setState(() {
+            _errorMessage = AppLocalizations.of(context)!.couldNotRetrieveDeviceInformation;
+          });
+        }
+      }
     });
   }
 
@@ -264,9 +281,11 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
-        child: _deviceType == null
-            ? const Center(child: CircularProgressIndicator())
-            : _buildContent(context),
+        child: _errorMessage != null
+            ? Center(child: Text(_errorMessage!))
+            : _deviceType == null
+                ? const Center(child: CircularProgressIndicator())
+                : _buildContent(context),
       ),
     );
   }
