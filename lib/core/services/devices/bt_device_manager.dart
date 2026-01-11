@@ -189,9 +189,6 @@ class SupportedBTDeviceManager {
         logger.i('✅ Device is FTMS, connecting...');
         final ftmsService = _supportedBTDevices.firstWhere((s) => s.deviceTypeName == 'FTMS');
         await ftmsService.connectToDevice(device);
-        if (ftmsService is Ftms) {
-          await ftmsService.detectFtmsMachineTypeAndConnectToDataStream(device);
-        }
         return;
       }
       logger.i('❌ Device is not FTMS');

@@ -1,4 +1,5 @@
 // This file contains the session selector tab for FTMS devices
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
@@ -68,6 +69,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   SupportedResistanceLevelRange? _supportedResistanceLevelRange;
   List<GpxData>? _gpxFiles;
   String? _selectedGpxAssetPath;
+  Timer? _deviceTypeCheckTimer;
 
   int get _freeRideDistanceIncrement {
     if (_deviceType == null) return 1000; // default to 1km
@@ -96,6 +98,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     );
     _loadUserSettings();
     _loadDeviceType();
+    if (_deviceType == null) {
+      _startDeviceTypeCheckTimer();
+    }
     _resistanceController = TextEditingController();
     _trainingSessionGeneratorResistanceController = TextEditingController();
   }
@@ -104,6 +109,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   void dispose() {
     _resistanceController?.dispose();
     _trainingSessionGeneratorResistanceController?.dispose();
+    _deviceTypeCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -179,6 +185,28 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       _deviceType = deviceType;
       _loadConfigForDeviceType(_deviceType!);
     }
+  }
+
+  void _startDeviceTypeCheckTimer() {
+    int attempts = 0;
+    const maxAttempts = 40; // 20 seconds at 500ms intervals
+    _deviceTypeCheckTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      attempts++;
+      final deviceType = Ftms().deviceType;
+      if (deviceType != null) {
+        setState(() {
+          _deviceType = deviceType;
+          _loadConfigForDeviceType(_deviceType!);
+        });
+        timer.cancel();
+        _deviceTypeCheckTimer = null;
+      } else if (attempts >= maxAttempts) {
+        // Timeout: stop checking and show an error or fallback
+        timer.cancel();
+        _deviceTypeCheckTimer = null;
+        // Could set an error state here if needed
+      }
+    });
   }
 
   Future<void> _loadTrainingSessions() async {

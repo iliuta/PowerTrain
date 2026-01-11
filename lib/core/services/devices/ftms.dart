@@ -195,13 +195,7 @@ class Ftms extends BTDevice {
         // Continue anyway - some devices may not require control request
       }
 
-      try {
-        await _requestControl(device);
-        logger.i('🔧 FTMS: Control requested successfully');
-      } catch(e) {
-        logger.w('⚠️ FTMS: Failed to request control: $e');
-        // Continue anyway - some devices may not require control request
-      }
+      await FTMSService(device).requestControlOnly();
       
       // Initialize packet merger for handling split packets (e.g., Yosuda rower)
       _dataMerger = DeviceDataMerger(
@@ -236,21 +230,9 @@ class Ftms extends BTDevice {
       await detectFtmsMachineTypeAndConnectToDataStream(device);
 
       logger.i('🔧 FTMS: Data stream re-established after reconnection');
-      await _requestControl(device);
+      await FTMSService(device).requestControlOnly();
     } catch (e) {
       logger.e('❌ FTMS: Failed to re-establish data stream after reconnection: $e');
-    }
-  }
-
-  /// Request control from the FTMS device to enable data transmission
-  Future<void> _requestControl(BluetoothDevice device) async {
-    try {
-      final ftmsService = FTMSService(device);
-      await ftmsService.writeCommand(MachineControlPointOpcodeType.requestControl);
-      logger.i('🔧 FTMS: Successfully requested control from device');
-    } catch (e) {
-      logger.w('⚠️ FTMS: Failed to request control: $e');
-      rethrow;
     }
   }
 

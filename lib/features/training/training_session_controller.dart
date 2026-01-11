@@ -163,16 +163,16 @@ class TrainingSessionController extends ChangeNotifier
 
     // Execute operations concurrently where possible
     await Future.wait([
-      resetWithControl(),
-      startOrResumeWithControl(),
+      _ftmsService.resetWithControl(),
+      _ftmsService.startOrResumeWithControl(),
     ]);
 
     // Some FTMS devices need a brief pause/resume cycle to properly start calculating averages
     // This ensures Average Speed, Average Power, and Total Distance start working correctly
     await Future.delayed(const Duration(milliseconds: 200));
-    await stopOrPauseWithControl();
+    await _ftmsService.stopOrPauseWithControl();
     await Future.delayed(const Duration(milliseconds: 200));
-    await startOrResumeWithControl();
+    await _ftmsService.startOrResumeWithControl();
 
     // Handle conditional operations that depend on the above
     final firstInterval = _state.intervals.isNotEmpty ? _state.intervals[0] : null;
@@ -181,12 +181,12 @@ class TrainingSessionController extends ChangeNotifier
 
       final firstResistance = firstInterval.resistanceLevel;
       if (firstResistance != null) {
-        operations.add(setResistanceWithControl(firstResistance));
+        operations.add(_ftmsService.setResistanceWithControl(firstResistance));
       }
 
       final firstPower = firstInterval.targets?['Instantaneous Power'];
       if (firstPower != null) {
-        await setPowerWithControl(firstPower);
+        await _ftmsService.setPowerWithControl(firstPower);
       }
 
       if (operations.isNotEmpty) {
@@ -616,11 +616,11 @@ class TrainingSessionController extends ChangeNotifier
   void onIntervalChanged(ExpandedUnitTrainingInterval newInterval) {
     final resistance = newInterval.resistanceLevel;
     if (resistance != null) {
-      setResistanceWithControl(resistance);
+      _ftmsService.setResistanceWithControl(resistance);
     }
     final power = newInterval.targets?['Instantaneous Power'];
     if (power != null) {
-      setPowerWithControl(power);
+      _ftmsService.setPowerWithControl(power);
     }
 
     // Update metronome
@@ -646,8 +646,8 @@ class TrainingSessionController extends ChangeNotifier
   void onSessionCompleted() {
     Future.microtask(() async {
       if (_disposed) return;
-      await stopOrPauseWithControl();
-      await resetWithControl();
+      await _ftmsService.stopOrPauseWithControl();
+      await _ftmsService.resetWithControl();
     });
     // Recording will be handled by the completion dialog
   }
@@ -657,7 +657,7 @@ class TrainingSessionController extends ChangeNotifier
     _logSessionCompleted();
     Future.microtask(() async {
       if (_disposed) return;
-      await stopOrPauseWithControl();
+      await _ftmsService.stopOrPauseWithControl();
     });
     // Recording will be handled by the completion dialog
   }
@@ -666,7 +666,7 @@ class TrainingSessionController extends ChangeNotifier
   void onSendFtmsPause() {
     Future.microtask(() async {
       if (_disposed) return;
-      await stopOrPauseWithControl();
+      await _ftmsService.stopOrPauseWithControl();
     });
   }
 
@@ -674,7 +674,7 @@ class TrainingSessionController extends ChangeNotifier
   void onSendFtmsResume() {
     Future.microtask(() async {
       if (_disposed) return;
-      await startOrResumeWithControl();
+      await _ftmsService.startOrResumeWithControl();
     });
   }
 
@@ -682,8 +682,8 @@ class TrainingSessionController extends ChangeNotifier
   void onSendFtmsStopAndReset() {
     Future.microtask(() async {
       if (_disposed) return;
-      await stopOrPauseWithControl();
-      await resetWithControl();
+      await _ftmsService.stopOrPauseWithControl();
+      await _ftmsService.resetWithControl();
     });
   }
 
@@ -953,7 +953,7 @@ class TrainingSessionController extends ChangeNotifier
 
     if (!_state.hasEnded) {
       Future.microtask(() async {
-        await stopOrPauseWithControl();
+        await _ftmsService.stopOrPauseWithControl();
       });
     }
 
@@ -966,82 +966,7 @@ class TrainingSessionController extends ChangeNotifier
 
   // ============ FTMS commands ============
 
-  /// Executes an FTMS command with retry logic for reliability
-  Future<void> _executeWithRetry(Future<void> Function() command, String operationName) async {
-    const int maxRetries = 5;
-    for (int attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        await command();
-        return; // Success, exit
-      } catch (e) {
-        debugPrint('Failed to $operationName (attempt ${attempt + 1}/$maxRetries): $e');
-        if (attempt == maxRetries - 1) {
-          debugPrint('All retries failed for $operationName');
-          // Don't rethrow - FTMS commands should fail silently to not disrupt the session
-          return;
-        }
-        await Future.delayed(const Duration(milliseconds: 500)); // Wait before retry
-      }
-    }
-  }
 
-  Future<void> setPowerWithControl(dynamic power) async {
-    await _executeWithRetry(() async {
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.requestControl);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await _ftmsService.writeCommand(
-          MachineControlPointOpcodeType.setTargetPower,
-          power: power);
-    }, 'setPowerWithControl');
-  }
-
-  Future<void> stopOrPauseWithControl() async {
-    await _executeWithRetry(() async {
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.requestControl);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.stopOrPause);
-    }, 'stopOrPauseWithControl');
-  }
-
-  Future<void> setResistanceWithControl(int resistance) async {
-    await _executeWithRetry(() async {
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.requestControl);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await _ftmsService.writeCommand(
-          MachineControlPointOpcodeType.setTargetResistanceLevel,
-          resistanceLevel: resistance);
-    }, 'setResistanceWithControl');
-  }
-
-  Future<void> startOrResumeWithControl() async {
-    await _executeWithRetry(() async {
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.requestControl);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.startOrResume);
-      logger.i('📤 Requested control and sent startOrResume command');
-    }, 'startOrResumeWithControl');
-  }
-
-  Future<void> resetWithControl() async {
-    await _executeWithRetry(() async {
-      await _ftmsService
-          .writeCommand(MachineControlPointOpcodeType.requestControl);
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (session.ftmsMachineType == DeviceType.indoorBike) {
-        await _ftmsService.writeCommand(
-            MachineControlPointOpcodeType.setTargetPower,
-            power: 0);
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-      await _ftmsService.writeCommand(MachineControlPointOpcodeType.reset);
-    }, 'resetWithControl');
-  }
 
   // ============ Analytics Helpers ============
 

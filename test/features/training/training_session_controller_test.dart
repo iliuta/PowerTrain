@@ -249,7 +249,7 @@ void main() {
         await controller.initialized;
 
         // Verify that the FTMS commands were called at least once
-        verify(mockFtmsService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel'))).called(greaterThanOrEqualTo(1));
+        verify(mockFtmsService.setResistanceWithControl(any)).called(greaterThanOrEqualTo(1));
 
         controller.dispose();
       });
@@ -310,8 +310,7 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
+        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
       });
 
       test('resumeSession resumes from pause and sends FTMS command', () async {
@@ -334,8 +333,7 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.startOrResume)).called(1);
+        verify(mockFtmsService.startOrResumeWithControl()).called(1);
       });
 
       test('stopSession completes session and sends FTMS command', () async {
@@ -356,9 +354,8 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(greaterThanOrEqualTo(2));
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(1);
+        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
+        verify(mockFtmsService.resetWithControl()).called(1);
       });
 
       test('pauseSession does nothing if session not running', () async {
@@ -442,9 +439,8 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(greaterThanOrEqualTo(2));
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(1);
+        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
+        verify(mockFtmsService.resetWithControl()).called(1);
       });
 
       test('discardSession does nothing if already completed', () async {
@@ -842,8 +838,7 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
+        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
       });
 
       test('sends FTMS resume command when auto-resuming', () async {
@@ -872,8 +867,7 @@ void main() {
           await Future.delayed(const Duration(seconds: 1));
         }
 
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(1);
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.startOrResume)).called(1);
+        verify(mockFtmsService.startOrResumeWithControl()).called(1);
       });
     });
 
@@ -1294,8 +1288,8 @@ void main() {
 
         // FTMS commands should have been sent (stop and reset)
         await Future.delayed(const Duration(milliseconds: 200));
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(greaterThanOrEqualTo(1));
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset)).called(greaterThanOrEqualTo(1));
+        verify(mockFtmsService.stopOrPauseWithControl()).called(greaterThanOrEqualTo(1));
+        verify(mockFtmsService.resetWithControl()).called(greaterThanOrEqualTo(1));
 
         controller.dispose();
       });
@@ -1356,9 +1350,8 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 500));
 
         // Verify only stop/pause was called (reset happens later when user confirms)
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl)).called(greaterThanOrEqualTo(1));
-        verify(mockFtmsService.writeCommand(MachineControlPointOpcodeType.stopOrPause)).called(1);
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.reset));
+        verify(mockFtmsService.stopOrPauseWithControl()).called(greaterThanOrEqualTo(1));
+        verifyNever(mockFtmsService.resetWithControl());
 
         controller.dispose();
       });
@@ -1485,10 +1478,7 @@ void main() {
         expect(controller.state.currentInterval.title, 'Interval B');
 
         // Verify resistance was updated for new interval
-        verify(mockFtmsService.writeCommand(
-          MachineControlPointOpcodeType.setTargetResistanceLevel,
-          resistanceLevel: 3,
-        )).called(greaterThanOrEqualTo(1));
+        verify(mockFtmsService.setResistanceWithControl(3)).called(greaterThanOrEqualTo(1));
 
         // Wait for completion
         await Future.delayed(const Duration(milliseconds: 2500));
