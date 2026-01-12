@@ -188,8 +188,9 @@ class Ftms extends BTDevice {
   Future<void> _detectFtmsMachineTypeAndConnectToDataStream(BluetoothDevice device) async {
     try {
       logger.i('🔧 FTMS: Starting machine type detection for ${device.platformName}');
+      DeviceType? detectedType;
       try {
-        var detectedType = await _determineDeviceTypeFromCharacteristics(device);
+        detectedType = await _determineDeviceTypeFromCharacteristics(device);
         if (detectedType != null) {
           logger.i('🔧 FTMS: Detected machine type from characteristics: $detectedType');
           updateDeviceType(detectedType);
@@ -199,15 +200,21 @@ class Ftms extends BTDevice {
         // Continue anyway - some devices may not require control request
       }
 
-      await FTMSService(device).requestControlOnly();
-      
       // Listen to FTMS data stream (flutter_ftms already handles packet merging)
+      DeviceDataType? preferredDeviceDataType;
+      if (detectedType == DeviceType.indoorBike) {
+        preferredDeviceDataType = DeviceDataType.indoorBike;
+      } else if (detectedType == DeviceType.rower) {
+        preferredDeviceDataType = DeviceDataType.rower;
+      }
+      
       FTMS.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
           // Forward merged data to the global FTMS bloc for other consumers
           ftmsBloc.ftmsDeviceDataControllerSink.add(data);
         },
+        preferredDeviceDataType: preferredDeviceDataType,
       );
     } catch (e) {
       logger.i('❌ FTMS: Machine type detection failed: $e');
