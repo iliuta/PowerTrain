@@ -40,11 +40,12 @@ class FtmsLiveDataDisplayWidget extends StatelessWidget {
   }
 
   List<List<Widget>> _buildRows(int columns) {
+    final supportedFields = config.fields.where((field) => paramValueMap[field.name] != null).toList();
     final List<List<Widget>> rows = [];
     List<Widget> currentRow = [];
-    for (int i = 0; i < config.fields.length; i++) {
-      currentRow.add(_buildFieldWidget(config.fields[i]));
-      if ((currentRow.length == columns) || (i == config.fields.length - 1)) {
+    for (int i = 0; i < supportedFields.length; i++) {
+      currentRow.add(_buildFieldWidget(supportedFields[i]));
+      if ((currentRow.length == columns) || (i == supportedFields.length - 1)) {
         rows.add(currentRow);
         currentRow = [];
       }

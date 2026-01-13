@@ -480,7 +480,10 @@ class _ScanPageState extends State<ScanPage> {
                             )
                             .toList();
 
-                        return scanResultsToWidget(scanResults, context);
+                        return RefreshIndicator(
+                          onRefresh: _startScan,
+                          child: scanResultsToWidget(scanResults, context),
+                        );
                       },
                     );
                   },
