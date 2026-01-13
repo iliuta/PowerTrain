@@ -1,9 +1,10 @@
 // This file contains the session selector tab for FTMS devices
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/models/device_types.dart';
-import '../../core/bloc/ftms_bloc.dart';
+import '../../core/services/devices/ftms.dart';
 import '../../core/services/analytics/analytics_service.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
@@ -23,7 +24,6 @@ import 'widgets/gpx_map_preview_widget.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
 import '../../core/services/gpx/gpx_data.dart';
 import '../../l10n/app_localizations.dart';
-import '../../core/services/device_data_merger.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -49,7 +49,6 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   bool _isFreeRideDistanceBased = false;
   int _freeRideDistanceMeters = 5000; // 5km default
   final Map<String, dynamic> _freeRideTargets = {};
-  DeviceDataMerger? _dataMerger;
   int? _freeRideResistanceLevel;
   TextEditingController? _resistanceController;
   bool _isResistanceLevelValid = true;
@@ -64,16 +63,18 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   Map<DeviceType, LiveDataDisplayConfig?> _configs = {};
   bool _isLoadingSettings = true;
   bool _isDeviceAvailable = true;
-  DeviceDataType? _deviceDataType;
+  DeviceType? _deviceType;
   List<TrainingSessionDefinition>? _trainingSessions;
   bool _isLoadingTrainingSessions = false;
   SupportedResistanceLevelRange? _supportedResistanceLevelRange;
   List<GpxData>? _gpxFiles;
   String? _selectedGpxAssetPath;
+  StreamSubscription<DeviceType>? _deviceTypeSubscription;
+  String? _errorMessage;
 
   int get _freeRideDistanceIncrement {
-    if (_deviceDataType == null) return 1000; // default to 1km
-    final deviceType = DeviceType.fromFtms(_deviceDataType!);
+    if (_deviceType == null) return 1000; // default to 1km
+    final deviceType = _deviceType!;
     return deviceType == DeviceType.rower ? 250 : 1000; // 250m for rowers, 1km for bikes
   }
 
@@ -97,7 +98,10 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       screenClass: 'FTMSessionSelectorTab',
     );
     _loadUserSettings();
-    _startFTMS();
+    _loadDeviceType();
+    if (_deviceType == null) {
+      _startDeviceTypeSubscription();
+    }
     _resistanceController = TextEditingController();
     _trainingSessionGeneratorResistanceController = TextEditingController();
   }
@@ -106,6 +110,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   void dispose() {
     _resistanceController?.dispose();
     _trainingSessionGeneratorResistanceController?.dispose();
+    _deviceTypeSubscription?.cancel();
     super.dispose();
   }
 
@@ -122,11 +127,10 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     });
   }
 
-  Future<void> _loadConfigForFtmsDeviceType(DeviceDataType ftmsMachineType) async {
-    final config = await LiveDataDisplayConfig.loadForFtmsMachineType(
-        DeviceType.fromFtms(ftmsMachineType));
+  Future<void> _loadConfigForDeviceType(DeviceType deviceType) async {
+    final config = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
     setState(() {
-      _deviceDataType = ftmsMachineType;
+      _deviceType = deviceType;
     });
     _checkDeviceAvailability(config);
     _loadSupportedResistanceLevelRange();
@@ -134,7 +138,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   }
 
   Future<void> _loadSupportedResistanceLevelRange() async {
-    if (_deviceDataType == null) return;
+    if (_deviceType == null) return;
 
     try {
       final ftmsService = FTMSService(widget.ftmsDevice);
@@ -158,9 +162,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   }
 
   Future<void> _loadGpxFiles() async {
-    if (_deviceDataType == null) return;
+    if (_deviceType == null) return;
 
-    final files = await GpxFileProvider.getSortedGpxData(DeviceType.fromFtms(_deviceDataType!));
+    final files = await GpxFileProvider.getSortedGpxData(_deviceType!);
     setState(() {
       _gpxFiles = files;
     });
@@ -176,28 +180,43 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     }
   }
 
-  void _startFTMS() async {
-    // Initialize packet merger for handling split packets
-    _dataMerger = DeviceDataMerger(
-      onMergedData: (DeviceData mergedData) {
-        ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
-        // Load config when we get the first data
-        if (_deviceDataType == null) {
-          _loadConfigForFtmsDeviceType(mergedData.deviceDataType);
+  void _loadDeviceType() {
+    final deviceType = Ftms().deviceType;
+    if (deviceType != null) {
+      _deviceType = deviceType;
+      _loadConfigForDeviceType(_deviceType!);
+    }
+  }
+
+  void _startDeviceTypeSubscription() {
+    bool hasReceivedValue = false;
+    _deviceTypeSubscription = Ftms().deviceTypeStream.listen((deviceType) {
+      hasReceivedValue = true;
+      setState(() {
+        _deviceType = deviceType;
+        _loadConfigForDeviceType(_deviceType!);
+      });
+      _deviceTypeSubscription?.cancel();
+      _deviceTypeSubscription = null;
+    });
+
+    // Timeout after 5 seconds if no device type is received
+    Future.delayed(const Duration(seconds: 15), () {
+      if (!hasReceivedValue && _deviceTypeSubscription != null) {
+        _deviceTypeSubscription?.cancel();
+        _deviceTypeSubscription = null;
+        // Handle timeout: display error message
+        if (_deviceType == null) {
+          setState(() {
+            _errorMessage = AppLocalizations.of(context)!.couldNotRetrieveDeviceInformation;
+          });
         }
-      },
-    );
-    
-    await FTMS.useDeviceDataCharacteristic(
-      widget.ftmsDevice,
-      (DeviceData data) {
-        _dataMerger?.processPacket(data);
-      },
-    );
+      }
+    });
   }
 
   Future<void> _loadTrainingSessions() async {
-    if (_deviceDataType == null || _trainingSessions != null) return;
+    if (_deviceType == null || _trainingSessions != null) return;
 
     setState(() {
       _isLoadingTrainingSessions = true;
@@ -205,7 +224,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
 
     try {
       final storageService = TrainingSessionStorageService();
-      final sessions = await storageService.loadTrainingSessions(DeviceType.fromFtms(_deviceDataType!));
+      final sessions = await storageService.loadTrainingSessions(_deviceType!);
       setState(() {
         _trainingSessions = sessions;
         _isLoadingTrainingSessions = false;
@@ -262,120 +281,116 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
-      child: StreamBuilder<DeviceData?>(
-        stream: ftmsBloc.ftmsDeviceDataControllerStream,
-        builder: (c, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(child: Text(AppLocalizations.of(context)!.noFtmsDataFound));
-          }
-          final deviceData = snapshot.data!;
+        child: _errorMessage != null
+            ? Center(child: Text(_errorMessage!))
+            : _deviceType == null
+                ? const Center(child: CircularProgressIndicator())
+                : _buildContent(context),
+      ),
+    );
+  }
 
-          // Load config if not loaded or if type changed
-          if (_deviceDataType == null) {
-            _loadConfigForFtmsDeviceType(deviceData.deviceDataType);
-            return const Center(child: CircularProgressIndicator());
-          }
+  Widget _buildContent(BuildContext context) {
+    // Show loading while user settings are being loaded
+    if (_isLoadingSettings) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-          // Show loading while user settings are being loaded
-          if (_isLoadingSettings) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    // Show developer mode required message if device is not available
+    if (!_isDeviceAvailable) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.developer_mode,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Developer Mode Required',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.',
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Go back to previous screen
+                },
+                icon: const Icon(Icons.arrow_back),
+                label: Text(AppLocalizations.of(context)!.goBack),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-          // Show developer mode required message if device is not available
-          if (!_isDeviceAvailable) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.developer_mode,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Developer Mode Required',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Go back to previous screen
-                      },
-                      icon: const Icon(Icons.arrow_back),
-                      label: Text(AppLocalizations.of(context)!.goBack),
-                    ),
-                  ],
+    // Show normal session selector content
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // GPX Route Selection Row
+          if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
+            SizedBox(
+              height: 85,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _gpxFiles!.map((data) => GpxMapPreviewWidget(
+                    info: data,
+                    isSelected: _selectedGpxAssetPath == data.assetPath,
+                    onTap: () {
+                      setState(() {
+                        if (_selectedGpxAssetPath == data.assetPath) {
+                          _selectedGpxAssetPath = null;
+                          if (_isFreeRideDistanceBased) {
+                            _freeRideDistanceMeters = 5000; // reset to default
+                          }
+                        } else {
+                          _selectedGpxAssetPath = data.assetPath;
+                          if (_isFreeRideDistanceBased) {
+                            _freeRideDistanceMeters = data.totalDistance.round();
+                          }
+                        }
+                      });
+                    },
+                  )).toList(),
                 ),
               ),
-            );
-          }
-
-          // Show normal session selector content
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
+            ),
+          if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
+            const SizedBox(height: 16),
+          // Free Ride Section
+          Card(
             child: Column(
               children: [
-                // GPX Route Selection Row
-                if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
-                  SizedBox(
-                    height: 85,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: _gpxFiles!.map((data) => GpxMapPreviewWidget(
-                          info: data,
-                          isSelected: _selectedGpxAssetPath == data.assetPath,
-                          onTap: () {
-                            setState(() {
-                              if (_selectedGpxAssetPath == data.assetPath) {
-                                _selectedGpxAssetPath = null;
-                                if (_isFreeRideDistanceBased) {
-                                  _freeRideDistanceMeters = 5000; // reset to default
-                                }
-                              } else {
-                                _selectedGpxAssetPath = data.assetPath;
-                                if (_isFreeRideDistanceBased) {
-                                  _freeRideDistanceMeters = data.totalDistance.round();
-                                }
-                              }
-                            });
-                          },
-                        )).toList(),
-                      ),
-                    ),
+                ListTile(
+                  title: Text(AppLocalizations.of(context)!.freeRide),
+                  trailing: Icon(
+                    _isFreeRideExpanded ? Icons.expand_less : Icons.expand_more,
                   ),
-                if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
-                  const SizedBox(height: 16),
-                // Free Ride Section
-                Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        title: Text(AppLocalizations.of(context)!.freeRide),
-                        trailing: Icon(
-                          _isFreeRideExpanded ? Icons.expand_less : Icons.expand_more,
-                        ),
-                        onTap: () {
-                          setState(() {
-                            _isFreeRideExpanded = !_isFreeRideExpanded;
-                          });
-                        },
-                      ),
-                      if (_isFreeRideExpanded)
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
+                  onTap: () {
+                    setState(() {
+                      _isFreeRideExpanded = !_isFreeRideExpanded;
+                    });
+                  },
+                ),
+                if (_isFreeRideExpanded)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
                               // Toggle between Time and Distance
@@ -478,11 +493,11 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                               const SizedBox(height: 16),
                               Text(AppLocalizations.of(context)!.targets, style: const TextStyle(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 8),
-                              if (_deviceDataType != null && _userSettings != null && _configs[DeviceType.fromFtms(_deviceDataType!)] != null)
+                              if (_deviceType != null && _userSettings != null && _configs[_deviceType!] != null)
                                 EditTargetFieldsWidget(
-                                  machineType: DeviceType.fromFtms(_deviceDataType!),
+                                  machineType: _deviceType!,
                                   userSettings: _userSettings!,
-                                  config: _configs[DeviceType.fromFtms(_deviceDataType!)]!,
+                                  config: _configs[_deviceType!]!,
                                   targets: _freeRideTargets,
                                   onTargetChanged: (name, value) {
                                     setState(() {
@@ -496,9 +511,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                 ),
                               const SizedBox(height: 16),
                               // Resistance Level Field (only for rowing and indoor bike if supported)
-                              if (_deviceDataType != null && 
-                                  (DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower || 
-                                   DeviceType.fromFtms(_deviceDataType!) == DeviceType.indoorBike) && 
+                              if (_deviceType != null &&
+                                  (_deviceType! == DeviceType.rower ||
+                                   _deviceType! == DeviceType.indoorBike) &&
                                   _supportedResistanceLevelRange != null)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -598,7 +613,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                 ),
                               const SizedBox(height: 16),
                               // Warm-up and Cool-down checkboxes (only for rowers)
-                              if (_deviceDataType != null && DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower)
+                              if (_deviceType != null && _deviceType! == DeviceType.rower)
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -633,12 +648,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                 ),
                               ElevatedButton(
                                 onPressed: !_isResistanceLevelValid ? null : () {
-                                  if (_deviceDataType != null) {
+                                  if (_deviceType != null) {
                                     final workoutValue = _isFreeRideDistanceBased
                                         ? _freeRideDistanceMeters
                                         : _freeRideDurationMinutes * 60;
                                     final session = TrainingSessionDefinition.createTemplate(
-                                      DeviceType.fromFtms(_deviceDataType!),
+                                      _deviceType!,
                                       isDistanceBased: _isFreeRideDistanceBased,
                                       workoutValue: workoutValue,
                                       targets: _freeRideTargets,
@@ -649,7 +664,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                     
                                     // Log free ride analytics
                                     AnalyticsService().logFreeRideStarted(
-                                      machineType: DeviceType.fromFtms(_deviceDataType!),
+                                      machineType: _deviceType!,
                                       isDistanceBased: _isFreeRideDistanceBased,
                                       targetValue: workoutValue,
                                       hasWarmup: _hasWarmup,
@@ -679,7 +694,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                 ),
                 const SizedBox(height: 16),
                 // Training Session Generator Section (only for rowing machines)
-                if (_deviceDataType != null && DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower)
+                if (_deviceType != null && _deviceType! == DeviceType.rower)
                   Card(
                     child: Column(
                       children: [
@@ -893,7 +908,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                       ],
                     ),
                   ),
-                if (_deviceDataType != null && DeviceType.fromFtms(_deviceDataType!) == DeviceType.rower)
+                if (_deviceType != null && _deviceType! == DeviceType.rower)
                   const SizedBox(height: 16),
                 // Load Training Session Section
                 Card(
@@ -978,9 +993,5 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
               ],
             ),
           );
-        },
-      ),
-    ),
-    );
   }
 }

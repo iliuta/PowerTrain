@@ -24,6 +24,7 @@
   "connectedAsAthlete": "Connected as {athleteName}",
   "failedLoadTrainingSessions": "Failed to load training sessions.",
   "noTrainingSessionsFound": "No training sessions found for this machine type.",
+  "couldNotRetrieveDeviceInformation": "Could not retrieve device information. Please check your connection and try again.",
   "noFtmsDataFound": "No FTMSData found!",
   "goBack": "Go Back",
   "freeRide": "Free Ride",

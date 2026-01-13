@@ -108,7 +108,6 @@ class SupportedBTDeviceManager {
 
   /// Notify listeners of device changes
   void _notifyDevicesChanged() {
-    logger.i('📡 Notifying device changes. Connected devices: ${_allConnectedDevices.length}');
     _globalDevicesController.add(allConnectedDevices);
   }
 
@@ -190,10 +189,6 @@ class SupportedBTDeviceManager {
         logger.i('✅ Device is FTMS, connecting...');
         final ftmsService = _supportedBTDevices.firstWhere((s) => s.deviceTypeName == 'FTMS');
         await ftmsService.connectToDevice(device);
-        // Start machine type detection for automatically discovered FTMS devices
-        if (ftmsService is Ftms) {
-          ftmsService.startMachineTypeDetection(device);
-        }
         return;
       }
       logger.i('❌ Device is not FTMS');

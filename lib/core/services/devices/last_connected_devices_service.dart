@@ -65,7 +65,6 @@ class LastConnectedDevicesService {
       };
       
       await prefs.setString(key, jsonEncode(deviceInfo));
-      logger.i('💾 Saved last connected device for ${deviceType.name}: $deviceName ($deviceId)');
     } catch (e) {
       logger.e('❌ Failed to save last connected device: $e');
     }
@@ -77,15 +76,10 @@ class LastConnectedDevicesService {
       final prefs = await SharedPreferences.getInstance();
       final key = _prefsPrefix + deviceType.name.toLowerCase();
       
-      logger.i('🔑 Looking for device with key: $key');
-      
       final jsonString = prefs.getString(key);
       if (jsonString == null) {
-        logger.i('❌ No data found for key: $key');
         return null;
       }
-      
-      logger.i('✅ Found data for key: $key -> $jsonString');
       
       final deviceInfo = jsonDecode(jsonString) as Map<String, dynamic>;
       return {
@@ -104,31 +98,14 @@ class LastConnectedDevicesService {
   Future<Map<BTDeviceServiceType, Map<String, dynamic>>> getAllLastConnectedDevices() async {
     final result = <BTDeviceServiceType, Map<String, dynamic>>{};
     
-    logger.i('🔍 Checking for saved devices in SharedPreferences...');
-    
-    // Debug: show all keys in SharedPreferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final allKeys = prefs.getKeys();
-      logger.i('📋 All SharedPreferences keys: $allKeys');
-      final deviceKeys = allKeys.where((key) => key.startsWith(_prefsPrefix)).toList();
-      logger.i('📋 Device-related keys: $deviceKeys');
-    } catch (e) {
-      logger.e('❌ Error reading SharedPreferences keys: $e');
-    }
-    
     // Check for each known device type
     for (final deviceType in BTDeviceServiceType.all) {
       final deviceInfo = await getLastConnectedDevice(deviceType);
       if (deviceInfo != null) {
         result[deviceType] = deviceInfo;
-        logger.i('✅ Found saved device for ${deviceType.name}: ${deviceInfo['deviceName']}');
-      } else {
-        logger.i('❌ No saved device for ${deviceType.name}');
       }
     }
     
-    logger.i('🔍 Total saved devices found: ${result.length}');
     return result;
   }
   
@@ -139,7 +116,6 @@ class LastConnectedDevicesService {
       final key = _prefsPrefix + deviceType.name.toLowerCase();
       
       await prefs.remove(key);
-      logger.i('🗑️ Cleared last connected device for ${deviceType.name}');
     } catch (e) {
       logger.e('❌ Failed to clear last connected device: $e');
     }
@@ -155,7 +131,6 @@ class LastConnectedDevicesService {
         await prefs.remove(key);
       }
       
-      logger.i('🗑️ Cleared all last connected devices');
     } catch (e) {
       logger.e('❌ Failed to clear all last connected devices: $e');
     }
@@ -176,8 +151,6 @@ class LastConnectedDevicesService {
     // Get all previously connected devices
     final lastConnectedDevices = await getAllLastConnectedDevices();
     
-    logger.i('🔄 Auto-reconnection: Found ${lastConnectedDevices.length} previously connected device types');
-    
     // Try to reconnect to each previously connected device
     for (final entry in lastConnectedDevices.entries) {
       final deviceType = entry.key;
@@ -194,7 +167,6 @@ class LastConnectedDevicesService {
       final alreadyConnected = _deviceManager.allConnectedDevices
           .any((device) => device.id == lastDeviceId);
       if (alreadyConnected) {
-        logger.i('⏭️ Auto-reconnection: Device $lastDeviceName is already connected, skipping');
         _attemptedReconnections.add(lastDeviceId);
         continue;
       }
@@ -205,8 +177,7 @@ class LastConnectedDevicesService {
       ).firstOrNull;
       
       if (scanResult != null) {
-        logger.i('🔄 Auto-reconnection: Found previously connected ${deviceType.name} device: $lastDeviceName');
-        
+
         // Mark as attempted
         _attemptedReconnections.add(lastDeviceId);
         
@@ -215,8 +186,7 @@ class LastConnectedDevicesService {
         final btDevice = _deviceManager.getBTDevice(device, scanResults);
         
         if (btDevice != null) {
-          logger.i('🔄 Auto-reconnection: Attempting to connect to $lastDeviceName...');
-          
+
           final success = await btDevice.connectToDevice(device);
           
           if (success) {

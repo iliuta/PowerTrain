@@ -102,6 +102,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine Trainingseinheiten für diesen Maschinentyp gefunden.';
 
   @override
+  String get couldNotRetrieveDeviceInformation =>
+      'Geräteinformationen konnten nicht abgerufen werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.';
+
+  @override
   String get noFtmsDataFound => 'Keine FTMS-Daten gefunden!';
 
   @override

@@ -24,6 +24,7 @@
   "connectedAsAthlete": "Verbunden als {athleteName}",
   "failedLoadTrainingSessions": "Laden der Trainingseinheiten fehlgeschlagen.",
   "noTrainingSessionsFound": "Keine Trainingseinheiten für diesen Maschinentyp gefunden.",
+  "couldNotRetrieveDeviceInformation": "Geräteinformationen konnten nicht abgerufen werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
   "noFtmsDataFound": "Keine FTMS-Daten gefunden!",
   "goBack": "Zurück",
   "freeRide": "Freie Fahrt",

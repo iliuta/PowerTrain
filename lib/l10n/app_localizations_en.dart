@@ -100,6 +100,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No training sessions found for this machine type.';
 
   @override
+  String get couldNotRetrieveDeviceInformation =>
+      'Could not retrieve device information. Please check your connection and try again.';
+
+  @override
   String get noFtmsDataFound => 'No FTMSData found!';
 
   @override

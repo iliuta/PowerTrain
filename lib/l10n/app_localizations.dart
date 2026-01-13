@@ -250,6 +250,12 @@ abstract class AppLocalizations {
   /// **'No training sessions found for this machine type.'**
   String get noTrainingSessionsFound;
 
+  /// No description provided for @couldNotRetrieveDeviceInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not retrieve device information. Please check your connection and try again.'**
+  String get couldNotRetrieveDeviceInformation;
+
   /// No description provided for @noFtmsDataFound.
   ///
   /// In en, this message translates to:

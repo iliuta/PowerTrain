@@ -467,6 +467,60 @@ class MockFTMSService extends _i1.Mock implements _i12.FTMSService {
             returnValue: _i8.Future<_i14.SupportedPowerRange?>.value(),
           )
           as _i8.Future<_i14.SupportedPowerRange?>);
+
+  @override
+  _i8.Future<void> setPowerWithControl(dynamic power) =>
+      (super.noSuchMethod(
+            Invocation.method(#setPowerWithControl, [power]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> stopOrPauseWithControl() =>
+      (super.noSuchMethod(
+            Invocation.method(#stopOrPauseWithControl, []),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> setResistanceWithControl(int? resistance) =>
+      (super.noSuchMethod(
+            Invocation.method(#setResistanceWithControl, [resistance]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> startOrResumeWithControl() =>
+      (super.noSuchMethod(
+            Invocation.method(#startOrResumeWithControl, []),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> resetWithControl() =>
+      (super.noSuchMethod(
+            Invocation.method(#resetWithControl, []),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> requestControlOnly() =>
+      (super.noSuchMethod(
+            Invocation.method(#requestControlOnly, []),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
 }
 
 /// A class which mocks [TrainingDataRecorder].

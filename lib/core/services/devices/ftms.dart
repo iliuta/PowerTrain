@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
@@ -9,7 +10,7 @@ import 'bt_device_navigation_registry.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
 import '../../bloc/ftms_bloc.dart';
-import '../device_data_merger.dart';
+import '../ftms_service.dart';
 
 /// Service for FTMS (Fitness Machine Service) devices
 class Ftms extends BTDevice {
@@ -18,7 +19,7 @@ class Ftms extends BTDevice {
   Ftms._internal();
 
   DeviceType? _deviceType;
-  DeviceDataMerger? _dataMerger;
+  final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
 
   @override
   String get deviceTypeName => 'FTMS';
@@ -29,9 +30,13 @@ class Ftms extends BTDevice {
   /// Device type (for FTMS devices)
   DeviceType? get deviceType => _deviceType;
 
+  /// Stream of device type changes
+  Stream<DeviceType> get deviceTypeStream => _deviceTypeController.stream;
+
   /// Update device type (for FTMS devices)
   void updateDeviceType(DeviceType deviceType) {
     _deviceType = deviceType;
+    _deviceTypeController.add(deviceType);
     notifyDevicesChanged();
     
     // Save the machine type to preferences
@@ -156,7 +161,7 @@ class Ftms extends BTDevice {
       // Check if device is still connected before starting machine type detection
       if (device.isConnected) {
         logger.i('🔧 FTMS: Starting machine type detection');
-        startMachineTypeDetection(device);
+        _detectFtmsMachineTypeAndConnectToDataStream(device);
         
         // Listen for connection state changes to handle both disconnection and reconnection
         device.connectionState.listen((state) {
@@ -180,33 +185,36 @@ class Ftms extends BTDevice {
   }
 
   /// Start listening to FTMS device data to detect and store machine type
-  void startMachineTypeDetection(BluetoothDevice device) {
+  Future<void> _detectFtmsMachineTypeAndConnectToDataStream(BluetoothDevice device) async {
     try {
       logger.i('🔧 FTMS: Starting machine type detection for ${device.platformName}');
+      DeviceType? detectedType;
+      try {
+        detectedType = await _determineDeviceTypeFromCharacteristics(device);
+        if (detectedType != null) {
+          logger.i('🔧 FTMS: Detected machine type from characteristics: $detectedType');
+          updateDeviceType(detectedType);
+        }
+      } catch(e) {
+        logger.w('⚠️ FTMS: Failed to determine ftms device type: $e');
+        // Continue anyway - some devices may not require control request
+      }
+
+      // Listen to FTMS data stream (flutter_ftms already handles packet merging)
+      DeviceDataType? preferredDeviceDataType;
+      if (detectedType == DeviceType.indoorBike) {
+        preferredDeviceDataType = DeviceDataType.indoorBike;
+      } else if (detectedType == DeviceType.rower) {
+        preferredDeviceDataType = DeviceDataType.rower;
+      }
       
-      // Initialize packet merger for handling split packets (e.g., Yosuda rower)
-      _dataMerger = DeviceDataMerger(
-        onMergedData: (DeviceData mergedData) {
-          // Extract machine type from merged device data
-          final machineType = DeviceType.fromFtms(mergedData.deviceDataType);
-          
-          logger.i('🔧 FTMS: Detected machine type: $machineType');
-          
-          // Update this device's machine type
-          updateDeviceType(machineType);
-          
-          // Forward merged data to the global FTMS bloc for other consumers
-          ftmsBloc.ftmsDeviceDataControllerSink.add(mergedData);
-        },
-      );
-      
-      // Listen to FTMS data stream and process through merger
       FTMS.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
-          // Process packet through merger to handle split packets
-          _dataMerger?.processPacket(data);
+          // Forward merged data to the global FTMS bloc for other consumers
+          ftmsBloc.ftmsDeviceDataControllerSink.add(data);
         },
+        preferredDeviceDataType: preferredDeviceDataType,
       );
     } catch (e) {
       logger.i('❌ FTMS: Machine type detection failed: $e');
@@ -222,12 +230,60 @@ class Ftms extends BTDevice {
       
       logger.i('🔧 FTMS: Re-establishing data stream after reconnection');
       
-      // Re-establish the FTMS data stream
-      startMachineTypeDetection(device);
-      
+      await _detectFtmsMachineTypeAndConnectToDataStream(device);
+
       logger.i('🔧 FTMS: Data stream re-established after reconnection');
+      await FTMSService(device).requestControlOnly();
     } catch (e) {
       logger.e('❌ FTMS: Failed to re-establish data stream after reconnection: $e');
+    }
+  }
+
+  /// Determine device type by inspecting available FTMS characteristics
+  /// According to FTMS spec:
+  /// - 0x2AD1: Rower Data
+  /// - 0x2AD2: Indoor Bike Data
+  Future<DeviceType?> _determineDeviceTypeFromCharacteristics(BluetoothDevice device) async {
+    try {
+      // Ensure services are discovered
+      // ignore: unnecessary_null_comparison
+      if (device.servicesList == null || device.servicesList.isEmpty) {
+        logger.i('🔧 FTMS: Discovering services for device type detection');
+        await device.discoverServices();
+      }
+      
+      // Find FTMS service
+      final ftmsServices = device.servicesList
+          .where((s) => s.uuid.toString().toLowerCase().contains('1826'));
+      
+      if (ftmsServices.isEmpty) {
+        logger.w('⚠️ FTMS: No FTMS service found on device');
+        return null;
+      }
+      
+      final ftmsService = ftmsServices.first;
+      final characteristics = ftmsService.characteristics;
+      
+      // Check for rower data characteristic (0x2AD1)
+      final hasRowerData = characteristics
+          .any((c) => c.uuid.toString().toLowerCase().contains('2ad1'));
+      
+      // Check for indoor bike data characteristic (0x2AD2)
+      final hasBikeData = characteristics
+          .any((c) => c.uuid.toString().toLowerCase().contains('2ad2'));
+      
+      // Determine device type based on available characteristics
+      if (hasRowerData) {
+        return DeviceType.rower;
+      } else if (hasBikeData) {
+        return DeviceType.indoorBike;
+      } else {
+        logger.w('⚠️ FTMS: Could not determine device type from characteristics');
+        return null;
+      }
+    } catch (e) {
+      logger.w('⚠️ FTMS: Failed to determine device type from characteristics: $e');
+      return null;
     }
   }
 

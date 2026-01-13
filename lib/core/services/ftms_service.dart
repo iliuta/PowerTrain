@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:ftms/core/utils/logger.dart';
 
 import '../models/supported_resistance_level_range.dart';
 import '../models/supported_power_range.dart';
@@ -73,6 +74,7 @@ class FTMSService {
     final ftmsService = ftmsDevice.servicesList.firstWhere(
       (s) => s.uuid.toString().toLowerCase().contains('1826'),
     );
+
     // Find control point (2ad9)
     final controlChar = ftmsService.characteristics.firstWhere(
       (c) => c.uuid.toString().toLowerCase().contains('2ad9'),
@@ -140,5 +142,80 @@ class FTMSService {
       debugPrint('❌ readSupportedPowerRange error: $e');
       rethrow;
     }
+  }
+
+  /// Executes an FTMS command with retry logic for reliability
+  Future<void> _executeWithRetry(Future<void> Function() command, String operationName) async {
+    const int maxRetries = 5;
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await command();
+        return; // Success, exit
+      } catch (e) {
+        debugPrint('Failed to $operationName (attempt ${attempt + 1}/$maxRetries): $e');
+        if (attempt == maxRetries - 1) {
+          debugPrint('All retries failed for $operationName');
+          // Don't rethrow - FTMS commands should fail silently to not disrupt the session
+          return;
+        }
+        await Future.delayed(const Duration(milliseconds: 500)); // Wait before retry
+      }
+    }
+  }
+
+  Future<void> setPowerWithControl(dynamic power) async {
+    await _executeWithRetry(() async {
+      await writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await writeCommand(
+          MachineControlPointOpcodeType.setTargetPower,
+          power: power);
+      logger.i('Requested control and sent setPowerWithControl($power W) command');
+    }, 'setPowerWithControl');
+  }
+
+  Future<void> stopOrPauseWithControl() async {
+    await _executeWithRetry(() async {
+      await writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await writeCommand(MachineControlPointOpcodeType.stopOrPause);
+      logger.i('Requested control and sent stopOrPause command');
+    }, 'stopOrPauseWithControl');
+  }
+
+  Future<void> setResistanceWithControl(int resistance) async {
+    await _executeWithRetry(() async {
+      await writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await writeCommand(
+          MachineControlPointOpcodeType.setTargetResistanceLevel,
+          resistanceLevel: resistance);
+      logger.i('Requested control and sent setTargetResistanceLevel($resistance) command');
+    }, 'setResistanceWithControl');
+  }
+
+  Future<void> startOrResumeWithControl() async {
+    await _executeWithRetry(() async {
+      await writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await writeCommand(MachineControlPointOpcodeType.startOrResume);
+      logger.i('Requested control and sent startOrResume command');
+    }, 'startOrResumeWithControl');
+  }
+
+  Future<void> resetWithControl() async {
+    await _executeWithRetry(() async {
+      await writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await writeCommand(MachineControlPointOpcodeType.reset);
+      logger.i('Requested control and sent reset command');
+    }, 'resetWithControl');
+  }
+
+  Future<void> requestControlOnly() async {
+    await _executeWithRetry(() async {
+      await writeCommand(MachineControlPointOpcodeType.requestControl);
+      await Future.delayed(const Duration(milliseconds: 100));
+    }, 'resetWithControl');
   }
 }
