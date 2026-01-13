@@ -935,7 +935,6 @@ class TrainingSessionController extends ChangeNotifier
 
     // Resume the session (send startOrResume to FTMS, no reset)
     onSendFtmsResume();
-    onStartTimer();
     notifyListeners();
   }
 
