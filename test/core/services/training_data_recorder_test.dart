@@ -916,6 +916,26 @@ void main() {
       expect(record.elevation, equals(35.0));
       expect(record.instantaneousPower, equals(150));
     });
+
+    test('TrainingRecord.fromFtmsParameters should convert Instantaneous Pace to speed', () {
+      final ftmsParams = <String, LiveDataFieldValue>{
+        'Instantaneous Pace': LiveDataFieldValue(
+          name: 'Instantaneous Pace',
+          value: 120, // seconds/500m
+          unit: 'seconds/500m',
+          factor: 1,
+        ),
+      };
+
+      final record = TrainingRecord.fromFtmsParameters(
+        timestamp: DateTime.now(),
+        elapsedTime: 60,
+        ftmsParams: ftmsParams,
+      );
+
+      // 1800 / 120 = 15 km/h
+      expect(record.instantaneousSpeed, equals(15.0));
+    });
   });
 }
 

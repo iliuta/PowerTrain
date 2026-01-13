@@ -45,11 +45,14 @@ class TrainingRecord {
     double? longitude,
     double? elevation,
   }) {
+    // Handle speed: prefer 'Instantaneous Speed', but convert from 'Instantaneous Pace' if needed
+    double? instantaneousSpeed = _extractInstantaneousSpeed(ftmsParams);
+
     return TrainingRecord(
       timestamp: timestamp,
       elapsedTime: elapsedTime,
       instantaneousPower: _getParameterValue(ftmsParams, 'Instantaneous Power'),
-      instantaneousSpeed: _getParameterValue(ftmsParams, 'Instantaneous Speed'),
+      instantaneousSpeed: instantaneousSpeed,
       instantaneousCadence: _getParameterValue(ftmsParams, 'Instantaneous Cadence'),
       heartRate: _getParameterValue(ftmsParams, 'Heart Rate'),
       totalDistance: calculatedDistance,
@@ -61,6 +64,19 @@ class TrainingRecord {
       longitude: longitude,
       elevation: elevation,
     );
+  }
+
+  static double? _extractInstantaneousSpeed(Map<String, LiveDataFieldValue> ftmsParams) {
+    double? instantaneousSpeed = _getParameterValue(ftmsParams, 'Instantaneous Speed');
+    if (instantaneousSpeed == null) {
+      final pace = _getParameterValue(ftmsParams, 'Instantaneous Pace');
+      if (pace != null && pace > 0) {
+        // Convert pace (seconds/500m) to speed (km/h)
+        // 500m = 0.5km, so speed = 0.5km / (pace/3600)h = 1800 / pace
+        instantaneousSpeed = 1800 / pace;
+      }
+    }
+    return instantaneousSpeed;
   }
   
   static double? _getParameterValue(Map<String, LiveDataFieldValue> params, String key) {
