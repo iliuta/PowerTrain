@@ -31,7 +31,7 @@ void main() async {
   // See: https://docs.flutter.dev/release/breaking-changes/default-systemuimode-edge-to-edge
   
   // Set log level for production
-  FlutterBluePlus.setLogLevel(LogLevel.info);
+  FlutterBluePlus.setLogLevel(LogLevel.warning);
   
   // Initialize device navigation callbacks to avoid circular dependencies
   initializeDeviceNavigation();

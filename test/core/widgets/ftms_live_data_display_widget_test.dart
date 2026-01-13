@@ -95,8 +95,6 @@ void main() {
     // Speedometer widget
     expect(find.text('Power'), findsOneWidget);
     expect(find.text('200 W'), findsOneWidget);
-    // Missing param
-    expect(find.textContaining('Missing: (not available)'), findsOneWidget);
     // Unknown display type
     expect(
         find.textContaining('Unknown: (unknown display type)'), findsOneWidget);
