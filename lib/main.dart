@@ -9,9 +9,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'features/scan/scan_page.dart';
 import 'features/scan/scan_widgets.dart';
-import 'features/common/burger_menu.dart';
 import 'core/services/devices/bt_device.dart';
 import 'core/services/devices/bt_device_manager.dart';
+import 'features/common/bottom_action_buttons.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -129,8 +129,6 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.appTitle),
-        titleSpacing: 0, // Reduce spacing between leading and title
-        leading: BurgerMenu(connectedDevice: _connectedFtmsDevice),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 4.0),
@@ -184,7 +182,25 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
           ),
         ],
       ),
-      body: const ScanPage(),
+      body: Stack(
+        children: [
+          const ScanPage(),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: StreamBuilder<List<BTDevice>>(
+              stream: SupportedBTDeviceManager().connectedDevicesStream,
+              initialData: SupportedBTDeviceManager().allConnectedDevices,
+              builder: (context, snapshot) {
+                final connectedDevices = snapshot.data ?? [];
+                final connectedDevice = connectedDevices.isNotEmpty ? connectedDevices.first.connectedDevice : null;
+                return BottomActionButtons(connectedDevice: connectedDevice);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
