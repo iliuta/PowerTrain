@@ -53,18 +53,20 @@ class _ScanPageState extends State<ScanPage> {
     _adapterStateSubscription?.cancel();
     super.dispose();
   }
-  
+
   Future<void> _checkStravaStatus() async {
     final status = await _stravaService.getAuthStatus();
     setState(() {
       if (status != null) {
-        _stravaStatus = AppLocalizations.of(context)!.connectedAsAthlete(status['athleteName']);
+        _stravaStatus = AppLocalizations.of(
+          context,
+        )!.connectedAsAthlete(status['athleteName']);
       } else {
         _stravaStatus = null;
       }
     });
   }
-  
+
   Future<void> _checkAndRequestReview() async {
     //await _reviewService.resetAll();
     await _reviewService.incrementUsageCount();
@@ -95,11 +97,11 @@ class _ScanPageState extends State<ScanPage> {
 
   Future<void> _handleStravaConnection() async {
     if (_isConnectingStrava) return;
-    
+
     setState(() {
       _isConnectingStrava = true;
     });
-    
+
     try {
       // Show initial feedback with detailed instructions
       if (mounted) {
@@ -111,17 +113,19 @@ class _ScanPageState extends State<ScanPage> {
               children: [
                 Text(AppLocalizations.of(context)!.openingStravaAuth),
                 const SizedBox(height: 4),
-                Text(AppLocalizations.of(context)!.signInStravaPopup,
-                     style: const TextStyle(fontSize: 12)),
+                Text(
+                  AppLocalizations.of(context)!.signInStravaPopup,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ],
             ),
             duration: const Duration(seconds: 4),
           ),
         );
       }
-      
+
       final success = await _stravaService.authenticate(context: context);
-      
+
       if (success) {
         await _checkStravaStatus();
         if (mounted) {
@@ -140,10 +144,12 @@ class _ScanPageState extends State<ScanPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                Text(AppLocalizations.of(context)!.stravaAuthIncomplete),
+                  Text(AppLocalizations.of(context)!.stravaAuthIncomplete),
                   const SizedBox(height: 4),
-                  Text(AppLocalizations.of(context)!.stravaAuthRetry,
-                       style: const TextStyle(fontSize: 12)),
+                  Text(
+                    AppLocalizations.of(context)!.stravaAuthRetry,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
               backgroundColor: Colors.orange,
@@ -157,7 +163,9 @@ class _ScanPageState extends State<ScanPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.stravaError(e.toString())),
+            content: Text(
+              AppLocalizations.of(context)!.stravaError(e.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -168,14 +176,17 @@ class _ScanPageState extends State<ScanPage> {
       });
     }
   }
+
   void _printBluetoothState() {
     // Listen to the adapter state stream (logging removed for production)
     FlutterBluePlus.adapterState.listen((state) {
       logger.i('Bluetooth adapter state: [0m${state.toString()}');
     });
     // Also print the last known state immediately
-    logger.i('Bluetooth adapter state (now): ${FlutterBluePlus.adapterStateNow.toString()}');
-    
+    logger.i(
+      'Bluetooth adapter state (now): ${FlutterBluePlus.adapterStateNow.toString()}',
+    );
+
     // Log platform information
     logger.i('Platform: ${Platform.operatingSystem}');
     if (Platform.isAndroid) {
@@ -197,7 +208,8 @@ class _ScanPageState extends State<ScanPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Check if adapter is already on and start scanning if not already done
-    if (FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on && !_hasStartedScan) {
+    if (FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on &&
+        !_hasStartedScan) {
       _hasStartedScan = true;
       _startScan();
     }
@@ -214,7 +226,9 @@ class _ScanPageState extends State<ScanPage> {
         case BTScanResult.permissionDenied:
           scaffoldMessenger.showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.bluetoothPermissionsRequired),
+              content: Text(
+                AppLocalizations.of(context)!.bluetoothPermissionsRequired,
+              ),
               action: SnackBarAction(
                 label: 'Settings',
                 onPressed: () async => await ph.openAppSettings(),
@@ -242,175 +256,240 @@ class _ScanPageState extends State<ScanPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false, // AppBar handles top insets
-      child: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // If the screen is narrow, stack buttons vertically
-                if (constraints.maxWidth < 600) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.refresh),
-                        label: Text(AppLocalizations.of(context)!.scanForDevices),
-                        onPressed: _startScan,
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton.icon(
-                        icon: _isConnectingStrava 
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Icon(_stravaStatus != null ? Icons.check_circle : Icons.link),
-                        label: Text(_stravaStatus != null ? AppLocalizations.of(context)!.connectedToStrava : AppLocalizations.of(context)!.connectToStrava),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _stravaStatus != null ? Colors.green : null,
-                          foregroundColor: _stravaStatus != null ? Colors.white : null,
+      bottom: false, // Allow content to extend to bottom for overlay buttons
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 40.0),
+        // Add bottom padding for overlay buttons
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8.0,
+                  horizontal: 16.0,
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // If the screen is narrow, stack buttons vertically
+                    if (constraints.maxWidth < 600) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.refresh),
+                            label: Text(
+                              AppLocalizations.of(context)!.scanForDevices,
+                            ),
+                            onPressed: _startScan,
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            icon: _isConnectingStrava
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    _stravaStatus != null
+                                        ? Icons.check_circle
+                                        : Icons.link,
+                                  ),
+                            label: Text(
+                              _stravaStatus != null
+                                  ? AppLocalizations.of(
+                                      context,
+                                    )!.connectedToStrava
+                                  : AppLocalizations.of(
+                                      context,
+                                    )!.connectToStrava,
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _stravaStatus != null
+                                  ? Colors.green
+                                  : null,
+                              foregroundColor: _stravaStatus != null
+                                  ? Colors.white
+                                  : null,
+                            ),
+                            onPressed: _isConnectingStrava
+                                ? null
+                                : _handleStravaConnection,
+                          ),
+                        ],
+                      );
+                    } else {
+                      // For wider screens, keep horizontal layout
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.refresh),
+                              label: Text(
+                                AppLocalizations.of(context)!.scanForDevices,
+                              ),
+                              onPressed: _startScan,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Flexible(
+                            child: ElevatedButton.icon(
+                              icon: _isConnectingStrava
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      _stravaStatus != null
+                                          ? Icons.check_circle
+                                          : Icons.link,
+                                    ),
+                              label: Text(
+                                _stravaStatus != null
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.connectedToStrava
+                                    : AppLocalizations.of(
+                                        context,
+                                      )!.connectToStrava,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _stravaStatus != null
+                                    ? Colors.green
+                                    : null,
+                                foregroundColor: _stravaStatus != null
+                                    ? Colors.white
+                                    : null,
+                              ),
+                              onPressed: _isConnectingStrava
+                                  ? null
+                                  : _handleStravaConnection,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  },
+                ),
+              ),
+              if (_showReviewBanner)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.enjoyingAppReviewPrompt,
+                            style: TextStyle(color: Colors.blue),
+                          ),
                         ),
-                        onPressed: _isConnectingStrava ? null : _handleStravaConnection,
-                      ),
-                    ],
-                  );
-                } else {
-                  // For wider screens, keep horizontal layout
-                  return Row(
+                        TextButton(
+                          onPressed: _requestReview,
+                          child: Text(AppLocalizations.of(context)!.rateNow),
+                        ),
+                        IconButton(
+                          onPressed: _dismissReviewBanner,
+                          icon: const Icon(Icons.close, size: 16),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (_stravaStatus != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Flexible(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.refresh),
-                          label: Text(AppLocalizations.of(context)!.scanForDevices),
-                          onPressed: _startScan,
+                        child: Text(
+                          _stravaStatus!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.green,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Flexible(
-                        child: ElevatedButton.icon(
-                          icon: _isConnectingStrava 
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Icon(_stravaStatus != null ? Icons.check_circle : Icons.link),
-                          label: Text(_stravaStatus != null ? 'Connected to Strava' : 'Connect to Strava'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _stravaStatus != null ? Colors.green : null,
-                            foregroundColor: _stravaStatus != null ? Colors.white : null,
-                          ),
-                          onPressed: _isConnectingStrava ? null : _handleStravaConnection,
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () async {
+                          // Capture the ScaffoldMessengerState before async operations
+                          final scaffoldMessenger = ScaffoldMessenger.of(
+                            context,
+                          );
+                          final disconnectedMessage = AppLocalizations.of(
+                            context,
+                          )!.disconnectedFromStrava;
+                          await _stravaService.signOut();
+                          await _checkStravaStatus();
+                          if (mounted) {
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(content: Text(disconnectedMessage)),
+                            );
+                          }
+                        },
+                        child: const Icon(
+                          Icons.logout,
+                          size: 16,
+                          color: Colors.grey,
                         ),
                       ),
                     ],
-                  );
-                }
-              },
-            ),
-          ),
-          if (_showReviewBanner)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Container(
-                padding: const EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8.0),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.enjoyingAppReviewPrompt,
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _requestReview,
-                      child: Text(AppLocalizations.of(context)!.rateNow),
-                    ),
-                    IconButton(
-                      onPressed: _dismissReviewBanner,
-                      icon: const Icon(Icons.close, size: 16),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          if (_stravaStatus != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      _stravaStatus!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.green,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () async {
-                      // Capture the ScaffoldMessengerState before async operations
-                      final scaffoldMessenger = ScaffoldMessenger.of(context);
-                      final disconnectedMessage = AppLocalizations.of(context)!.disconnectedFromStrava;
-                      await _stravaService.signOut();
-                      await _checkStravaStatus();
-                      if (mounted) {
-                        scaffoldMessenger.showSnackBar(
-                          SnackBar(content: Text(disconnectedMessage)),
-                        );
-                      }
-                    },
-                    child: const Icon(
-                      Icons.logout,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          // HRM Status Widget
-          Expanded(
-            child: StreamBuilder<List<ScanResult>>(
-              stream: FlutterBluePlus.scanResults,
-              initialData: const [],
-              builder: (c, scanSnapshot) {
-                return StreamBuilder<List<BTDevice>>(
-                  stream: SupportedBTDeviceManager().connectedDevicesStream,
-                  initialData: SupportedBTDeviceManager().allConnectedDevices,
-                  builder: (context, connectedSnapshot) {
-                    final scanResults = (scanSnapshot.data ?? [])
-                        .where((element) => element.device.platformName.isNotEmpty)
-                        .toList();
-                    
-                    return scanResultsToWidget(scanResults, context);
+                ),
+              // HRM Status Widget
+              Expanded(
+                child: StreamBuilder<List<ScanResult>>(
+                  stream: FlutterBluePlus.scanResults,
+                  initialData: const [],
+                  builder: (c, scanSnapshot) {
+                    return StreamBuilder<List<BTDevice>>(
+                      stream: SupportedBTDeviceManager().connectedDevicesStream,
+                      initialData:
+                          SupportedBTDeviceManager().allConnectedDevices,
+                      builder: (context, connectedSnapshot) {
+                        final scanResults = (scanSnapshot.data ?? [])
+                            .where(
+                              (element) =>
+                                  element.device.platformName.isNotEmpty,
+                            )
+                            .toList();
+
+                        return scanResultsToWidget(scanResults, context);
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
     );
   }
 }
