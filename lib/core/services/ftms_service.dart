@@ -75,18 +75,6 @@ class FTMSService {
       (s) => s.uuid.toString().toLowerCase().contains('1826'),
     );
 
-    final rowerDataChar = ftmsService.characteristics
-        .where((c) => c.uuid.toString().toLowerCase().contains('2ad1'))
-        .firstOrNull;
-
-    if (rowerDataChar != null) {
-      if (rowerDataChar.properties.indicate && !rowerDataChar.isNotifying) {
-        await rowerDataChar.setNotifyValue(true);
-      } else if (rowerDataChar.properties.notify && !rowerDataChar.isNotifying) {
-        await rowerDataChar.setNotifyValue(true);
-      }
-    }
-
     // Find control point (2ad9)
     final controlChar = ftmsService.characteristics.firstWhere(
       (c) => c.uuid.toString().toLowerCase().contains('2ad9'),
