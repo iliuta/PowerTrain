@@ -7,6 +7,7 @@
   "unsynchronizedActivities": "Nicht synchronisierte Aktivitäten",
   "settings": "Einstellungen",
   "help": "Hilfe",
+  "helpUrl": "https://iliuta.github.io/powertrain-training-sessions/index_de.html",
   "disconnectedFromDevice": "Von {deviceName} getrennt",
   "failedToDisconnect": "Trennung fehlgeschlagen: {error}",
   "openingStravaAuth": "Strava-Autorisierung wird geöffnet...",
