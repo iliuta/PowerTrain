@@ -10,23 +10,36 @@ class HelpPage extends StatefulWidget {
 }
 
 class _HelpPageState extends State<HelpPage> {
-  late final WebViewController controller;
+  WebViewController? controller;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('https://iliuta.github.io/powertrain-training-sessions/'));
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      final url = AppLocalizations.of(context)!.helpUrl;
+      controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse(url));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (controller == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.help),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.help),
       ),
-      body: WebViewWidget(controller: controller),
+      body: WebViewWidget(controller: controller!),
     );
   }
 }

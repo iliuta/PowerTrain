@@ -60,6 +60,10 @@ class TrainingSessionController extends ChangeNotifier
   double? _currentMetronomeTarget;
   int _metronomeTickCount = 0; // Counter for alternating high/low sounds
 
+  // Public getters for metronome state (used by UI to show visual metronome)
+  double? get currentMetronomeTarget => _currentMetronomeTarget;
+  int get metronomeTickCount => _metronomeTickCount;
+
   // For detecting activity to trigger session auto-start and auto-pause
   double? _lastActivityValue;
   double? _lastResumeCheckValue; // Separate tracking for resume detection
@@ -711,19 +715,24 @@ class TrainingSessionController extends ChangeNotifier
     _stopMetronome();
     if (!_state.isRunning) return;
 
+    _currentMetronomeTarget = target; // Store the target for UI
     // Use double frequency for alternating high/low ticks
     final periodSeconds = 60 / target / 2; // Half the period for double frequency
     _metronomeTickCount = 0; // Reset counter
     _metronomeTimer = Timer.periodic(Duration(milliseconds: (periodSeconds * 1000).round()), (_) {
       _metronomeTickCount++;
       _metronomeTickCount.isOdd ? _soundService?.playTickHigh() : _soundService?.playTickLow();
+      if (!_disposed) notifyListeners(); // Notify UI of tick count change
     });
+    if (!_disposed) notifyListeners(); // Notify UI that metronome started
   }
 
   void _stopMetronome() {
     _metronomeTimer?.cancel();
     _metronomeTimer = null;
+    _currentMetronomeTarget = null; // Clear the target
     _metronomeTickCount = 0; // Reset counter
+    if (!_disposed) notifyListeners(); // Notify UI that metronome stopped
   }
 
   // ============ Recording and Strava ============
