@@ -11,6 +11,7 @@ void main() {
             body: MetronomeVisualizer(
               targetCadence: 24.0,
               tickCount: 0,
+              isPullPhase: true,
             ),
           ),
         ),
@@ -26,8 +27,8 @@ void main() {
       expect(find.byType(AnimatedPositioned), findsOneWidget);
     });
 
-    testWidgets('circle position changes based on tick count', (WidgetTester tester) async {
-      // Test with even tick count (should be at left position)
+    testWidgets('circle position changes based on phase', (WidgetTester tester) async {
+      // Test with pull phase (should be moving to right position)
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -36,7 +37,8 @@ void main() {
               height: 50,
               child: MetronomeVisualizer(
                 targetCadence: 24.0,
-                tickCount: 0, // Even - should be at left
+                tickCount: 0,
+                isPullPhase: true, // Pull - should be moving to right
               ),
             ),
           ),
@@ -44,14 +46,14 @@ void main() {
       );
 
       // Get the AnimatedPositioned widget
-      final animatedPositionedEven = tester.widget<AnimatedPositioned>(
+      final animatedPositionedPull = tester.widget<AnimatedPositioned>(
         find.byType(AnimatedPositioned),
       );
 
-      // With tickCount 0 (even), position should be at left (0.0)
-      expect(animatedPositionedEven.left, 0.0);
+      // With isPullPhase true, target position should be at right (calculated based on width)
+      expect(animatedPositionedPull.left, greaterThan(0.0));
 
-      // Test with odd tick count (should be at right position)
+      // Test with recovery phase (should be moving to left position)
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -60,56 +62,84 @@ void main() {
               height: 50,
               child: MetronomeVisualizer(
                 targetCadence: 24.0,
-                tickCount: 1, // Odd - should be at right
+                tickCount: 1,
+                isPullPhase: false, // Recovery - should be moving to left
               ),
             ),
           ),
         ),
       );
 
-      final animatedPositionedOdd = tester.widget<AnimatedPositioned>(
+      final animatedPositionedRecovery = tester.widget<AnimatedPositioned>(
         find.byType(AnimatedPositioned),
       );
 
-      // With tickCount 1 (odd), position should be at right (calculated based on width)
-      // The exact value depends on the track width calculation, but should be > 0
-      expect(animatedPositionedOdd.left, greaterThan(0.0));
+      // With isPullPhase false, target position should be at left (0.0)
+      expect(animatedPositionedRecovery.left, 0.0);
     });
 
-    testWidgets('animation duration is calculated correctly', (WidgetTester tester) async {
+    testWidgets('animation duration reflects pull vs recovery timing', (WidgetTester tester) async {
       const targetCadence = 24.0; // strokes per minute
+      final cycleSeconds = 60 / targetCadence;
 
+      // Test pull phase (1/3 of cycle)
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: MetronomeVisualizer(
               targetCadence: targetCadence,
               tickCount: 0,
+              isPullPhase: true,
             ),
           ),
         ),
       );
 
-      final animatedPositioned = tester.widget<AnimatedPositioned>(
+      final animatedPositionedPull = tester.widget<AnimatedPositioned>(
         find.byType(AnimatedPositioned),
       );
 
-      // Duration should be half the metronome period (since it alternates high/low ticks)
-      // Period = 60 / targetCadence seconds, half period = 30 / targetCadence seconds
-      // In milliseconds: (30 / targetCadence) * 1000 = 30000 / targetCadence
-      // For targetCadence = 24: 30000 / 24 = 1250 ms
-      final expectedDurationMs = (60 / targetCadence / 2 * 1000).round();
-      expect(animatedPositioned.duration.inMilliseconds, expectedDurationMs);
+      // Pull duration should be 1/3 of cycle
+      final expectedPullDurationMs = (cycleSeconds / 3 * 1000).round();
+      expect(animatedPositionedPull.duration.inMilliseconds, expectedPullDurationMs);
+
+      // Test recovery phase (2/3 of cycle)
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MetronomeVisualizer(
+              targetCadence: targetCadence,
+              tickCount: 1,
+              isPullPhase: false,
+            ),
+          ),
+        ),
+      );
+
+      final animatedPositionedRecovery = tester.widget<AnimatedPositioned>(
+        find.byType(AnimatedPositioned),
+      );
+
+      // Recovery duration should be 2/3 of cycle
+      final expectedRecoveryDurationMs = (cycleSeconds * 2 / 3 * 1000).round();
+      expect(animatedPositionedRecovery.duration.inMilliseconds, expectedRecoveryDurationMs);
+      
+      // Recovery should be approximately twice as long as pull
+      expect(
+        animatedPositionedRecovery.duration.inMilliseconds,
+        greaterThan(animatedPositionedPull.duration.inMilliseconds * 1.5),
+      );
     });
 
     testWidgets('different cadences produce different animation durations', (WidgetTester tester) async {
-      // Test with slower cadence (20 spm)
+      // Test with slower cadence (20 spm) - pull phase
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: MetronomeVisualizer(
               targetCadence: 20.0,
               tickCount: 0,
+              isPullPhase: true,
             ),
           ),
         ),
@@ -119,13 +149,14 @@ void main() {
         find.byType(AnimatedPositioned),
       );
 
-      // Test with faster cadence (30 spm)
+      // Test with faster cadence (30 spm) - pull phase
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: MetronomeVisualizer(
               targetCadence: 30.0,
               tickCount: 0,
+              isPullPhase: true,
             ),
           ),
         ),
@@ -149,6 +180,7 @@ void main() {
             body: MetronomeVisualizer(
               targetCadence: 24.0,
               tickCount: 0,
+              isPullPhase: true,
             ),
           ),
         ),
@@ -161,23 +193,44 @@ void main() {
       expect(find.byType(Container), findsNWidgets(4)); // track bar + 2 end markers + circle
     });
 
-    testWidgets('uses easeInOut curve for smooth animation', (WidgetTester tester) async {
+    testWidgets('uses different curves for pull and recovery phases', (WidgetTester tester) async {
+      // Test pull phase - should use easeOutCubic (explosive)
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: MetronomeVisualizer(
               targetCadence: 24.0,
               tickCount: 0,
+              isPullPhase: true,
             ),
           ),
         ),
       );
 
-      final animatedPositioned = tester.widget<AnimatedPositioned>(
+      final animatedPositionedPull = tester.widget<AnimatedPositioned>(
         find.byType(AnimatedPositioned),
       );
 
-      expect(animatedPositioned.curve, Curves.easeInOut);
+      expect(animatedPositionedPull.curve, Curves.easeOutCubic);
+
+      // Test recovery phase - should use easeInOutSine (smooth)
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MetronomeVisualizer(
+              targetCadence: 24.0,
+              tickCount: 1,
+              isPullPhase: false,
+            ),
+          ),
+        ),
+      );
+
+      final animatedPositionedRecovery = tester.widget<AnimatedPositioned>(
+        find.byType(AnimatedPositioned),
+      );
+
+      expect(animatedPositionedRecovery.curve, Curves.easeInOutSine);
     });
   });
 }

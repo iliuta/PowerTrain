@@ -56,6 +56,7 @@ class TrainingSessionBody extends StatelessWidget {
                           MetronomeVisualizer(
                             targetCadence: controller.currentMetronomeTarget!,
                             tickCount: controller.metronomeTickCount,
+                            isPullPhase: controller.isPullPhase,
                           ),
                         // Interval list
                         Expanded(

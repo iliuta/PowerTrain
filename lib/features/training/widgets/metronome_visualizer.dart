@@ -2,23 +2,32 @@ import 'package:flutter/material.dart';
 
 /// A visual metronome representation showing a circle moving left-right
 /// synchronized with the audio metronome ticks.
-/// The circle moves from left (tick 0) to right (tick 1) and back.
+/// The circle moves from left (pull phase - faster) to right (recovery phase - slower).
 class MetronomeVisualizer extends StatelessWidget {
   final double targetCadence;
   final int tickCount;
+  final bool isPullPhase;
 
   const MetronomeVisualizer({
     super.key,
     required this.targetCadence,
     required this.tickCount,
+    required this.isPullPhase,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Calculate position: tickCount alternates between odd (right) and even (left)
-    // We want smooth animation from left to right when odd, right to left when even
-    final isMovingRight = tickCount.isEven;
-    final position = isMovingRight ? 0.0 : 1.0;
+    // Calculate position based on phase:
+    // Pull phase (isPullPhase = true): moving from left (0.0) to right (1.0)
+    // Recovery phase (isPullPhase = false): moving from right (1.0) to left (0.0)
+    final position = isPullPhase ? 1.0 : 0.0;
+    
+    // Calculate animation duration based on phase
+    // Pull is 1/3 of cycle, recovery is 2/3 of cycle
+    final cycleSeconds = 60 / targetCadence;
+    final animationDuration = isPullPhase 
+        ? (cycleSeconds / 3 * 1000).round()  // Pull: 1/3 of cycle
+        : (cycleSeconds * 2 / 3 * 1000).round(); // Recovery: 2/3 of cycle
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
@@ -76,11 +85,10 @@ class MetronomeVisualizer extends StatelessWidget {
                     ),
                   ),
                   // Animated circle with smooth transition
+                  // Use different curves for pull (faster, explosive) vs recovery (slower, smooth)
                   AnimatedPositioned(
-                    duration: Duration(
-                      milliseconds: (60 / targetCadence * 500).round(),
-                    ),
-                    curve: Curves.easeInOut,
+                    duration: Duration(milliseconds: animationDuration),
+                    curve: isPullPhase ? Curves.easeOutCubic : Curves.easeInOutSine,
                     left: offset,
                     top: 8,
                     child: Container(

@@ -59,10 +59,12 @@ class TrainingSessionController extends ChangeNotifier
   Timer? _metronomeTimer;
   double? _currentMetronomeTarget;
   int _metronomeTickCount = 0; // Counter for alternating high/low sounds
+  bool _isPullPhase = true; // Track if we're in pull (true) or recovery (false) phase
 
   // Public getters for metronome state (used by UI to show visual metronome)
   double? get currentMetronomeTarget => _currentMetronomeTarget;
   int get metronomeTickCount => _metronomeTickCount;
+  bool get isPullPhase => _isPullPhase;
 
   // For detecting activity to trigger session auto-start and auto-pause
   double? _lastActivityValue;
@@ -716,15 +718,37 @@ class TrainingSessionController extends ChangeNotifier
     if (!_state.isRunning) return;
 
     _currentMetronomeTarget = target; // Store the target for UI
-    // Use double frequency for alternating high/low ticks
-    final periodSeconds = 60 / target / 2; // Half the period for double frequency
     _metronomeTickCount = 0; // Reset counter
-    _metronomeTimer = Timer.periodic(Duration(milliseconds: (periodSeconds * 1000).round()), (_) {
-      _metronomeTickCount++;
-      _metronomeTickCount.isOdd ? _soundService?.playTickHigh() : _soundService?.playTickLow();
-      if (!_disposed) notifyListeners(); // Notify UI of tick count change
-    });
+    _isPullPhase = true; // Start with pull phase
+    _scheduleNextMetronomeTick(target);
     if (!_disposed) notifyListeners(); // Notify UI that metronome started
+  }
+
+  void _scheduleNextMetronomeTick(double target) {
+    if (_disposed || !_state.isRunning) return;
+
+    // Calculate timing: pull is 1/3 of cycle, recovery is 2/3 of cycle
+    final cycleSeconds = 60 / target;
+    final pullSeconds = cycleSeconds / 3; // Pull phase
+    final recoverySeconds = cycleSeconds * 2 / 3; // Recovery phase
+    
+    final nextDuration = _isPullPhase ? pullSeconds : recoverySeconds;
+    
+    _metronomeTimer = Timer(Duration(milliseconds: (nextDuration * 1000).round()), () {
+      if (_disposed || !_state.isRunning) return;
+      
+      _metronomeTickCount++;
+      // Play high tick for pull (start), low tick for recovery (finish)
+      _isPullPhase ? _soundService?.playTickHigh() : _soundService?.playTickLow();
+      
+      // Toggle phase for next iteration
+      _isPullPhase = !_isPullPhase;
+      
+      if (!_disposed) notifyListeners(); // Notify UI of tick count change
+      
+      // Schedule next tick
+      _scheduleNextMetronomeTick(target);
+    });
   }
 
   void _stopMetronome() {
@@ -732,6 +756,7 @@ class TrainingSessionController extends ChangeNotifier
     _metronomeTimer = null;
     _currentMetronomeTarget = null; // Clear the target
     _metronomeTickCount = 0; // Reset counter
+    _isPullPhase = true; // Reset to pull phase
     if (!_disposed) notifyListeners(); // Notify UI that metronome stopped
   }
 
