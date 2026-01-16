@@ -189,14 +189,17 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: StreamBuilder<List<BTDevice>>(
-              stream: SupportedBTDeviceManager().connectedDevicesStream,
-              initialData: SupportedBTDeviceManager().allConnectedDevices,
-              builder: (context, snapshot) {
-                final connectedDevices = snapshot.data ?? [];
-                final connectedDevice = connectedDevices.isNotEmpty ? connectedDevices.first.connectedDevice : null;
-                return BottomActionButtons(connectedDevice: connectedDevice);
-              },
+            child: SafeArea(
+              top: false,
+              child: StreamBuilder<List<BTDevice>>(
+                stream: SupportedBTDeviceManager().connectedDevicesStream,
+                initialData: SupportedBTDeviceManager().allConnectedDevices,
+                builder: (context, snapshot) {
+                  final connectedDevices = snapshot.data ?? [];
+                  final connectedDevice = connectedDevices.isNotEmpty ? connectedDevices.first.connectedDevice : null;
+                  return BottomActionButtons(connectedDevice: connectedDevice);
+                },
+              ),
             ),
           ),
         ],
