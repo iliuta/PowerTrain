@@ -63,7 +63,7 @@ class StravaWebViewOAuthHandler {
 
       // Exchange code for tokens
       logger.i('🔄 Starting token exchange...');
-      final success = await _tokenManager.exchangeCodeForTokens(authCode);
+      final success = await _tokenManager.exchangeCodeForTokens(authCode, context!);
       logger.i('🔄 Token exchange completed: $success');
       return success;
     } catch (e) {
@@ -142,6 +142,11 @@ class _StravaWebViewDialogState extends State<StravaWebViewDialog> {
             });
           },
           onWebResourceError: (WebResourceError error) {
+            // Ignore "Frame load interrupted" errors which occur when preventing navigation to custom schemes
+            if (error.description.contains('Frame load interrupted')) {
+              logger.i('ℹ️ Ignored WebView error: ${error.description}');
+              return;
+            }
             logger.e('❌ WebView error: ${error.description}');
             setState(() {
               _error = 'Failed to load authentication page';
@@ -151,7 +156,11 @@ class _StravaWebViewDialogState extends State<StravaWebViewDialog> {
           },
           onNavigationRequest: (NavigationRequest request) {
             logger.i('🔗 Navigation requested: ${request.url}');
-            _checkForRedirect(request.url);
+            if (request.url.startsWith(StravaConfig.redirectUri)) {
+              logger.i('✅ Detected redirect URL in navigation: ${request.url}');
+              _checkForRedirect(request.url);
+              return NavigationDecision.prevent;
+            }
             return NavigationDecision.navigate;
           },
         ),

@@ -1651,6 +1651,7 @@ void main() {
           any,
           any,
           activityType: anyNamed('activityType'),
+          context: anyNamed('context'),
         )).thenAnswer((_) async => {'id': '12345'});
 
         final controller = TrainingSessionController(
@@ -1673,6 +1674,7 @@ void main() {
           fitFilePath,
           'Test Session - PowerTrain',
           activityType: 'ride', // indoor bike -> ride
+          context: anyNamed('context'),
         )).called(1);
 
         expect(controller.stravaUploadAttempted, isTrue);
@@ -1709,7 +1711,7 @@ void main() {
 
         // Verify authentication check but no upload
         verify(mockStravaService.isAuthenticated()).called(1);
-        verifyNever(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType')));
+        verifyNever(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType'), context: anyNamed('context')));
 
         expect(controller.stravaUploadAttempted, isTrue);
         expect(controller.stravaUploadSuccessful, isFalse);
@@ -1734,6 +1736,7 @@ void main() {
           any,
           any,
           activityType: anyNamed('activityType'),
+          context: anyNamed('context'),
         )).thenAnswer((_) async => null);
 
         final controller = TrainingSessionController(
@@ -1755,6 +1758,7 @@ void main() {
           fitFilePath,
           'Test Session - PowerTrain',
           activityType: 'ride',
+          context: anyNamed('context'),
         )).called(1);
 
         expect(controller.stravaUploadAttempted, isTrue);
@@ -1780,6 +1784,7 @@ void main() {
           any,
           any,
           activityType: anyNamed('activityType'),
+          context: anyNamed('context'),
         )).thenThrow(Exception('Network error'));
 
         final controller = TrainingSessionController(
@@ -1797,7 +1802,7 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Verify upload was attempted
-        verify(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType'))).called(1);
+        verify(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType'), context: anyNamed('context'))).called(1);
 
         expect(controller.stravaUploadAttempted, isTrue);
         expect(controller.stravaUploadSuccessful, isFalse);
@@ -1831,6 +1836,7 @@ void main() {
           any,
           any,
           activityType: anyNamed('activityType'),
+          context: anyNamed('context'),
         )).thenAnswer((_) async => {'id': '67890'});
 
         final controller = TrainingSessionController(
@@ -1852,6 +1858,7 @@ void main() {
           fitFilePath,
           'Rowing Test - PowerTrain',
           activityType: 'rowing', // rower -> rowing
+          context: anyNamed('context'),
         )).called(1);
 
         expect(controller.stravaUploadSuccessful, isTrue);
@@ -1880,7 +1887,7 @@ void main() {
 
         // Verify no Strava operations were attempted (because FIT file failed)
         verifyNever(mockStravaService.isAuthenticated());
-        verifyNever(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType')));
+        verifyNever(mockStravaService.uploadActivity(any, any, activityType: anyNamed('activityType'), context: anyNamed('context')));
 
         expect(controller.stravaUploadAttempted, isFalse);
         expect(controller.stravaUploadSuccessful, isFalse);
@@ -1922,6 +1929,7 @@ void main() {
           any,
           any,
           activityType: anyNamed('activityType'),
+          context: anyNamed('context'),
         )).thenAnswer((_) async => {'id': '999888'});
 
         final controller = TrainingSessionController(
@@ -1994,6 +2002,7 @@ void main() {
           fitFilePath,
           'Test Session - PowerTrain',
           activityType: 'ride',
+          context: anyNamed('context'),
         )).called(1);
 
         controller.dispose();

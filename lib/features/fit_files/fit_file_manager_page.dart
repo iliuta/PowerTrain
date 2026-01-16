@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -181,6 +183,7 @@ class _FitFileManagerPageState extends State<FitFileManagerPage> {
         fitFile.filePath,
         activityName,
         activityType: activityType,
+        context: context,
       );
 
       if (uploadResult != null) {
