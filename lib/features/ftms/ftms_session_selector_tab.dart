@@ -12,6 +12,7 @@ import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
 import '../../core/services/user_settings_service.dart';
+import '../../core/services/training_session_preferences_service.dart';
 import '../training/widgets/edit_target_fields_widget.dart';
 import '../training/model/training_session.dart';
 import '../training/model/rower_workout_type.dart';
@@ -135,6 +136,42 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     _checkDeviceAvailability(config);
     _loadSupportedResistanceLevelRange();
     _loadGpxFiles();
+    _loadFreeRidePreferences();
+    _loadTrainingGeneratorPreferences();
+  }
+
+  Future<void> _loadFreeRidePreferences() async {
+    if (_deviceType == null) return;
+
+    try {
+      final prefs = await TrainingSessionPreferencesService.loadFreeRidePreferences(_deviceType!);
+      setState(() {
+        _freeRideTargets.clear();
+        _freeRideTargets.addAll(prefs.targets);
+        if (prefs.resistanceLevel != null) {
+          _freeRideResistanceLevel = prefs.resistanceLevel;
+          _updateResistanceController();
+        }
+      });
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  Future<void> _loadTrainingGeneratorPreferences() async {
+    if (_deviceType == null) return;
+
+    try {
+      final prefs = await TrainingSessionPreferencesService.loadTrainingGeneratorPreferences(_deviceType!);
+      setState(() {
+        if (prefs.resistanceLevel != null) {
+          _trainingSessionGeneratorResistanceLevel = prefs.resistanceLevel;
+          _updateTrainingSessionGeneratorResistanceController();
+        }
+      });
+    } catch (e) {
+      // Handle error silently
+    }
   }
 
   Future<void> _loadSupportedResistanceLevelRange() async {
@@ -561,6 +598,17 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                   isDense: true,
                                                   errorText: !_isResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
                                                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                  suffixIcon: _freeRideResistanceLevel != null
+                                                      ? IconButton(
+                                                          icon: const Icon(Icons.clear),
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              _freeRideResistanceLevel = null;
+                                                              _updateResistanceController();
+                                                            });
+                                                          },
+                                                        )
+                                                      : null,
                                                 ),
                                                 keyboardType: TextInputType.number,
                                                 inputFormatters: [
@@ -660,6 +708,16 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       resistanceLevel: _freeRideResistanceLevel,
                                       hasWarmup: _hasWarmup,
                                       hasCooldown: _hasCooldown,
+                                    );
+                                    
+                                    // Save preferences
+                                    TrainingSessionPreferencesService.saveFreeRidePreferences(
+                                      _deviceType!,
+                                      TrainingSessionPreferences(
+                                        deviceType: _deviceType!,
+                                        targets: _freeRideTargets,
+                                        resistanceLevel: _freeRideResistanceLevel,
+                                      ),
                                     );
                                     
                                     // Log free ride analytics
@@ -822,6 +880,17 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                     isDense: true,
                                                     errorText: !_isTrainingSessionGeneratorResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
                                                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                    suffixIcon: _trainingSessionGeneratorResistanceLevel != null
+                                                        ? IconButton(
+                                                            icon: const Icon(Icons.clear),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _trainingSessionGeneratorResistanceLevel = null;
+                                                                _updateTrainingSessionGeneratorResistanceController();
+                                                              });
+                                                            },
+                                                          )
+                                                        : null,
                                                   ),
                                                   keyboardType: TextInputType.number,
                                                   inputFormatters: [
@@ -881,6 +950,16 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                       _selectedWorkoutType,
                                       AppLocalizations.of(context)!,
                                       _trainingSessionGeneratorResistanceLevel,
+                                    );
+                                    
+                                    // Save preferences
+                                    TrainingSessionPreferencesService.saveTrainingGeneratorPreferences(
+                                      _deviceType!,
+                                      TrainingSessionPreferences(
+                                        deviceType: _deviceType!,
+                                        targets: {},
+                                        resistanceLevel: _trainingSessionGeneratorResistanceLevel,
+                                      ),
                                     );
                                     
                                     // Log analytics event for training session generator

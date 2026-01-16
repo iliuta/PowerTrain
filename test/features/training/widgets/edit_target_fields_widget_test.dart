@@ -190,5 +190,132 @@ void main() {
 
       expect(changedFields, contains('Power:null'));
     });
+
+    testWidgets('clears target when clear button is pressed for percentage field', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: EditTargetFieldsWidget(
+              machineType: DeviceType.rower,
+              userSettings: userSettings,
+              config: config,
+              targets: {'Power': '80%'},
+              onTargetChanged: (name, value) {
+                changedFields.add('$name:${value ?? "null"}');
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Find and tap the clear button
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+
+      // Should call onTargetChanged with null
+      expect(changedFields, contains('Power:null'));
+
+      // TextFormField should be empty
+      final textField = find.byType(TextFormField).first;
+      expect(find.descendant(of: textField, matching: find.byWidgetPredicate(
+        (widget) => widget is EditableText && widget.controller.text == '',
+      )), findsOneWidget);
+    });
+
+    testWidgets('clears target when clear button is pressed for numeric field', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: EditTargetFieldsWidget(
+              machineType: DeviceType.rower,
+              userSettings: userSettings,
+              config: config,
+              targets: {'Heart Rate': 150},
+              onTargetChanged: (name, value) {
+                changedFields.add('$name:${value ?? "null"}');
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Find and tap the clear button (second field's clear button)
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+
+      // Should call onTargetChanged with null
+      expect(changedFields, contains('Heart Rate:null'));
+    });
+
+    testWidgets('clear button is hidden when field is empty', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: EditTargetFieldsWidget(
+              machineType: DeviceType.rower,
+              userSettings: userSettings,
+              config: config,
+              targets: {},
+              onTargetChanged: (name, value) {
+                changedFields.add('$name:${value ?? "null"}');
+              },
+            ),
+          ),
+        ),
+      );
+
+      // No clear buttons should be visible initially
+      expect(find.byIcon(Icons.clear), findsNothing);
+    });
+
+    testWidgets('clear button appears when field gets a value', (WidgetTester tester) async {
+      Map<String, dynamic> testTargets = {};
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return EditTargetFieldsWidget(
+                  machineType: DeviceType.rower,
+                  userSettings: userSettings,
+                  config: config,
+                  targets: testTargets,
+                  onTargetChanged: (name, value) {
+                    setState(() {
+                      if (value == null) {
+                        testTargets.remove(name);
+                      } else {
+                        testTargets[name] = value;
+                      }
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      // No clear buttons initially
+      expect(find.byIcon(Icons.clear), findsNothing);
+
+      // Enter a value
+      await tester.enterText(find.byType(TextFormField).first, '75');
+      await tester.pump();
+
+      // Clear button should appear
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+    });
   });
 }
