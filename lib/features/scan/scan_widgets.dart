@@ -11,6 +11,19 @@ import '../../core/services/devices/bt_device.dart';
 import '../../core/services/devices/last_connected_devices_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+/// Button for scanning Bluetooth devices
+Widget scanBluetoothButton(bool? isScanning) {
+  if (isScanning == null) {
+    return Container();
+  }
+  return ElevatedButton(
+    onPressed: isScanning ? null : () async {
+    },
+    child:
+        isScanning ? const Text("Scanning...") : const Text("Scan for devices"),
+  );
+}
+
 /// Widget to display scan results as a list of FTMS devices
 Widget scanResultsToWidget(List<ScanResult> data, BuildContext context) {
   final supportedBTDeviceManager = SupportedBTDeviceManager();
@@ -209,7 +222,9 @@ Widget _buildAvailableDeviceCard(ScanResult scanResult, BTDevice? deviceService,
               Expanded(
                 child: Text(
                   scanResult.device.platformName.isEmpty
-                      ? AppLocalizations.of(context)!.unknownDevice
+                      ? (scanResult.advertisementData.advName.isEmpty
+                          ? AppLocalizations.of(context)!.unknownDevice
+                          : scanResult.advertisementData.advName)
                       : scanResult.device.platformName,
                 ),
               ),

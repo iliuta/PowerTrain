@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../utils/logger.dart';
+import '../demo/demo_mode_service.dart';
+import 'ftms.dart' show demoDeviceId, demoDeviceName;
 import 'package:permission_handler/permission_handler.dart' as ph;
 
 /// Result of a Bluetooth scan operation
@@ -18,6 +21,34 @@ class BluetoothScanService {
   static final BluetoothScanService _instance = BluetoothScanService._internal();
   factory BluetoothScanService() => _instance;
   BluetoothScanService._internal();
+  
+  /// Stream of scan results. Automatically includes the demo device when demo mode is enabled.
+  Stream<List<ScanResult>> get scanResults {
+    return FlutterBluePlus.scanResults.map((results) {
+      if (!DemoModeService().isDemoModeEnabled) {
+        return results;
+      }
+      // Prepend demo device to results
+      return [_createDemoScanResult(), ...results];
+    });
+  }
+  
+  ScanResult _createDemoScanResult() {
+    return ScanResult(
+      device: BluetoothDevice.fromId(demoDeviceId),
+      advertisementData: AdvertisementData(
+        advName: demoDeviceName,
+        connectable: true,
+        manufacturerData: {},
+        serviceData: {},
+        serviceUuids: [Guid.fromString("00001826")], // FTMS
+        txPowerLevel: -50,
+        appearance: null,
+      ),
+      rssi: -40,
+      timeStamp: DateTime.now(),
+    );
+  }
 
   static final List<Guid> supportedServices = [
     Guid.fromString("00001826"), // FTMS Service UUID

@@ -366,12 +366,12 @@ class TrainingSessionController extends ChangeNotifier
     // When inactive, pace is 0 or very high (>300 = 5:00/500m)
     // When active, pace is between ~60 (1:00/500m) and 300 (5:00/500m)
     if (paramName == 'Instantaneous Pace') {
-      final wasInactive = lastValue == 0 || lastValue > 300;
+      //final wasInactive = lastValue == 0 || lastValue > 300;
       final isNowActive = currentValue > 0 && currentValue <= 300;
       // Activity detected if:
       // - Was inactive (0 or high pace) and now in active range, OR
       // - Pace decreased significantly while already in active range
-      return (wasInactive && isNowActive) ||
+      return isNowActive ||
              (lastValue > 0 && currentValue < lastValue * 0.9 && isNowActive);
     }
 

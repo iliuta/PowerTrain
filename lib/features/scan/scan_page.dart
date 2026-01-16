@@ -465,7 +465,7 @@ class _ScanPageState extends State<ScanPage> {
               // HRM Status Widget
               Expanded(
                 child: StreamBuilder<List<ScanResult>>(
-                  stream: FlutterBluePlus.scanResults,
+              stream: BluetoothScanService().scanResults,
                   initialData: const [],
                   builder: (c, scanSnapshot) {
                     return StreamBuilder<List<BTDevice>>(
@@ -474,10 +474,9 @@ class _ScanPageState extends State<ScanPage> {
                           SupportedBTDeviceManager().allConnectedDevices,
                       builder: (context, connectedSnapshot) {
                         final scanResults = (scanSnapshot.data ?? [])
-                            .where(
-                              (element) =>
-                                  element.device.platformName.isNotEmpty,
-                            )
+                        .where((element) =>
+                            element.device.platformName.isNotEmpty ||
+                            element.advertisementData.advName.isNotEmpty)
                             .toList();
 
                         return RefreshIndicator(
