@@ -1,6 +1,7 @@
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/services/devices/cadence.dart';
+import 'package:ftms/core/services/devices/flutter_blue_plus_facade_impl.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'bt_device.dart';
 import 'hrm.dart';
