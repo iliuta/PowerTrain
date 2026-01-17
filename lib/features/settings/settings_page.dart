@@ -5,6 +5,7 @@ import 'model/user_settings.dart';
 import '../../core/utils/logger.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/services/user_settings_service.dart';
+import '../../core/services/devices/flutter_blue_plus_facade_provider.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/user_preferences_section.dart';
 
@@ -70,7 +71,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     try {
       await UserSettingsService.instance.saveSettings(_userSettings!);
-
+      
+      // Apply demo mode setting to the facade and notify listeners
+      FlutterBluePlusFacadeProvider().setDemoMode(_userSettings!.demoModeEnabled);
+      
       setState(() {
         _hasChanges = false;
       });
