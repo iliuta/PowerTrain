@@ -34,6 +34,7 @@ class _ScanPageState extends State<ScanPage> {
   bool _isConnectingStrava = false;
   String? _stravaStatus;
   StreamSubscription<BluetoothAdapterState>? _adapterStateSubscription;
+  StreamSubscription<void>? _modeChangeSubscription;
   bool _hasStartedScan = false;
   
   /// Get the FlutterBluePlus facade (real or demo)
@@ -51,11 +52,13 @@ class _ScanPageState extends State<ScanPage> {
     _checkStravaStatus();
     _checkAndRequestReview();
     _listenToAdapterState();
+    _listenToModeChanges();
   }
 
   @override
   void dispose() {
     _adapterStateSubscription?.cancel();
+    _modeChangeSubscription?.cancel();
     super.dispose();
   }
 
@@ -205,6 +208,21 @@ class _ScanPageState extends State<ScanPage> {
       if (state == BluetoothAdapterState.on && !_hasStartedScan && mounted) {
         _hasStartedScan = true;
         _startScan();
+      }
+    });
+  }
+
+  void _listenToModeChanges() {
+    _modeChangeSubscription = FlutterBluePlusFacadeProvider().onModeChanged.listen((_) {
+      logger.i('Demo mode changed, restarting scan...');
+      _hasStartedScan = false;
+      if (mounted) {
+        setState(() {});
+        // Restart the scan with the new facade
+        if (_bluetoothFacade.adapterStateNow == BluetoothAdapterState.on) {
+          _hasStartedScan = true;
+          _startScan();
+        }
       }
     });
   }

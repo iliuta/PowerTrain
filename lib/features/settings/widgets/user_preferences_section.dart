@@ -77,6 +77,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
           _buildRowingFtpField(),
         const Divider(),
         _buildDeveloperModeField(),
+        _buildDemoModeField(),
       ],
     );
   }
@@ -197,6 +198,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
             rowingFtp: widget.userSettings.rowingFtp,
             developerMode: value,
             soundEnabled: widget.userSettings.soundEnabled,
+            metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+            demoModeEnabled: widget.userSettings.demoModeEnabled,
           ));
           HapticFeedback.lightImpact();
         },
@@ -208,6 +211,42 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
           rowingFtp: widget.userSettings.rowingFtp,
           developerMode: newValue,
           soundEnabled: widget.userSettings.soundEnabled,
+          metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+          demoModeEnabled: widget.userSettings.demoModeEnabled,
+        ));
+        HapticFeedback.lightImpact();
+      },
+    );
+  }
+
+  Widget _buildDemoModeField() {
+    return ListTile(
+      leading: const Icon(Icons.videogame_asset, color: Colors.purple),
+      title: const Text('Demo Mode'),
+      subtitle: const Text('Use simulated device data for testing'),
+      trailing: Switch(
+        value: widget.userSettings.demoModeEnabled,
+        onChanged: (bool value) {
+          widget.onChanged(UserSettings(
+            cyclingFtp: widget.userSettings.cyclingFtp,
+            rowingFtp: widget.userSettings.rowingFtp,
+            developerMode: widget.userSettings.developerMode,
+            soundEnabled: widget.userSettings.soundEnabled,
+            metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+            demoModeEnabled: value,
+          ));
+          HapticFeedback.lightImpact();
+        },
+      ),
+      onTap: () {
+        final newValue = !widget.userSettings.demoModeEnabled;
+        widget.onChanged(UserSettings(
+          cyclingFtp: widget.userSettings.cyclingFtp,
+          rowingFtp: widget.userSettings.rowingFtp,
+          developerMode: widget.userSettings.developerMode,
+          soundEnabled: widget.userSettings.soundEnabled,
+          metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+          demoModeEnabled: newValue,
         ));
         HapticFeedback.lightImpact();
       },
@@ -237,6 +276,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         rowingFtp: widget.userSettings.rowingFtp,
         developerMode: widget.userSettings.developerMode,
         soundEnabled: widget.userSettings.soundEnabled,
+        metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+        demoModeEnabled: widget.userSettings.demoModeEnabled,
       ));
       HapticFeedback.lightImpact();
       setState(() {
@@ -259,6 +300,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         rowingFtp: value,
         developerMode: widget.userSettings.developerMode,
         soundEnabled: widget.userSettings.soundEnabled,
+        metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+        demoModeEnabled: widget.userSettings.demoModeEnabled,
       ));
       HapticFeedback.lightImpact();
       setState(() {

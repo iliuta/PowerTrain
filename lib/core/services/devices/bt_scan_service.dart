@@ -45,16 +45,13 @@ class BluetoothScanService {
       return BTScanResult.scanError;
     }
 
-    // Skip permission requests in demo mode
-    if (!FlutterBluePlusFacadeProvider().isDemoMode) {
-      // Request Bluetooth permissions first
-      logger.i('Requesting Bluetooth permissions...');
-      final hasPermissions = await _requestBluetoothPermissions();
+    // Request Bluetooth permissions first
+    logger.i('Requesting Bluetooth permissions...');
+    final hasPermissions = await _requestBluetoothPermissions();
 
-      if (!hasPermissions) {
-        logger.w('Bluetooth permissions denied');
-        return BTScanResult.permissionDenied;
-      }
+    if (!hasPermissions) {
+      logger.w('Bluetooth permissions denied');
+      return BTScanResult.permissionDenied;
     }
 
     logger.i('Bluetooth permissions granted, starting scan...');

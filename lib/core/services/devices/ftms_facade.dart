@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/services/devices/flutter_blue_plus_facade_provider.dart';
+import 'package:ftms/core/services/user_settings_service.dart';
 
 /// Facade interface for FTMS operations to enable testing
 abstract class FtmsFacade {
@@ -93,10 +94,9 @@ class FtmsFacadeProvider {
   final FtmsFacadeImpl _realFacade = FtmsFacadeImpl();
   final DemoFtmsFacade _demoFacade = DemoFtmsFacade();
   
-  /// Get the current facade (real or demo based on mode)
   FtmsFacade get facade {
-    final isDemoMode = FlutterBluePlusFacadeProvider().isDemoMode;
-    final selectedFacade = isDemoMode ? _demoFacade : _realFacade;
-    return selectedFacade;
+    final settings = UserSettingsService.instance.getCachedSettings();
+    final isDemoMode = settings?.demoModeEnabled ?? false;
+    return isDemoMode ? _demoFacade : _realFacade;
   }
 }

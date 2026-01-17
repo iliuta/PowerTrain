@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/core/services/devices/flutter_blue_plus_facade_provider.dart';
+import 'package:ftms/core/services/user_settings_service.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,7 +39,7 @@ void main() async {
   // See: https://docs.flutter.dev/release/breaking-changes/default-systemuimode-edge-to-edge
   
   // Set log level for production (using facade)
-  FlutterBluePlusFacadeProvider().toggleDemoMode();
+  await UserSettingsService.instance.loadSettings();
   FlutterBluePlusFacadeProvider().facade.setLogLevel(LogLevel.warning);
   
   // Initialize device navigation callbacks to avoid circular dependencies
