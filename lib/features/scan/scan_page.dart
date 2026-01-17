@@ -1,12 +1,14 @@
 // This file was moved from lib/scan_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:ftms/core/services/devices/flutter_blue_plus_facade_provider.dart';
 import '../../core/utils/logger.dart';
 import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/strava/strava_service.dart';
 import '../../core/services/devices/bt_device.dart';
 import '../../core/services/devices/bt_device_manager.dart';
 import '../../core/services/devices/bt_scan_service.dart';
+import '../../core/services/devices/flutter_blue_plus_facade.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart' as ph;
@@ -33,6 +35,9 @@ class _ScanPageState extends State<ScanPage> {
   String? _stravaStatus;
   StreamSubscription<BluetoothAdapterState>? _adapterStateSubscription;
   bool _hasStartedScan = false;
+  
+  /// Get the FlutterBluePlus facade (real or demo)
+  FlutterBluePlusFacade get _bluetoothFacade => FlutterBluePlusFacadeProvider().facade;
   bool _showReviewBanner = false;
 
   @override
@@ -179,12 +184,12 @@ class _ScanPageState extends State<ScanPage> {
 
   void _printBluetoothState() {
     // Listen to the adapter state stream (logging removed for production)
-    FlutterBluePlus.adapterState.listen((state) {
+    _bluetoothFacade.adapterState.listen((state) {
       logger.i('Bluetooth adapter state: [0m${state.toString()}');
     });
     // Also print the last known state immediately
     logger.i(
-      'Bluetooth adapter state (now): ${FlutterBluePlus.adapterStateNow.toString()}',
+      'Bluetooth adapter state (now): ${_bluetoothFacade.adapterStateNow.toString()}',
     );
 
     // Log platform information
@@ -195,7 +200,7 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void _listenToAdapterState() {
-    _adapterStateSubscription = FlutterBluePlus.adapterState.listen((state) {
+    _adapterStateSubscription = _bluetoothFacade.adapterState.listen((state) {
       logger.i('Bluetooth adapter state changed: $state');
       if (state == BluetoothAdapterState.on && !_hasStartedScan && mounted) {
         _hasStartedScan = true;
@@ -208,7 +213,7 @@ class _ScanPageState extends State<ScanPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Check if adapter is already on and start scanning if not already done
-    if (FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on &&
+    if (_bluetoothFacade.adapterStateNow == BluetoothAdapterState.on &&
         !_hasStartedScan) {
       _hasStartedScan = true;
       _startScan();
@@ -465,7 +470,7 @@ class _ScanPageState extends State<ScanPage> {
               // HRM Status Widget
               Expanded(
                 child: StreamBuilder<List<ScanResult>>(
-                  stream: FlutterBluePlus.scanResults,
+                  stream: _bluetoothFacade.scanResults,
                   initialData: const [],
                   builder: (c, scanSnapshot) {
                     return StreamBuilder<List<BTDevice>>(
@@ -476,7 +481,8 @@ class _ScanPageState extends State<ScanPage> {
                         final scanResults = (scanSnapshot.data ?? [])
                             .where(
                               (element) =>
-                                  element.device.platformName.isNotEmpty,
+                                  element.device.platformName.isNotEmpty ||
+                                  element.advertisementData.advName.isNotEmpty,
                             )
                             .toList();
 

@@ -8,6 +8,7 @@ import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'bt_device.dart';
 import 'bt_device_navigation_registry.dart';
+import 'ftms_facade.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
 import '../../models/supported_resistance_level_range.dart';
@@ -25,6 +26,9 @@ class Ftms extends BTDevice {
 
   DeviceType? _deviceType;
   final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
+  
+  /// Get the FTMS facade (real or demo)
+  FtmsFacade get _ftmsFacade => FtmsFacadeProvider().facade;
 
   /// Cached FTMSService for the connected device
   FTMSService? _ftmsService;
@@ -338,7 +342,7 @@ class Ftms extends BTDevice {
         preferredDeviceDataType = DeviceDataType.rower;
       }
       
-      FTMS.useDeviceDataCharacteristic(
+      _ftmsFacade.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
           // Process the raw data and forward to the global FTMS bloc
