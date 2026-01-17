@@ -9,7 +9,7 @@ import 'package:ftms/features/settings/model/user_settings.dart';
 import 'package:ftms/features/training/model/target_power_strategy.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 
-class EditTargetFieldsWidget extends StatelessWidget {
+class EditTargetFieldsWidget extends StatefulWidget {
   final DeviceType machineType;
   final UserSettings userSettings;
   final LiveDataDisplayConfig config;
@@ -26,8 +26,82 @@ class EditTargetFieldsWidget extends StatelessWidget {
   });
 
   @override
+  State<EditTargetFieldsWidget> createState() => _EditTargetFieldsWidgetState();
+}
+
+class _EditTargetFieldsWidgetState extends State<EditTargetFieldsWidget> {
+  late Map<String, TextEditingController> _controllers;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeControllers();
+  }
+
+  void _initializeControllers() {
+    _controllers = {};
+    final availableTargetFields = widget.config.fields.where((field) => field.availableAsTarget).toList();
+    
+    for (final field in availableTargetFields) {
+      final currentValue = widget.targets[field.name];
+      final bool canShowPercentage = field.userSetting != null;
+      
+      String initialValue = '';
+      if (currentValue != null) {
+        if (canShowPercentage) {
+          final percentageString = currentValue.toString().replaceAll('%', '');
+          final percentage = double.tryParse(percentageString);
+          if (percentage != null) {
+            initialValue = percentage.round().toString();
+          }
+        } else {
+          initialValue = currentValue.toString();
+        }
+      }
+      
+      _controllers[field.name] = TextEditingController(text: initialValue);
+    }
+  }
+
+  @override
+  void didUpdateWidget(EditTargetFieldsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update controllers when targets change externally
+    for (final entry in _controllers.entries) {
+      final currentValue = widget.targets[entry.key];
+      final field = widget.config.fields.firstWhere((f) => f.name == entry.key);
+      final bool canShowPercentage = field.userSetting != null;
+      
+      String newValue = '';
+      if (currentValue != null) {
+        if (canShowPercentage) {
+          final percentageString = currentValue.toString().replaceAll('%', '');
+          final percentage = double.tryParse(percentageString);
+          if (percentage != null) {
+            newValue = percentage.round().toString();
+          }
+        } else {
+          newValue = currentValue.toString();
+        }
+      }
+      
+      if (entry.value.text != newValue) {
+        entry.value.text = newValue;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final availableTargetFields = config.fields.where((field) => field.availableAsTarget).toList();
+    final availableTargetFields = widget.config.fields.where((field) => field.availableAsTarget).toList();
 
     return Column(
       children: availableTargetFields.map((field) => _buildTargetField(context, field)).toList(),
@@ -35,19 +109,11 @@ class EditTargetFieldsWidget extends StatelessWidget {
   }
 
   Widget _buildTargetField(BuildContext context, LiveDataFieldConfig field) {
-    final currentValue = targets[field.name];
+    final currentValue = widget.targets[field.name];
+    final controller = _controllers[field.name]!;
 
     // Fields with userSetting always use percentage input
     final bool canShowPercentage = field.userSetting != null;
-
-    String initialPercentage = '';
-    if (canShowPercentage && currentValue != null) {
-      final percentageString = currentValue.replaceAll('%', '');
-      final percentage = double.tryParse(percentageString);
-      if (percentage != null) {
-        initialPercentage = percentage.round().toString();
-      }
-    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -63,10 +129,19 @@ class EditTargetFieldsWidget extends StatelessWidget {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          initialValue: initialPercentage,
+                          controller: controller,
                           decoration: InputDecoration(
                             hintText: AppLocalizations.of(context)!.examplePercentage,
                             suffixText: '%',
+                            suffixIcon: currentValue != null
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      controller.clear();
+                                      widget.onTargetChanged(field.name, null);
+                                    },
+                                  )
+                                : null,
                             border: const OutlineInputBorder(),
                             isDense: true,
                           ),
@@ -77,12 +152,12 @@ class EditTargetFieldsWidget extends StatelessWidget {
                           ],
                           onChanged: (value) {
                             if (value.isEmpty) {
-                              onTargetChanged(field.name, null);
+                              widget.onTargetChanged(field.name, null);
                               return;
                             }
                             final percentage = int.tryParse(value);
                             if (percentage != null && percentage >= 0 && percentage <= 200) {
-                              onTargetChanged(field.name, '$percentage%');
+                              widget.onTargetChanged(field.name, '$percentage%');
                             }
                           },
                         ),
@@ -90,9 +165,18 @@ class EditTargetFieldsWidget extends StatelessWidget {
                     ],
                   )
                 : TextFormField(
-                    initialValue: currentValue?.toString() ?? '',
+                    controller: controller,
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.enterValue,
+                      suffixIcon: currentValue != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                controller.clear();
+                                widget.onTargetChanged(field.name, null);
+                              },
+                            )
+                          : null,
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -102,12 +186,12 @@ class EditTargetFieldsWidget extends StatelessWidget {
                     ],
                     onChanged: (value) {
                       if (value.isEmpty) {
-                        onTargetChanged(field.name, null);
+                        widget.onTargetChanged(field.name, null);
                         return;
                       }
                       final numValue = num.tryParse(value);
                       if (numValue != null) {
-                        onTargetChanged(field.name, numValue);
+                        widget.onTargetChanged(field.name, numValue);
                       }
                     },
                   ),
@@ -127,14 +211,13 @@ class EditTargetFieldsWidget extends StatelessWidget {
     );
   }
 
-
   double _calculateValueFromPercentage(double percentage) {
     // Use the existing target power strategy
-    final strategy = TargetPowerStrategyFactory.getStrategy(machineType);
+    final strategy = TargetPowerStrategyFactory.getStrategy(widget.machineType);
 
     // Create a percentage string and let the strategy resolve it
     final percentageString = '${percentage.round()}%';
-    final resolvedValue = strategy.resolvePower(percentageString, userSettings);
+    final resolvedValue = strategy.resolvePower(percentageString, widget.userSettings);
 
     // If the strategy resolved it to a number, use that; otherwise return 0
     if (resolvedValue is num) {

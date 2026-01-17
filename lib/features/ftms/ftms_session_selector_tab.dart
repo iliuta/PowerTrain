@@ -1,7 +1,6 @@
 // This file contains the session selector tab for FTMS devices
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/models/device_types.dart';
 import '../../core/services/devices/ftms.dart';
@@ -12,18 +11,19 @@ import '../training/training_session_progress_screen.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../settings/model/user_settings.dart';
 import '../../core/services/user_settings_service.dart';
-import '../training/widgets/edit_target_fields_widget.dart';
+import '../../core/services/training_session_preferences_service.dart';
 import '../training/model/training_session.dart';
 import '../training/model/rower_workout_type.dart';
 import '../training/model/rower_training_session_generator.dart';
-import 'ftms_machine_features_tab.dart';
-import 'ftms_device_data_features_tab.dart';
 import '../../core/models/supported_resistance_level_range.dart';
 import '../../core/services/ftms_service.dart';
 import 'widgets/gpx_map_preview_widget.dart';
 import '../../core/services/gpx/gpx_file_provider.dart';
 import '../../core/services/gpx/gpx_data.dart';
 import '../../l10n/app_localizations.dart';
+import 'widgets/free_ride_section.dart';
+import 'widgets/training_session_generator_section.dart';
+import 'widgets/developer_mode_sections.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
   final BluetoothDevice ftmsDevice;
@@ -135,6 +135,42 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     _checkDeviceAvailability(config);
     _loadSupportedResistanceLevelRange();
     _loadGpxFiles();
+    _loadFreeRidePreferences();
+    _loadTrainingGeneratorPreferences();
+  }
+
+  Future<void> _loadFreeRidePreferences() async {
+    if (_deviceType == null) return;
+
+    try {
+      final prefs = await TrainingSessionPreferencesService.loadFreeRidePreferences(_deviceType!);
+      setState(() {
+        _freeRideTargets.clear();
+        _freeRideTargets.addAll(prefs.targets);
+        if (prefs.resistanceLevel != null) {
+          _freeRideResistanceLevel = prefs.resistanceLevel;
+          _updateResistanceController();
+        }
+      });
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  Future<void> _loadTrainingGeneratorPreferences() async {
+    if (_deviceType == null) return;
+
+    try {
+      final prefs = await TrainingSessionPreferencesService.loadTrainingGeneratorPreferences(_deviceType!);
+      setState(() {
+        if (prefs.resistanceLevel != null) {
+          _trainingSessionGeneratorResistanceLevel = prefs.resistanceLevel;
+          _updateTrainingSessionGeneratorResistanceController();
+        }
+      });
+    } catch (e) {
+      // Handle error silently
+    }
   }
 
   Future<void> _loadSupportedResistanceLevelRange() async {
@@ -374,543 +410,191 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
           if (_gpxFiles != null && _gpxFiles!.isNotEmpty)
             const SizedBox(height: 16),
           // Free Ride Section
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  title: Text(AppLocalizations.of(context)!.freeRide),
-                  trailing: Icon(
-                    _isFreeRideExpanded ? Icons.expand_less : Icons.expand_more,
+          FreeRideSection(
+            isExpanded: _isFreeRideExpanded,
+            onExpandChanged: () {
+              setState(() {
+                _isFreeRideExpanded = !_isFreeRideExpanded;
+              });
+            },
+            deviceType: _deviceType,
+            durationMinutes: _freeRideDurationMinutes,
+            isDistanceBased: _isFreeRideDistanceBased,
+            distanceMeters: _freeRideDistanceMeters,
+            distanceIncrement: _freeRideDistanceIncrement,
+            targets: _freeRideTargets,
+            resistanceLevel: _freeRideResistanceLevel,
+            isResistanceValid: _isResistanceLevelValid,
+            resistanceController: _resistanceController!,
+            supportedResistanceRange: _supportedResistanceLevelRange,
+            hasWarmup: _hasWarmup,
+            hasCooldown: _hasCooldown,
+            userSettings: _userSettings,
+            configs: _configs,
+            selectedGpxAssetPath: _selectedGpxAssetPath,
+            onDurationChanged: (minutes) {
+              setState(() {
+                _freeRideDurationMinutes = minutes;
+              });
+            },
+            onDistanceChanged: (meters) {
+              setState(() {
+                _freeRideDistanceMeters = meters;
+              });
+            },
+            onModeChanged: (isDistanceBased) {
+              setState(() {
+                _isFreeRideDistanceBased = isDistanceBased;
+                if (isDistanceBased && _selectedGpxAssetPath != null) {
+                  final selectedData = _gpxFiles!.firstWhere((data) => data.assetPath == _selectedGpxAssetPath);
+                  _freeRideDistanceMeters = selectedData.totalDistance.round();
+                }
+              });
+            },
+            onTargetsChanged: (targets) {
+              setState(() {
+                _freeRideTargets.clear();
+                _freeRideTargets.addAll(targets);
+              });
+            },
+            onResistanceChanged: (value) {
+              setState(() {
+                _freeRideResistanceLevel = value;
+                _isResistanceLevelValid = true;
+                _updateResistanceController();
+              });
+            },
+            onWarmupChanged: (value) {
+              setState(() {
+                _hasWarmup = value;
+              });
+            },
+            onCooldownChanged: (value) {
+              setState(() {
+                _hasCooldown = value;
+              });
+            },
+            onStartPressed: () {
+              if (_deviceType != null) {
+                final workoutValue = _isFreeRideDistanceBased
+                    ? _freeRideDistanceMeters
+                    : _freeRideDurationMinutes * 60;
+                final session = TrainingSessionDefinition.createTemplate(
+                  _deviceType!,
+                  isDistanceBased: _isFreeRideDistanceBased,
+                  workoutValue: workoutValue,
+                  targets: _freeRideTargets,
+                  resistanceLevel: _freeRideResistanceLevel,
+                  hasWarmup: _hasWarmup,
+                  hasCooldown: _hasCooldown,
+                );
+                
+                // Save preferences
+                TrainingSessionPreferencesService.saveFreeRidePreferences(
+                  _deviceType!,
+                  TrainingSessionPreferences(
+                    deviceType: _deviceType!,
+                    targets: _freeRideTargets,
+                    resistanceLevel: _freeRideResistanceLevel,
                   ),
-                  onTap: () {
-                    setState(() {
-                      _isFreeRideExpanded = !_isFreeRideExpanded;
-                    });
-                  },
-                ),
-                if (_isFreeRideExpanded)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              // Toggle between Time and Distance
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(AppLocalizations.of(context)!.time),
-                                  Switch(
-                                    value: _isFreeRideDistanceBased,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _isFreeRideDistanceBased = value;
-                                        if (value && _selectedGpxAssetPath != null) {
-                                          final selectedData = _gpxFiles!.firstWhere((data) => data.assetPath == _selectedGpxAssetPath);
-                                          _freeRideDistanceMeters = selectedData.totalDistance.round();
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  Text(AppLocalizations.of(context)!.distance),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(_isFreeRideDistanceBased ? 'Distance:' : 'Duration:'),
-                              const SizedBox(height: 8),
-                              if (_isFreeRideDistanceBased)
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: _freeRideDistanceMeters > _freeRideDistanceIncrement
-                                          ? () {
-                                              setState(() {
-                                                _freeRideDistanceMeters -= _freeRideDistanceIncrement;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        '${(_freeRideDistanceMeters / 1000).toStringAsFixed(1)} km',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: _freeRideDistanceMeters < 50000
-                                          ? () {
-                                              setState(() {
-                                                _freeRideDistanceMeters += _freeRideDistanceIncrement;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                  ],
-                                )
-                              else
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: _freeRideDurationMinutes > 1
-                                          ? () {
-                                              setState(() {
-                                                _freeRideDurationMinutes--;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        '$_freeRideDurationMinutes min',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: _freeRideDurationMinutes < 120
-                                          ? () {
-                                              setState(() {
-                                                _freeRideDurationMinutes++;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                              const SizedBox(height: 16),
-                              Text(AppLocalizations.of(context)!.targets, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 8),
-                              if (_deviceType != null && _userSettings != null && _configs[_deviceType!] != null)
-                                EditTargetFieldsWidget(
-                                  machineType: _deviceType!,
-                                  userSettings: _userSettings!,
-                                  config: _configs[_deviceType!]!,
-                                  targets: _freeRideTargets,
-                                  onTargetChanged: (name, value) {
-                                    setState(() {
-                                      if (value == null) {
-                                        _freeRideTargets.remove(name);
-                                      } else {
-                                        _freeRideTargets[name] = value;
-                                      }
-                                    });
-                                  },
-                                ),
-                              const SizedBox(height: 16),
-                              // Resistance Level Field (only for rowing and indoor bike if supported)
-                              if (_deviceType != null &&
-                                  (_deviceType! == DeviceType.rower ||
-                                   _deviceType! == DeviceType.indoorBike) &&
-                                  _supportedResistanceLevelRange != null)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 80,
-                                        child: Text(AppLocalizations.of(context)!.resistance),
-                                      ),
-                                      Expanded(
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.remove),
-                                              onPressed: () {
-                                                setState(() {
-                                                  if (_freeRideResistanceLevel == null) {
-                                                    _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                  } else if (_freeRideResistanceLevel! > _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                    _freeRideResistanceLevel = _freeRideResistanceLevel! - _supportedResistanceLevelRange!.minIncrement;
-                                                    if (_freeRideResistanceLevel! < _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                      _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                    }
-                                                  }
-                                                  _isResistanceLevelValid = true;
-                                                  _updateResistanceController();
-                                                });
-                                              },
-                                            ),
-                                            SizedBox(
-                                              width: 100,
-                                              child: TextFormField(
-                                                controller: _resistanceController,
-                                                decoration: InputDecoration(
-                                                  hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
-                                                  hintStyle: const TextStyle(fontSize: 12.0),
-                                                  border: const OutlineInputBorder(),
-                                                  errorBorder: const OutlineInputBorder(
-                                                    borderSide: BorderSide(color: Colors.red),
-                                                  ),
-                                                  focusedErrorBorder: const OutlineInputBorder(
-                                                    borderSide: BorderSide(color: Colors.red, width: 2),
-                                                  ),
-                                                  isDense: true,
-                                                  errorText: !_isResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
-                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                                ),
-                                                keyboardType: TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  LengthLimitingTextInputFormatter(4), // Max 4 digits for resistance
-                                                ],
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    if (value.isEmpty) {
-                                                      _freeRideResistanceLevel = null;
-                                                      _isResistanceLevelValid = true;
-                                                    } else {
-                                                      final intValue = int.tryParse(value);
-                                                      if (intValue != null && 
-                                                          intValue >= _supportedResistanceLevelRange!.minResistanceLevel && 
-                                                          intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
-                                                          (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
-                                                        _freeRideResistanceLevel = intValue;
-                                                        _isResistanceLevelValid = true;
-                                                      } else {
-                                                        _isResistanceLevelValid = false;
-                                                      }
-                                                    }
-                                                  });
-                                                },
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.add),
-                                              onPressed: () {
-                                                setState(() {
-                                                  if (_freeRideResistanceLevel == null) {
-                                                    _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                  } else if (_freeRideResistanceLevel! < _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                    _freeRideResistanceLevel = _freeRideResistanceLevel! + _supportedResistanceLevelRange!.minIncrement;
-                                                    if (_freeRideResistanceLevel! > _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                      _freeRideResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
-                                                    }
-                                                  }
-                                                  _isResistanceLevelValid = true;
-                                                  _updateResistanceController();
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              const SizedBox(height: 16),
-                              // Warm-up and Cool-down checkboxes (only for rowers)
-                              if (_deviceType != null && _deviceType! == DeviceType.rower)
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Switch(
-                                          value: _hasWarmup,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _hasWarmup = value;
-                                            });
-                                          },
-                                        ),
-                                        Text(AppLocalizations.of(context)!.warmUp),
-                                      ],
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Row(
-                                      children: [
-                                        Switch(
-                                          value: _hasCooldown,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _hasCooldown = value;
-                                            });
-                                          },
-                                        ),
-                                        Text(AppLocalizations.of(context)!.coolDown),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ElevatedButton(
-                                onPressed: !_isResistanceLevelValid ? null : () {
-                                  if (_deviceType != null) {
-                                    final workoutValue = _isFreeRideDistanceBased
-                                        ? _freeRideDistanceMeters
-                                        : _freeRideDurationMinutes * 60;
-                                    final session = TrainingSessionDefinition.createTemplate(
-                                      _deviceType!,
-                                      isDistanceBased: _isFreeRideDistanceBased,
-                                      workoutValue: workoutValue,
-                                      targets: _freeRideTargets,
-                                      resistanceLevel: _freeRideResistanceLevel,
-                                      hasWarmup: _hasWarmup,
-                                      hasCooldown: _hasCooldown,
-                                    );
-                                    
-                                    // Log free ride analytics
-                                    AnalyticsService().logFreeRideStarted(
-                                      machineType: _deviceType!,
-                                      isDistanceBased: _isFreeRideDistanceBased,
-                                      targetValue: workoutValue,
-                                      hasWarmup: _hasWarmup,
-                                      hasCooldown: _hasCooldown,
-                                      resistanceLevel: _freeRideResistanceLevel,
-                                      hasGpxRoute: _selectedGpxAssetPath != null,
-                                    );
-                                    
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => TrainingSessionProgressScreen(
-                                          session: session,
-                                          ftmsDevice: widget.ftmsDevice,
-                                          gpxAssetPath: _selectedGpxAssetPath,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Text(AppLocalizations.of(context)!.start),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Training Session Generator Section (only for rowing machines)
-                if (_deviceType != null && _deviceType! == DeviceType.rower)
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          title: Text(AppLocalizations.of(context)!.trainingSessionGenerator),
-                          trailing: Icon(
-                            _isTrainingSessionGeneratorExpanded ? Icons.expand_less : Icons.expand_more,
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _isTrainingSessionGeneratorExpanded = !_isTrainingSessionGeneratorExpanded;
-                            });
-                          },
-                        ),
-                        if (_isTrainingSessionGeneratorExpanded)
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                // Duration Field (time-based only, minimum 15 minutes)
-                                Text('Duration:'),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: _trainingSessionGeneratorDurationMinutes > 15
-                                          ? () {
-                                              setState(() {
-                                                _trainingSessionGeneratorDurationMinutes--;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        '$_trainingSessionGeneratorDurationMinutes min',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: _trainingSessionGeneratorDurationMinutes < 120
-                                          ? () {
-                                              setState(() {
-                                                _trainingSessionGeneratorDurationMinutes++;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                // Workout Type Selector
-                                Text('Workout Type:'),
-                                const SizedBox(height: 8),
-                                DropdownButton<RowerWorkoutType>(
-                                  value: _selectedWorkoutType,
-                                  onChanged: (RowerWorkoutType? newValue) {
-                                    if (newValue != null) {
-                                      setState(() {
-                                        _selectedWorkoutType = newValue;
-                                      });
-                                    }
-                                  },
-                                  items: RowerWorkoutType.values.map<DropdownMenuItem<RowerWorkoutType>>((RowerWorkoutType value) {
-                                    return DropdownMenuItem<RowerWorkoutType>(
-                                      value: value,
-                                      child: Text(value.strategy.getLabel(AppLocalizations.of(context)!)),
-                                    );
-                                  }).toList(),
-                                ),
-                                const SizedBox(height: 16),
-                                // Resistance Level Field (only if supported)
-                                if (_supportedResistanceLevelRange != null)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                    child: Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 80,
-                                          child: Text(AppLocalizations.of(context)!.resistance),
-                                        ),
-                                        Expanded(
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.remove),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    if (_trainingSessionGeneratorResistanceLevel == null) {
-                                                      _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                    } else if (_trainingSessionGeneratorResistanceLevel! > _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                      _trainingSessionGeneratorResistanceLevel = _trainingSessionGeneratorResistanceLevel! - _supportedResistanceLevelRange!.minIncrement;
-                                                      if (_trainingSessionGeneratorResistanceLevel! < _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                        _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                      }
-                                                    }
-                                                    _isTrainingSessionGeneratorResistanceLevelValid = true;
-                                                    _updateTrainingSessionGeneratorResistanceController();
-                                                  });
-                                                },
-                                              ),
-                                              SizedBox(
-                                                width: 100,
-                                                child: TextFormField(
-                                                  controller: _trainingSessionGeneratorResistanceController,
-                                                  decoration: InputDecoration(
-                                                    hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
-                                                    hintStyle: const TextStyle(fontSize: 12.0),
-                                                    border: const OutlineInputBorder(),
-                                                    errorBorder: const OutlineInputBorder(
-                                                      borderSide: BorderSide(color: Colors.red),
-                                                    ),
-                                                    focusedErrorBorder: const OutlineInputBorder(
-                                                      borderSide: BorderSide(color: Colors.red, width: 2),
-                                                    ),
-                                                    isDense: true,
-                                                    errorText: !_isTrainingSessionGeneratorResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
-                                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                                  ),
-                                                  keyboardType: TextInputType.number,
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
-                                                    LengthLimitingTextInputFormatter(4),
-                                                  ],
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      if (value.isEmpty) {
-                                                        _trainingSessionGeneratorResistanceLevel = null;
-                                                        _isTrainingSessionGeneratorResistanceLevelValid = true;
-                                                      } else {
-                                                        final intValue = int.tryParse(value);
-                                                        if (intValue != null && 
-                                                            intValue >= _supportedResistanceLevelRange!.minResistanceLevel && 
-                                                            intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
-                                                            (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
-                                                          _trainingSessionGeneratorResistanceLevel = intValue;
-                                                          _isTrainingSessionGeneratorResistanceLevelValid = true;
-                                                        } else {
-                                                          _isTrainingSessionGeneratorResistanceLevelValid = false;
-                                                        }
-                                                      }
-                                                    });
-                                                  },
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.add),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    if (_trainingSessionGeneratorResistanceLevel == null) {
-                                                      _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                    } else if (_trainingSessionGeneratorResistanceLevel! < _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                      _trainingSessionGeneratorResistanceLevel = _trainingSessionGeneratorResistanceLevel! + _supportedResistanceLevelRange!.minIncrement;
-                                                      if (_trainingSessionGeneratorResistanceLevel! > _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                        _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
-                                                      }
-                                                    }
-                                                    _isTrainingSessionGeneratorResistanceLevelValid = true;
-                                                    _updateTrainingSessionGeneratorResistanceController();
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                const SizedBox(height: 16),
-                                // Start Button
-                                ElevatedButton(
-                                  onPressed: !_isTrainingSessionGeneratorResistanceLevelValid ? null : () {
-                                    final session = RowerTrainingSessionGenerator.generateTrainingSession(
-                                      _trainingSessionGeneratorDurationMinutes,
-                                      _selectedWorkoutType,
-                                      AppLocalizations.of(context)!,
-                                      _trainingSessionGeneratorResistanceLevel,
-                                    );
-                                    
-                                    // Log analytics event for training session generator
-                                    AnalyticsService().logTrainingSessionGenerated(
-                                      workoutType: _selectedWorkoutType.name,
-                                      duration: _trainingSessionGeneratorDurationMinutes,
-                                      resistanceLevel: _trainingSessionGeneratorResistanceLevel,
-                                    );
-                                    
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => TrainingSessionProgressScreen(
-                                          session: session,
-                                          ftmsDevice: widget.ftmsDevice,
-                                          gpxAssetPath: _selectedGpxAssetPath,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(AppLocalizations.of(context)!.start),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
+                );
+                
+                // Log free ride analytics
+                AnalyticsService().logFreeRideStarted(
+                  machineType: _deviceType!,
+                  isDistanceBased: _isFreeRideDistanceBased,
+                  targetValue: workoutValue,
+                  hasWarmup: _hasWarmup,
+                  hasCooldown: _hasCooldown,
+                  resistanceLevel: _freeRideResistanceLevel,
+                  hasGpxRoute: _selectedGpxAssetPath != null,
+                );
+                
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TrainingSessionProgressScreen(
+                      session: session,
+                      ftmsDevice: widget.ftmsDevice,
+                      gpxAssetPath: _selectedGpxAssetPath,
                     ),
                   ),
-                if (_deviceType != null && _deviceType! == DeviceType.rower)
-                  const SizedBox(height: 16),
-                // Load Training Session Section
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+        // Training Session Generator Section (only for rowing machines)
+        if (_deviceType != null && _deviceType! == DeviceType.rower)
+          TrainingSessionGeneratorSection(
+            isExpanded: _isTrainingSessionGeneratorExpanded,
+            onExpandChanged: () {
+              setState(() {
+                _isTrainingSessionGeneratorExpanded = !_isTrainingSessionGeneratorExpanded;
+              });
+            },
+            durationMinutes: _trainingSessionGeneratorDurationMinutes,
+            selectedWorkoutType: _selectedWorkoutType,
+            resistanceLevel: _trainingSessionGeneratorResistanceLevel,
+            isResistanceValid: _isTrainingSessionGeneratorResistanceLevelValid,
+            resistanceController: _trainingSessionGeneratorResistanceController!,
+            supportedResistanceRange: _supportedResistanceLevelRange,
+            selectedGpxAssetPath: _selectedGpxAssetPath,
+            onDurationChanged: (minutes) {
+              setState(() {
+                _trainingSessionGeneratorDurationMinutes = minutes;
+              });
+            },
+            onWorkoutTypeChanged: (workoutType) {
+              setState(() {
+                _selectedWorkoutType = workoutType;
+              });
+            },
+            onResistanceChanged: (value) {
+              setState(() {
+                _trainingSessionGeneratorResistanceLevel = value;
+                _isTrainingSessionGeneratorResistanceLevelValid = true;
+                _updateTrainingSessionGeneratorResistanceController();
+              });
+            },
+            onStartPressed: () {
+              final session = RowerTrainingSessionGenerator.generateTrainingSession(
+                _trainingSessionGeneratorDurationMinutes,
+                _selectedWorkoutType,
+                AppLocalizations.of(context)!,
+                _trainingSessionGeneratorResistanceLevel,
+              );
+              
+              // Save preferences
+              TrainingSessionPreferencesService.saveTrainingGeneratorPreferences(
+                _deviceType!,
+                TrainingSessionPreferences(
+                  deviceType: _deviceType!,
+                  targets: {},
+                  resistanceLevel: _trainingSessionGeneratorResistanceLevel,
+                ),
+              );
+              
+              // Log analytics event for training session generator
+              AnalyticsService().logTrainingSessionGenerated(
+                workoutType: _selectedWorkoutType.name,
+                duration: _trainingSessionGeneratorDurationMinutes,
+                resistanceLevel: _trainingSessionGeneratorResistanceLevel,
+              );
+              
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => TrainingSessionProgressScreen(
+                    session: session,
+                    ftmsDevice: widget.ftmsDevice,
+                    gpxAssetPath: _selectedGpxAssetPath,
+                  ),
+                ),
+              );
+            },
+          ),
+        if (_deviceType != null && _deviceType! == DeviceType.rower)
+          const SizedBox(height: 16),
+        // Load Training Session Section
                 Card(
                   child: Column(
                     children: [
@@ -935,63 +619,26 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Device Data Features Section (only show if developer mode is enabled)
-                if (_userSettings?.developerMode == true)
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          title: Text(AppLocalizations.of(context)!.deviceDataFeatures),
-                          trailing: Icon(
-                            _isDeviceDataFeaturesExpanded ? Icons.expand_less : Icons.expand_more,
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _isDeviceDataFeaturesExpanded = !_isDeviceDataFeaturesExpanded;
-                            });
-                          },
-                        ),
-                        if (_isDeviceDataFeaturesExpanded)
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.5,
-                            child: FTMSDeviceDataFeaturesTab(
-                              ftmsDevice: widget.ftmsDevice,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                if (_userSettings?.developerMode == true)
-                  const SizedBox(height: 16),
-                // Machine Features Section (only show if developer mode is enabled)
-                if (_userSettings?.developerMode == true)
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          title: Text(AppLocalizations.of(context)!.machineFeatures),
-                          trailing: Icon(
-                            _isMachineFeaturesExpanded ? Icons.expand_less : Icons.expand_more,
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _isMachineFeaturesExpanded = !_isMachineFeaturesExpanded;
-                            });
-                          },
-                        ),
-                        if (_isMachineFeaturesExpanded)
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.6,
-                            child: FTMSMachineFeaturesTab(
-                              ftmsDevice: widget.ftmsDevice,
-                              writeCommand: widget.writeCommand,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          );
+        // Developer Mode Sections (only show if developer mode is enabled)
+        if (_userSettings?.developerMode == true)
+          DeveloperModeSections(
+            ftmsDevice: widget.ftmsDevice,
+            writeCommand: widget.writeCommand,
+            isMachineFeaturesExpanded: _isMachineFeaturesExpanded,
+            isDeviceDataFeaturesExpanded: _isDeviceDataFeaturesExpanded,
+            onMachineFeaturesExpandChanged: () {
+              setState(() {
+                _isMachineFeaturesExpanded = !_isMachineFeaturesExpanded;
+              });
+            },
+            onDeviceDataFeaturesExpandChanged: () {
+              setState(() {
+                _isDeviceDataFeaturesExpanded = !_isDeviceDataFeaturesExpanded;
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
