@@ -18,7 +18,8 @@
       "availableAsTarget": true,
       "targetRange": 0.08,
       "userSetting": "rowingFtp",
-      "icon": "speed"
+      "icon": "speed",
+      "samplePeriodSeconds": 7
     },
     {
       "name": "Stroke Rate",
@@ -37,7 +38,7 @@
       "availableAsTarget": true,
       "targetRange": 0.08,
       "metronome": true,
-      "samplePeriodSeconds": 5
+      "samplePeriodSeconds": 7
     },
     {
       "name": "Instantaneous Power",
@@ -51,7 +52,8 @@
       "unit": "W",
       "icon": "power",
       "min": 0,
-      "max": 1500
+      "max": 1500,
+      "samplePeriodSeconds": 7
     },
     {
       "name": "Resistance Level",
