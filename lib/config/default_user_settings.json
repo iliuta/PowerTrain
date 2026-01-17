@@ -3,5 +3,6 @@
   "rowingFtp": "2:27",
   "developerMode": false,
   "soundEnabled": true,
-  "metronomeSoundEnabled": true
+  "metronomeSoundEnabled": true,
+  "demoModeEnabled": false
 }
