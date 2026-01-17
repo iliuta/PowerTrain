@@ -754,7 +754,7 @@ class TrainingSessionController extends ChangeNotifier
   void _stopMetronome() {
     _metronomeTimer?.cancel();
     _metronomeTimer = null;
-    _currentMetronomeTarget = null; // Clear the target
+    //_currentMetronomeTarget = null;
     _metronomeTickCount = 0; // Reset counter
     _isPullPhase = true; // Reset to pull phase
     if (!_disposed) notifyListeners(); // Notify UI that metronome stopped
