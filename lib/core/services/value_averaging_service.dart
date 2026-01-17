@@ -62,9 +62,33 @@ class ValueAveragingService {
       return null; // No values available
     }
 
-    // Calculate average
+    // For stroke rate, use weighted average with more weight on recent values
+    if (fieldName == 'Stroke Rate') {
+      return _calculateWeightedAverage(queue);
+    }
+
+    // For other fields, use simple average
     final sum = queue.fold<num>(0, (sum, item) => sum + item.value);
     return sum / queue.length;
+  }
+
+  /// Calculate weighted average with exponential decay (more recent = higher weight)
+  num _calculateWeightedAverage(Queue<_TimestampedValue> queue) {
+    if (queue.isEmpty) return 0;
+
+    final now = DateTime.now();
+    num weightedSum = 0;
+    num totalWeight = 0;
+
+    for (final item in queue) {
+      // Weight decreases exponentially with age (newer = higher weight)
+      final ageSeconds = now.difference(item.timestamp).inSeconds;
+      final weight = 1.0 / (1.0 + ageSeconds); // Simple decay function
+      weightedSum += item.value * weight;
+      totalWeight += weight;
+    }
+
+    return weightedSum / totalWeight;
   }
 
   /// Check if a field is configured for averaging
