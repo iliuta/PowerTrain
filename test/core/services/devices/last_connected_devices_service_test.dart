@@ -1,3 +1,4 @@
+import 'package:flutter_ftms/src/ftms/characteristic/data/device_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/services/devices/last_connected_devices_service.dart';
 import 'package:ftms/core/models/bt_device_service_type.dart';
@@ -576,7 +577,7 @@ class MockBTDevice extends BTDevice {
   void Function(BuildContext context, BluetoothDevice device)? getNavigationCallback() => null;
 }
 
-class MockFlutterBluePlusFacade implements FlutterBluePlusFacade {
+class MockFlutterBluePlusFacade extends FlutterBluePlusFacade {
   final StreamController<BluetoothAdapterState> _adapterStateController = 
       StreamController<BluetoothAdapterState>.broadcast();
   
@@ -585,9 +586,52 @@ class MockFlutterBluePlusFacade implements FlutterBluePlusFacade {
   
   @override
   List<BluetoothDevice> get connectedDevices => [];
+
+  @override
+  bool isDemoMode=false;
+
+  @override
+  BluetoothAdapterState get adapterStateNow => throw UnimplementedError();
+
+  @override
+  Stream<bool> get isScanning => throw UnimplementedError();
+
+  @override
+  bool get isScanningNow => throw UnimplementedError();
+
+  @override
+  Stream<List<ScanResult>> get scanResults => throw UnimplementedError();
+
+  @override
+  void setLogLevel(LogLevel level) {
+  }
+
+  @override
+  Future<void> startScan({Duration timeout = const Duration(seconds: 15), List<Guid>? withServices}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> stopScan() {
+    throw UnimplementedError();
+  }
 }
 
 class MockFtmsFacade implements FtmsFacade {
   @override
   Future<bool> isBluetoothDeviceFTMSDevice(BluetoothDevice device) async => false;
+
+  @override
+  Future<bool> connectToFTMSDevice(BluetoothDevice device) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> disconnectFromFTMSDevice(BluetoothDevice device) {
+    throw UnimplementedError();
+  }
+
+  @override
+  void useDeviceDataCharacteristic(BluetoothDevice device, void Function(DeviceData) callback, {DeviceDataType? preferredDeviceDataType}) {
+  }
 }
