@@ -144,6 +144,36 @@ class FTMSService {
     }
   }
 
+  /// Checks if the machine supports resistance level setting by reading the MachineFeatureFlag
+  Future<bool> supportsPowerControl() async {
+    try {
+      final machineFeature = await FTMS.readMachineFeatureCharacteristic(ftmsDevice);
+      if (machineFeature == null) {
+        return false;
+      }
+      final features = machineFeature.getFeatureFlags();
+      return features[MachineFeatureFlag.powerMeasurementFlag] ?? false;
+    } catch (e) {
+      debugPrint('❌ supportsPowerControl error: $e');
+      return false;
+    }
+  }
+
+  /// Checks if the machine supports resistance level setting by reading the MachineFeatureFlag
+  Future<bool> supportsResistanceControl() async {
+    try {
+      final machineFeature = await FTMS.readMachineFeatureCharacteristic(ftmsDevice);
+      if (machineFeature == null) {
+        return false;
+      }
+      final features = machineFeature.getFeatureFlags();
+      return features[MachineFeatureFlag.resistanceLevelFlag] ?? false;
+    } catch (e) {
+      debugPrint('❌ supportsResistanceControl error: $e');
+      return false;
+    }
+  }
+
   /// Executes an FTMS command with retry logic for reliability
   Future<void> _executeWithRetry(Future<void> Function() command, String operationName) async {
     const int maxRetries = 5;
@@ -164,6 +194,11 @@ class FTMSService {
   }
 
   Future<void> setPowerWithControl(dynamic power) async {
+    final ergModeAvailable = await supportsPowerControl();
+    if (!ergModeAvailable) {
+      logger.w('Device does not support power control');
+      return;
+    }
     await _executeWithRetry(() async {
       await writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
@@ -184,6 +219,13 @@ class FTMSService {
   }
 
   Future<void> setResistanceWithControl(int resistance) async {
+    // Check if the device supports resistance level control
+    final supportsResistance = await supportsResistanceControl();
+    if (!supportsResistance) {
+      logger.w('Device does not support resistance level control');
+      return;
+    }
+
     await _executeWithRetry(() async {
       await writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
