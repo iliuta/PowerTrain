@@ -25,6 +25,7 @@ class DemoFtmsDevice extends BluetoothDevice {
   int _totalDistance = 0;
   int _totalCalories = 0;
   double _elapsedTimeSeconds = 0;
+  int _resistanceLevel = 50; // Default resistance level
 
   // Demo state
   BluetoothCharacteristic? _dataCharacteristic;
@@ -81,6 +82,9 @@ class DemoFtmsDevice extends BluetoothDevice {
     // Control Point characteristic (0x2AD9) - required for FTMS control operations
     final controlPointUuid = Guid('00002ad9-0000-1000-8000-00805f9b34fb');
 
+    // Supported Resistance Level Range characteristic (0x2AD6) - read-only
+    final supportedResistanceUuid = Guid('00002ad6-0000-1000-8000-00805f9b34fb');
+
     // Create the data characteristic
     final dataCharacteristic = _MockBluetoothCharacteristic(
       remoteId: remoteId,
@@ -90,6 +94,20 @@ class DemoFtmsDevice extends BluetoothDevice {
       onWrite: null, // Data characteristic is read-only for notifications
     );
     _dataCharacteristic = dataCharacteristic;
+    // Set initial data for the data characteristic
+    final initialData = _buildRowerBytes(
+      strokeRate: 24,
+      strokeCount: 0,
+      totalDistance: 0,
+      instantaneousPace: 120,
+      instantaneousPower: 150,
+      totalEnergy: 0,
+      energyPerHour: 540,
+      energyPerMinute: 9,
+      heartRate: 120,
+      elapsedTime: 0,
+    );
+    dataCharacteristic.emitData(initialData);
 
     // Create the control point characteristic with write capability
     final controlPointCharacteristic = _MockBluetoothCharacteristic(
@@ -100,12 +118,23 @@ class DemoFtmsDevice extends BluetoothDevice {
       onWrite: _handleControlPointWrite,
     );
 
+    // Create the supported resistance level range characteristic (read-only)
+    final supportedResistanceCharacteristic = _MockBluetoothCharacteristic(
+      remoteId: remoteId,
+      serviceUuid: ftmsServiceUuid,
+      characteristicUuid: supportedResistanceUuid,
+      primaryServiceUuid: null,
+      onWrite: null, // Read-only
+    );
+    // Set the supported range: min 10, max 150, increment 10
+    supportedResistanceCharacteristic.emitData([10, 0, 150, 0, 10, 0]);
+
     // Create the FTMS service with both characteristics
     final ftmsService = _MockBluetoothService(
       remoteId: remoteId,
       serviceUuid: ftmsServiceUuid,
       primaryServiceUuid: null,
-      characteristics: [dataCharacteristic, controlPointCharacteristic],
+      characteristics: [dataCharacteristic, controlPointCharacteristic, supportedResistanceCharacteristic],
     );
     _fakeServicesList = [ftmsService];
     return [ftmsService];
@@ -299,9 +328,10 @@ class DemoFtmsDevice extends BluetoothDevice {
       instantaneousPower & 0xFF,
       // Average Power (same for simplicity)
       (instantaneousPower >> 8) & 0xFF,
-      5,
-      0,
-      // Resistance Level (little-endian 16-bit)
+      _resistanceLevel & 0xFF,
+      // Resistance Level low byte
+      (_resistanceLevel >> 8) & 0xFF,
+      // Resistance Level high byte
       totalEnergy & 0xFF,
       // Energy low byte
       (totalEnergy >> 8) & 0xFF,
@@ -336,6 +366,16 @@ class DemoFtmsDevice extends BluetoothDevice {
         _totalDistance = 0;
         _totalCalories = 0;
         _elapsedTimeSeconds = 0;
+        break;
+      case 0x04: // Set Target Resistance Level
+        if (value.length > 1) {
+          int newLevel = value[1];
+          // Clamp to 10-150
+          newLevel = newLevel.clamp(10, 150);
+          // Round to nearest 10
+          _resistanceLevel = ((newLevel / 10).round() * 10).clamp(10, 150);
+          debugPrint('🎭 DEMO: Resistance level set to $_resistanceLevel via control point');
+        }
         break;
       case 0x07: // Start or Resume
         _startDataEmission();
@@ -389,6 +429,21 @@ class DemoFtmsDevice extends BluetoothDevice {
       await controlPoint.write([0x08]); // Stop or Pause command
     }
   }
+
+  /// Set resistance level (10-150, increments of 10)
+  Future<void> setResistanceLevel(int level) async {
+    // Clamp and round to nearest 10
+    level = level.clamp(10, 150);
+    level = ((level / 10).round() * 10).clamp(10, 150);
+    
+    final controlPoint = _findControlPointCharacteristic();
+    if (controlPoint != null) {
+      await controlPoint.write([0x04, level]); // Set Target Resistance Level command
+    } else {
+      // Fallback: set directly
+      _resistanceLevel = level;
+    }
+  }
 }
 
 /// Mock BluetoothCharacteristic for demo service discovery
@@ -430,8 +485,25 @@ class _MockBluetoothCharacteristic extends BluetoothCharacteristic {
     if (onWrite != null) {
       onWrite!(value);
     }
+    // Update last value for readable characteristics
+    if (properties.read) {
+      _lastValue = value;
+    }
     // Simulate write delay
     await Future.delayed(const Duration(milliseconds: 50));
+  }
+
+  @override
+  Future<List<int>> read({int timeout = 15}) async {
+    // For demo purposes, return last value for readable characteristics
+    if (properties.read) {
+      // Simulate read delay
+      await Future.delayed(const Duration(milliseconds: 20));
+      return _lastValue;
+    } else {
+      // Characteristic doesn't support read
+      throw Exception('Characteristic does not support read operation');
+    }
   }
 
   @override
@@ -445,6 +517,21 @@ class _MockBluetoothCharacteristic extends BluetoothCharacteristic {
         write: true,
         notify: false,
         indicate: true,
+        authenticatedSignedWrites: false,
+        extendedProperties: false,
+        notifyEncryptionRequired: false,
+        indicateEncryptionRequired: false,
+      );
+    }
+    // For supported resistance level range, allow read
+    if (characteristicUuid == Guid('00002ad6-0000-1000-8000-00805f9b34fb')) {
+      return CharacteristicProperties(
+        broadcast: false,
+        read: true,
+        writeWithoutResponse: false,
+        write: false,
+        notify: false,
+        indicate: false,
         authenticatedSignedWrites: false,
         extendedProperties: false,
         notifyEncryptionRequired: false,
