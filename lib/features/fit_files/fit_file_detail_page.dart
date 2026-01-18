@@ -255,8 +255,15 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
       return FlSpot(secondsFromStart, point.value);
     }).toList();
 
-    final minY = spots.isNotEmpty ? spots.map((s) => s.y).reduce((a, b) => a < b ? a : b) : 0;
-    final maxY = spots.isNotEmpty ? spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) : 100;
+    final minY = spots.isNotEmpty ? spots.map((s) => s.y).reduce((a, b) => a < b ? a : b) : 0.0;
+    final maxY = spots.isNotEmpty ? spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) : 100.0;
+
+    final bool invertYAxis = unit == '/500m';
+    final double chartMinY = minY * 0.1;
+    final double chartMaxY = maxY * 1.2;
+    final adjustedSpots = invertYAxis 
+        ? spots.map((s) => FlSpot(s.x, minY + maxY - s.y)).toList()
+        : spots;
 
     return LineChartData(
       gridData: FlGridData(show: true),
@@ -266,9 +273,10 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
             showTitles: true,
             reservedSize: 40,
             getTitlesWidget: (value, meta) {
+              final displayValue = invertYAxis ? minY + maxY - value : value;
               final formattedValue = unit == '/500m' 
-                  ? _formatPace(value) 
-                  : value.toStringAsFixed(decimalPlaces);
+                  ? _formatPace(displayValue) 
+                  : displayValue.toStringAsFixed(decimalPlaces);
               return Text(
                 formattedValue,
                 style: const TextStyle(fontSize: 10),
@@ -294,15 +302,16 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
       borderData: FlBorderData(show: true),
       minX: spots.isNotEmpty ? spots.first.x : 0,
       maxX: spots.isNotEmpty ? spots.last.x : 100,
-      minY: minY * 0.9,
-      maxY: maxY * 1.1,
+      minY: chartMinY,
+      maxY: chartMaxY,
       lineTouchData: LineTouchData(
         touchTooltipData: LineTouchTooltipData(
           getTooltipItems: (touchedSpots) {
             return touchedSpots.map((spot) {
+              final displayValue = invertYAxis ? minY + maxY - spot.y : spot.y;
               final formattedValue = unit == '/500m' 
-                  ? _formatPace(spot.y) 
-                  : spot.y.toStringAsFixed(decimalPlaces);
+                  ? _formatPace(displayValue) 
+                  : displayValue.toStringAsFixed(decimalPlaces);
               return LineTooltipItem(
                 formattedValue,
                 TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -313,7 +322,7 @@ class _FitFileDetailPageState extends State<FitFileDetailPage> {
       ),
       lineBarsData: [
         LineChartBarData(
-          spots: spots,
+          spots: adjustedSpots,
           isCurved: true,
           color: color,
           barWidth: 2,
