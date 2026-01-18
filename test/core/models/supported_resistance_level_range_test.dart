@@ -201,4 +201,56 @@ void main() {
       );
     });
   });
+
+  group('SupportedResistanceLevelRange with min=0, max=100, step=1', () {
+    late SupportedResistanceLevelRange range;
+
+    setUp(() {
+      range = SupportedResistanceLevelRange(
+        minResistanceLevel: 0,
+        maxResistanceLevel: 100,
+        minIncrement: 1,
+      );
+    });
+
+    test('maxUserInput returns correct value', () {
+      expect(range.maxUserInput, equals(100));
+    });
+
+    test('convertUserInputToMachine converts correctly', () {
+      expect(range.convertUserInputToMachine(1), equals(1));
+      expect(range.convertUserInputToMachine(2), equals(2));
+      expect(range.convertUserInputToMachine(50), equals(50));
+      expect(range.convertUserInputToMachine(100), equals(100));
+    });
+
+    test('convertUserInputToMachine throws for invalid input', () {
+      expect(
+        () => range.convertUserInputToMachine(0),
+        throwsA(isA<ArgumentError>()),
+      );
+      expect(
+        () => range.convertUserInputToMachine(101),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('convertMachineToUserInput converts correctly', () {
+      expect(range.convertMachineToUserInput(1), equals(1));
+      expect(range.convertMachineToUserInput(2), equals(2));
+      expect(range.convertMachineToUserInput(50), equals(50));
+      expect(range.convertMachineToUserInput(100), equals(100));
+    });
+
+    test('convertMachineToUserInput throws for invalid input', () {
+      expect(
+        () => range.convertMachineToUserInput(-1),
+        throwsA(isA<ArgumentError>()),
+      );
+      expect(
+        () => range.convertMachineToUserInput(101),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+  });
 }

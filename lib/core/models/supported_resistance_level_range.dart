@@ -28,14 +28,20 @@ class SupportedResistanceLevelRange {
   int get controlIncrement => minIncrement;
 
   /// Returns the maximum user input value (1-based range)
-  int get maxUserInput => ((maxResistanceLevel - minResistanceLevel) ~/ minIncrement) + 1;
+  int get maxUserInput => minResistanceLevel == 0
+      ? ((maxResistanceLevel - minResistanceLevel) ~/ minIncrement)
+      : ((maxResistanceLevel - minResistanceLevel) ~/ minIncrement) + 1;
 
   /// Converts user input (1 to maxUserInput) to machine resistance level
   int convertUserInputToMachine(int userInput) {
     if (userInput < 1 || userInput > maxUserInput) {
       throw ArgumentError('User input must be between 1 and $maxUserInput');
     }
-    return minResistanceLevel + (userInput - 1) * minIncrement;
+    if (minResistanceLevel == 0) {
+      return minResistanceLevel + userInput * minIncrement;
+    } else {
+      return minResistanceLevel + (userInput - 1) * minIncrement;
+    }
   }
 
   /// Converts machine resistance level to user input value
@@ -46,7 +52,11 @@ class SupportedResistanceLevelRange {
     if ((machineValue - minResistanceLevel) % minIncrement != 0) {
       throw ArgumentError('Machine value $machineValue is not a valid step');
     }
-    return ((machineValue - minResistanceLevel) ~/ minIncrement) + 1;
+    if (minResistanceLevel == 0) {
+      return (machineValue - minResistanceLevel) ~/ minIncrement;
+    } else {
+      return ((machineValue - minResistanceLevel) ~/ minIncrement) + 1;
+    }
   }
 
   /// Parse the characteristic value (6 bytes minimum)
