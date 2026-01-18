@@ -50,6 +50,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   int _freeRideDistanceMeters = 5000; // 5km default
   final Map<String, dynamic> _freeRideTargets = {};
   int? _freeRideResistanceLevel;
+  int? _freeRideUserResistanceLevel;
   TextEditingController? _resistanceController;
   bool _isResistanceLevelValid = true;
   bool _hasWarmup = true; // Default to true for rowers
@@ -57,6 +58,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   int _trainingSessionGeneratorDurationMinutes = 30; // Default 30 minutes, minimum 15
   RowerWorkoutType _selectedWorkoutType = RowerWorkoutType.BASE_ENDURANCE;
   int? _trainingSessionGeneratorResistanceLevel;
+  int? _trainingSessionGeneratorUserResistanceLevel;
   TextEditingController? _trainingSessionGeneratorResistanceController;
   bool _isTrainingSessionGeneratorResistanceLevelValid = true;
   UserSettings? _userSettings;
@@ -80,13 +82,13 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
 
   void _updateResistanceController() {
     if (_resistanceController != null) {
-      _resistanceController!.text = _freeRideResistanceLevel?.toString() ?? '';
+      _resistanceController!.text = _freeRideUserResistanceLevel?.toString() ?? '';
     }
   }
 
   void _updateTrainingSessionGeneratorResistanceController() {
     if (_trainingSessionGeneratorResistanceController != null) {
-      _trainingSessionGeneratorResistanceController!.text = _trainingSessionGeneratorResistanceLevel?.toString() ?? '';
+      _trainingSessionGeneratorResistanceController!.text = _trainingSessionGeneratorUserResistanceLevel?.toString() ?? '';
     }
   }
 
@@ -145,6 +147,14 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       final range = await ftmsService.readSupportedResistanceLevelRange();
       setState(() {
         _supportedResistanceLevelRange = range;
+        if (range != null) {
+          if (_freeRideResistanceLevel != null) {
+            _freeRideUserResistanceLevel = range.convertMachineToUserInput(_freeRideResistanceLevel!);
+          }
+          if (_trainingSessionGeneratorResistanceLevel != null) {
+            _trainingSessionGeneratorUserResistanceLevel = range.convertMachineToUserInput(_trainingSessionGeneratorResistanceLevel!);
+          }
+        }
         _isResistanceLevelValid = true;
         _updateResistanceController();
         _isTrainingSessionGeneratorResistanceLevelValid = true;
@@ -153,6 +163,8 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     } catch (e) {
       setState(() {
         _supportedResistanceLevelRange = null;
+        _freeRideUserResistanceLevel = null;
+        _trainingSessionGeneratorUserResistanceLevel = null;
         _isResistanceLevelValid = true;
         _updateResistanceController();
         _isTrainingSessionGeneratorResistanceLevelValid = true;
@@ -531,14 +543,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                               icon: const Icon(Icons.remove),
                                               onPressed: () {
                                                 setState(() {
-                                                  if (_freeRideResistanceLevel == null) {
-                                                    _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                  } else if (_freeRideResistanceLevel! > _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                    _freeRideResistanceLevel = _freeRideResistanceLevel! - _supportedResistanceLevelRange!.minIncrement;
-                                                    if (_freeRideResistanceLevel! < _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                      _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                    }
+                                                  if (_freeRideUserResistanceLevel == null) {
+                                                    _freeRideUserResistanceLevel = 1;
+                                                  } else if (_freeRideUserResistanceLevel! > 1) {
+                                                    _freeRideUserResistanceLevel = _freeRideUserResistanceLevel! - 1;
                                                   }
+                                                  _freeRideResistanceLevel = _supportedResistanceLevelRange!.convertUserInputToMachine(_freeRideUserResistanceLevel!);
                                                   _isResistanceLevelValid = true;
                                                   _updateResistanceController();
                                                 });
@@ -549,7 +559,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                               child: TextFormField(
                                                 controller: _resistanceController,
                                                 decoration: InputDecoration(
-                                                  hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
+                                                  hintText: '(1-${_supportedResistanceLevelRange!.maxUserInput})',
                                                   hintStyle: const TextStyle(fontSize: 12.0),
                                                   border: const OutlineInputBorder(),
                                                   errorBorder: const OutlineInputBorder(
@@ -559,7 +569,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                     borderSide: BorderSide(color: Colors.red, width: 2),
                                                   ),
                                                   isDense: true,
-                                                  errorText: !_isResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
+                                                  errorText: !_isResistanceLevelValid ? 'Invalid value (1-${_supportedResistanceLevelRange!.maxUserInput})' : null,
                                                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                                 ),
                                                 keyboardType: TextInputType.number,
@@ -570,15 +580,16 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                 onChanged: (value) {
                                                   setState(() {
                                                     if (value.isEmpty) {
+                                                      _freeRideUserResistanceLevel = null;
                                                       _freeRideResistanceLevel = null;
                                                       _isResistanceLevelValid = true;
                                                     } else {
                                                       final intValue = int.tryParse(value);
                                                       if (intValue != null && 
-                                                          intValue >= _supportedResistanceLevelRange!.minResistanceLevel && 
-                                                          intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
-                                                          (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
-                                                        _freeRideResistanceLevel = intValue;
+                                                          intValue >= 1 && 
+                                                          intValue <= _supportedResistanceLevelRange!.maxUserInput) {
+                                                        _freeRideUserResistanceLevel = intValue;
+                                                        _freeRideResistanceLevel = _supportedResistanceLevelRange!.convertUserInputToMachine(intValue);
                                                         _isResistanceLevelValid = true;
                                                       } else {
                                                         _isResistanceLevelValid = false;
@@ -592,14 +603,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                               icon: const Icon(Icons.add),
                                               onPressed: () {
                                                 setState(() {
-                                                  if (_freeRideResistanceLevel == null) {
-                                                    _freeRideResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                  } else if (_freeRideResistanceLevel! < _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                    _freeRideResistanceLevel = _freeRideResistanceLevel! + _supportedResistanceLevelRange!.minIncrement;
-                                                    if (_freeRideResistanceLevel! > _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                      _freeRideResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
-                                                    }
+                                                  if (_freeRideUserResistanceLevel == null) {
+                                                    _freeRideUserResistanceLevel = 1;
+                                                  } else if (_freeRideUserResistanceLevel! < _supportedResistanceLevelRange!.maxUserInput) {
+                                                    _freeRideUserResistanceLevel = _freeRideUserResistanceLevel! + 1;
                                                   }
+                                                  _freeRideResistanceLevel = _supportedResistanceLevelRange!.convertUserInputToMachine(_freeRideUserResistanceLevel!);
                                                   _isResistanceLevelValid = true;
                                                   _updateResistanceController();
                                                 });
@@ -792,14 +801,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                 icon: const Icon(Icons.remove),
                                                 onPressed: () {
                                                   setState(() {
-                                                    if (_trainingSessionGeneratorResistanceLevel == null) {
-                                                      _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                    } else if (_trainingSessionGeneratorResistanceLevel! > _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                      _trainingSessionGeneratorResistanceLevel = _trainingSessionGeneratorResistanceLevel! - _supportedResistanceLevelRange!.minIncrement;
-                                                      if (_trainingSessionGeneratorResistanceLevel! < _supportedResistanceLevelRange!.minResistanceLevel) {
-                                                        _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                      }
+                                                    if (_trainingSessionGeneratorUserResistanceLevel == null) {
+                                                      _trainingSessionGeneratorUserResistanceLevel = 1;
+                                                    } else if (_trainingSessionGeneratorUserResistanceLevel! > 1) {
+                                                      _trainingSessionGeneratorUserResistanceLevel = _trainingSessionGeneratorUserResistanceLevel! - 1;
                                                     }
+                                                    _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.convertUserInputToMachine(_trainingSessionGeneratorUserResistanceLevel!);
                                                     _isTrainingSessionGeneratorResistanceLevelValid = true;
                                                     _updateTrainingSessionGeneratorResistanceController();
                                                   });
@@ -810,7 +817,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                 child: TextFormField(
                                                   controller: _trainingSessionGeneratorResistanceController,
                                                   decoration: InputDecoration(
-                                                    hintText: '(${_supportedResistanceLevelRange!.minResistanceLevel}-${_supportedResistanceLevelRange!.maxResistanceLevel})',
+                                                    hintText: '(1-${_supportedResistanceLevelRange!.maxUserInput})',
                                                     hintStyle: const TextStyle(fontSize: 12.0),
                                                     border: const OutlineInputBorder(),
                                                     errorBorder: const OutlineInputBorder(
@@ -820,7 +827,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                       borderSide: BorderSide(color: Colors.red, width: 2),
                                                     ),
                                                     isDense: true,
-                                                    errorText: !_isTrainingSessionGeneratorResistanceLevelValid ? 'Invalid value (must be multiple of ${_supportedResistanceLevelRange!.minIncrement})' : null,
+                                                    errorText: !_isTrainingSessionGeneratorResistanceLevelValid ? 'Invalid value (1-${_supportedResistanceLevelRange!.maxUserInput})' : null,
                                                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                                   ),
                                                   keyboardType: TextInputType.number,
@@ -831,15 +838,16 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                   onChanged: (value) {
                                                     setState(() {
                                                       if (value.isEmpty) {
+                                                        _trainingSessionGeneratorUserResistanceLevel = null;
                                                         _trainingSessionGeneratorResistanceLevel = null;
                                                         _isTrainingSessionGeneratorResistanceLevelValid = true;
                                                       } else {
                                                         final intValue = int.tryParse(value);
                                                         if (intValue != null && 
-                                                            intValue >= _supportedResistanceLevelRange!.minResistanceLevel && 
-                                                            intValue <= _supportedResistanceLevelRange!.maxResistanceLevel &&
-                                                            (intValue - _supportedResistanceLevelRange!.minResistanceLevel) % _supportedResistanceLevelRange!.minIncrement == 0) {
-                                                          _trainingSessionGeneratorResistanceLevel = intValue;
+                                                            intValue >= 1 && 
+                                                            intValue <= _supportedResistanceLevelRange!.maxUserInput) {
+                                                          _trainingSessionGeneratorUserResistanceLevel = intValue;
+                                                          _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.convertUserInputToMachine(intValue);
                                                           _isTrainingSessionGeneratorResistanceLevelValid = true;
                                                         } else {
                                                           _isTrainingSessionGeneratorResistanceLevelValid = false;
@@ -853,14 +861,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                                 icon: const Icon(Icons.add),
                                                 onPressed: () {
                                                   setState(() {
-                                                    if (_trainingSessionGeneratorResistanceLevel == null) {
-                                                      _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.minResistanceLevel;
-                                                    } else if (_trainingSessionGeneratorResistanceLevel! < _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                      _trainingSessionGeneratorResistanceLevel = _trainingSessionGeneratorResistanceLevel! + _supportedResistanceLevelRange!.minIncrement;
-                                                      if (_trainingSessionGeneratorResistanceLevel! > _supportedResistanceLevelRange!.maxResistanceLevel) {
-                                                        _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.maxResistanceLevel;
-                                                      }
+                                                    if (_trainingSessionGeneratorUserResistanceLevel == null) {
+                                                      _trainingSessionGeneratorUserResistanceLevel = 1;
+                                                    } else if (_trainingSessionGeneratorUserResistanceLevel! < _supportedResistanceLevelRange!.maxUserInput) {
+                                                      _trainingSessionGeneratorUserResistanceLevel = _trainingSessionGeneratorUserResistanceLevel! + 1;
                                                     }
+                                                    _trainingSessionGeneratorResistanceLevel = _supportedResistanceLevelRange!.convertUserInputToMachine(_trainingSessionGeneratorUserResistanceLevel!);
                                                     _isTrainingSessionGeneratorResistanceLevelValid = true;
                                                     _updateTrainingSessionGeneratorResistanceController();
                                                   });
