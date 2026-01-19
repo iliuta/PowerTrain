@@ -14,6 +14,12 @@ class FTMSService {
   final BluetoothDevice ftmsDevice;
   final WriteMachineControlPointCharacteristic writeCharacteristic;
 
+  // Cached values
+  bool? _supportsResistanceControl;
+  bool? _supportsPowerControl;
+  SupportedResistanceLevelRange? _supportedResistanceLevelRange;
+  SupportedPowerRange? _supportedPowerRange;
+
   FTMSService(this.ftmsDevice,
       {WriteMachineControlPointCharacteristic? writeCharacteristic})
       : writeCharacteristic =
@@ -94,6 +100,10 @@ class FTMSService {
   /// This characteristic is exposed by the Server if Resistance Control Target
   /// Setting feature is supported (according to FTMS spec 4.13)
   Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange() async {
+    if (_supportedResistanceLevelRange != null) {
+      return _supportedResistanceLevelRange;
+    }
+
     try {
       // Find FTMS service (1826)
       final ftmsService = ftmsDevice.servicesList.firstWhere(
@@ -110,7 +120,8 @@ class FTMSService {
       final value = await characteristic.read();
       debugPrint('📖 Read Supported Resistance Level Range: ${value.join(', ')}');
 
-      return SupportedResistanceLevelRange.fromBytes(value);
+      _supportedResistanceLevelRange = SupportedResistanceLevelRange.fromBytes(value);
+      return _supportedResistanceLevelRange;
     } catch (e) {
       debugPrint('❌ readSupportedResistanceLevelRange error: $e');
       rethrow;
@@ -121,6 +132,10 @@ class FTMSService {
   /// This characteristic is exposed by the Server if Power Target Setting
   /// feature is supported (according to FTMS spec 4.14)
   Future<SupportedPowerRange?> readSupportedPowerRange() async {
+    if (_supportedPowerRange != null) {
+      return _supportedPowerRange;
+    }
+
     try {
       // Find FTMS service (1826)
       final ftmsService = ftmsDevice.servicesList.firstWhere(
@@ -137,7 +152,8 @@ class FTMSService {
       final value = await characteristic.read();
       debugPrint('📖 Read Supported Power Range: ${value.join(', ')}');
 
-      return SupportedPowerRange.fromBytes(value);
+      _supportedPowerRange = SupportedPowerRange.fromBytes(value);
+      return _supportedPowerRange;
     } catch (e) {
       debugPrint('❌ readSupportedPowerRange error: $e');
       rethrow;
@@ -146,30 +162,44 @@ class FTMSService {
 
   /// Checks if the machine supports resistance level setting by reading the MachineFeatureFlag
   Future<bool> supportsPowerControl() async {
+    if (_supportsPowerControl != null) {
+      return _supportsPowerControl!;
+    }
+
     try {
       final machineFeature = await FTMS.readMachineFeatureCharacteristic(ftmsDevice);
       if (machineFeature == null) {
+        _supportsPowerControl = false;
         return false;
       }
       final features = machineFeature.getFeatureFlags();
-      return features[MachineFeatureFlag.powerMeasurementFlag] ?? false;
+      _supportsPowerControl = features[MachineFeatureFlag.powerMeasurementFlag] ?? false;
+      return _supportsPowerControl!;
     } catch (e) {
       debugPrint('❌ supportsPowerControl error: $e');
+      _supportsPowerControl = false;
       return false;
     }
   }
 
   /// Checks if the machine supports resistance level setting by reading the MachineFeatureFlag
   Future<bool> supportsResistanceControl() async {
+    if (_supportsResistanceControl != null) {
+      return _supportsResistanceControl!;
+    }
+
     try {
       final machineFeature = await FTMS.readMachineFeatureCharacteristic(ftmsDevice);
       if (machineFeature == null) {
+        _supportsResistanceControl = false;
         return false;
       }
       final features = machineFeature.getFeatureFlags();
-      return features[MachineFeatureFlag.resistanceLevelFlag] ?? false;
+      _supportsResistanceControl = features[MachineFeatureFlag.resistanceLevelFlag] ?? false;
+      return _supportsResistanceControl!;
     } catch (e) {
       debugPrint('❌ supportsResistanceControl error: $e');
+      _supportsResistanceControl = false;
       return false;
     }
   }
