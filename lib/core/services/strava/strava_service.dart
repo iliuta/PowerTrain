@@ -1,5 +1,5 @@
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import '../../utils/platform_utils.dart';
 import 'strava_token_manager.dart';
 import 'strava_oauth_handler.dart';
 import 'strava_webview_oauth_handler.dart';
@@ -33,8 +33,8 @@ class StravaService {
   /// 
   /// Returns true if authentication was successful, false otherwise.
   Future<bool> authenticate({BuildContext? context}) async {
-    // Try WebView authentication if context is provided
-    if (context != null && !Platform.isLinux) {
+    // Try WebView authentication if context is provided and WebView is supported
+    if (context != null && PlatformUtils.isWebViewSupported()) {
       final webViewHandler = StravaWebViewOAuthHandler(
         tokenManager: _tokenManager,
         context: context,
@@ -45,7 +45,7 @@ class StravaService {
     // Fall back to external browser
     return await _oauthHandler.authenticate();
   }
-  
+
   // Token management methods - delegates to token manager
   Future<bool> isAuthenticated() => _tokenManager.isAuthenticated();
   Future<Map<String, dynamic>?> getAuthStatus() => _tokenManager.getAuthStatus();
