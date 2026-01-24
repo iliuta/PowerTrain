@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import '../../utils/platform_utils.dart';
 import 'strava_token_manager.dart';
