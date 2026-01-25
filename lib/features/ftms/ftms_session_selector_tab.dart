@@ -74,6 +74,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   String? _selectedGpxAssetPath;
   StreamSubscription<DeviceType>? _deviceTypeSubscription;
   String? _errorMessage;
+  bool _ftmsDataEventLogged = false;
 
   int get _freeRideDistanceIncrement {
     if (_deviceType == null) return 1000; // default to 1km
@@ -165,6 +166,10 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
       final ftmsService = FTMSService(widget.ftmsDevice);
       final range = await ftmsService.readSupportedResistanceLevelRange();
       final supportsResistance = await ftmsService.supportsResistanceControl();
+      
+      // Log FTMS device data to Firebase Analytics (only once)
+      await _logFtmsDeviceDataOnce(supportsResistance, range);
+      
       setState(() {
         _supportedResistanceLevelRange = range;
         _supportsResistanceControl = supportsResistance;
@@ -193,6 +198,25 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         _updateTrainingSessionGeneratorResistanceController();
       });
     }
+  }
+
+  Future<void> _logFtmsDeviceDataOnce(
+    bool supportsResistance,
+    SupportedResistanceLevelRange? range,
+  ) async {
+    if (_ftmsDataEventLogged) return;
+
+    final deviceName = widget.ftmsDevice.platformName;
+    final resistanceRangeStr = range != null 
+      ? '${range.minResistanceLevel}-${range.maxResistanceLevel}' 
+      : 'none';
+    final resistanceIncrementStr = range?.minIncrement.toString() ?? 'none';
+    final ftmsDeviceData = '$deviceName,$supportsResistance,$resistanceRangeStr,$resistanceIncrementStr';
+    
+    final analyticsService = AnalyticsService();
+    await analyticsService.logFtmsDeviceDataRead(ftmsDeviceData: ftmsDeviceData);
+    
+    _ftmsDataEventLogged = true;
   }
 
   Future<void> _loadGpxFiles() async {

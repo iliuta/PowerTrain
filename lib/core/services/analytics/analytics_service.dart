@@ -314,6 +314,18 @@ class AnalyticsService {
       },
     );
   }
+
+  /// Track FTMS device data read
+  Future<void> logFtmsDeviceDataRead({
+    required String ftmsDeviceData,
+  }) async {
+    await _analytics?.logEvent(
+      name: 'ftms_device_data_read',
+      parameters: {
+        'ftms_device_data': _truncateString(ftmsDeviceData, 100),
+      },
+    );
+  }
   
   // ============ Screen Tracking ============
   

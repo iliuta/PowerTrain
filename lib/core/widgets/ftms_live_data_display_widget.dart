@@ -27,11 +27,7 @@ class FtmsLiveDataDisplayWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final orientation = MediaQuery.of(context).orientation;
-        final int columns =
-            (orientation == Orientation.portrait ||
-                ResponsiveUtils.isTablet(context))
-            ? 3 : 4;
+        final int columns = ResponsiveUtils.getOptimalColumnCount(context);
         //final int columns = orientation == Orientation.portrait ? 3 : 4;
         final rows = _buildRows(columns);
         return Column(
