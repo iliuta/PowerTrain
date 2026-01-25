@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/config/live_data_field_format_strategy.dart';
 import 'package:ftms/core/utils/i18n_utils.dart';
+import 'package:ftms/core/utils/responsive_utils.dart';
 import '../models/live_data_field_value.dart';
 import 'live_data_icon_registry.dart';
 
@@ -16,6 +17,7 @@ class SimpleNumberWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     IconData? iconData = getLiveDataIcon(displayField.icon);
     final scaledValue = param.getScaledValue();
+    final scale = ResponsiveUtils.scaleFactor(context);
 
     String formattedValue = '${scaledValue.toStringAsFixed(0)} ${displayField.unit}';
     if (displayField.formatter != null) {
@@ -33,15 +35,15 @@ class SimpleNumberWidget extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14 * scale)),
             if (iconData != null)
               Padding(
-                padding: const EdgeInsets.only(left: 6.0),
-                child: Icon(iconData, size: 16, color: Colors.grey[600]),
+                padding: EdgeInsets.only(left: 6.0 * scale),
+                child: Icon(iconData, size: 16 * scale, color: Colors.grey[600]),
               ),
           ],
         ),
-        Text(formattedValue, style: TextStyle(fontSize: 22, color: color)),
+        Text(formattedValue, style: TextStyle(fontSize: 22 * scale, color: color)),
       ],
     );
   }

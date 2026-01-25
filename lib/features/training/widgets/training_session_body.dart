@@ -28,7 +28,7 @@ class TrainingSessionBody extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.only(left: 16, top: 0, right: 16, bottom: 16),
+        padding: const EdgeInsets.only(left: 4, top: 0, right: 4, bottom: 4),
         child: Column(
           children: [
             SessionProgressBar(
@@ -43,7 +43,7 @@ class TrainingSessionBody extends StatelessWidget {
               config: config,
               isDistanceBased: session.isDistanceBased,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Expanded(
               child: Row(
                 children: [
@@ -78,7 +78,7 @@ class TrainingSessionBody extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   Expanded(
                     flex: 3,
                     child: LiveFTMSDataWidget(
