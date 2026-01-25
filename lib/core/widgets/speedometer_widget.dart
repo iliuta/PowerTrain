@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ftms/core/config/live_data_field_format_strategy.dart';
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/utils/i18n_utils.dart';
+import 'package:ftms/core/utils/responsive_utils.dart';
 import '../models/live_data_field_value.dart';
 import 'live_data_icon_registry.dart';
 import '../../l10n/app_localizations.dart';
@@ -30,6 +31,7 @@ class SpeedometerWidget extends StatelessWidget {
         (displayField.max is num) ? (displayField.max as num).toDouble() : null;
     
     IconData? iconData = getLiveDataIcon(displayField.icon);
+    final scale = ResponsiveUtils.scaleFactor(context);
     
     if (param == null) {
       return Column(
@@ -38,15 +40,15 @@ class SpeedometerWidget extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14 * scale)),
               if (iconData != null)
                 Padding(
-                  padding: const EdgeInsets.only(left: 6.0),
-                  child: Icon(iconData, size: 16, color: Colors.grey[600]),
+                  padding: EdgeInsets.only(left: 6.0 * scale),
+                  child: Icon(iconData, size: 16 * scale, color: Colors.grey[600]),
                 ),
             ],
           ),
-          Text(AppLocalizations.of(context)!.noData, style: const TextStyle(color: Colors.grey)),
+          Text(AppLocalizations.of(context)!.noData, style: TextStyle(color: Colors.grey, fontSize: 14 * scale)),
         ],
       );
     }
@@ -72,20 +74,20 @@ class SpeedometerWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14 * scale)),
             if (iconData != null)
               Padding(
-                padding: const EdgeInsets.only(left: 6.0),
-                child: Icon(iconData, size: 16, color: Colors.grey[600]),
+                padding: EdgeInsets.only(left: 6.0 * scale),
+                child: Icon(iconData, size: 16 * scale, color: Colors.grey[600]),
               ),
           ],
         ),
-        const SizedBox(height: 4), 
+        SizedBox(height: 4 * scale), 
         Stack(
           children: [
             SizedBox(
-              width: 120,
-              height: 65,
+              width: 120 * scale,
+              height: 65 * scale,
               child: CustomPaint(
                 painter: _GaugePainter(
                   scaledValue.toDouble(), 
@@ -93,6 +95,7 @@ class SpeedometerWidget extends StatelessWidget {
                   max!, 
                   color,
                   targetInterval: targetInterval,
+                  strokeWidth: 8 * scale,
                 ),
               ),
             ),
@@ -102,8 +105,8 @@ class SpeedometerWidget extends StatelessWidget {
               right: 0,
               child: Center(
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 2),
-                  child: Text(formattedValue, style: TextStyle(fontSize: 16, color: color)),
+                  margin: EdgeInsets.only(bottom: 2 * scale),
+                  child: Text(formattedValue, style: TextStyle(fontSize: 16 * scale, color: color)),
                 ),
               ),
             ),
@@ -120,8 +123,9 @@ class _GaugePainter extends CustomPainter {
   final double max;
   final Color color;
   final ({double lower, double upper})? targetInterval;
+  final double strokeWidth;
 
-  _GaugePainter(this.value, this.min, this.max, this.color, {this.targetInterval});
+  _GaugePainter(this.value, this.min, this.max, this.color, {this.targetInterval, this.strokeWidth = 8});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -135,7 +139,7 @@ class _GaugePainter extends CustomPainter {
     
     final paint = Paint()
       ..color = Colors.grey[300]!
-      ..strokeWidth = 8
+      ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke;
     
     // Create a square rect centered in the available space for a perfect circle
@@ -152,7 +156,7 @@ class _GaugePainter extends CustomPainter {
     if (targetInterval != null) {
       final targetPaint = Paint()
         ..color = Colors.green.withValues(alpha: 0.3)
-        ..strokeWidth = 12
+        ..strokeWidth = strokeWidth * 1.5
         ..style = PaintingStyle.stroke;
       
       // Handle inverted ranges (where max < min, like pace values)
@@ -182,7 +186,7 @@ class _GaugePainter extends CustomPainter {
     // Draw value arc
     final paintValue = Paint()
       ..color = color // Utilise la couleur passée au constructeur
-      ..strokeWidth = 8
+      ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke;
     
     // Handle inverted ranges (where max < min, like pace values)
@@ -215,7 +219,7 @@ class _GaugePainter extends CustomPainter {
     
     final needlePaint = Paint()
       ..color = Colors.black87
-      ..strokeWidth = 3
+      ..strokeWidth = strokeWidth * 0.375
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     
@@ -226,7 +230,7 @@ class _GaugePainter extends CustomPainter {
     final centerDotPaint = Paint()
       ..color = Colors.black87
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 4, centerDotPaint);
+    canvas.drawCircle(center, strokeWidth * 0.5, centerDotPaint);
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/utils/responsive_utils.dart';
 import '../config/live_data_display_config.dart';
 import '../config/live_data_field_config.dart';
 import '../models/live_data_field_value.dart';
@@ -12,6 +13,7 @@ class FtmsLiveDataDisplayWidget extends StatelessWidget {
   final Map<String, dynamic>? targets;
   final Color? defaultColor;
   final DeviceType? machineType;
+
   const FtmsLiveDataDisplayWidget({
     super.key,
     required this.config,
@@ -26,21 +28,31 @@ class FtmsLiveDataDisplayWidget extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final orientation = MediaQuery.of(context).orientation;
-        final int columns = orientation == Orientation.portrait ? 3 : 4;
+        final int columns =
+            (orientation == Orientation.portrait ||
+                ResponsiveUtils.isTablet(context))
+            ? 3 : 4;
+        //final int columns = orientation == Orientation.portrait ? 3 : 4;
         final rows = _buildRows(columns);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: rows.map((row) => Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: row,
-          )).toList(),
+          children: rows
+              .map(
+                (row) => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: row,
+                ),
+              )
+              .toList(),
         );
       },
     );
   }
 
   List<List<Widget>> _buildRows(int columns) {
-    final supportedFields = config.fields.where((field) => paramValueMap[field.name] != null).toList();
+    final supportedFields = config.fields
+        .where((field) => paramValueMap[field.name] != null)
+        .toList();
     final List<List<Widget>> rows = [];
     List<Widget> currentRow = [];
     for (int i = 0; i < supportedFields.length; i++) {
