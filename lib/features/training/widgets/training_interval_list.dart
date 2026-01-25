@@ -31,69 +31,106 @@ class TrainingIntervalList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remainingIntervals = intervals.sublist(currentInterval);
-    return ListView.builder(
-      itemCount: remainingIntervals.length,
-      itemBuilder: (context, idx) {
-        final ExpandedUnitTrainingInterval interval = remainingIntervals[idx];
-        final isCurrent = idx == 0;
-        final totalIntervalValue = isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0);
-        final intervalProgress = isCurrent && totalIntervalValue > 0 ? intervalElapsed / totalIntervalValue : 0.0;
-        return Card(
-          color: isCurrent ? Colors.blue[50] : null,
-          child: ListTile(
-            title: Text(
-              _intervalTitleWithIndex(
-                interval.title == 'Workout' ? AppLocalizations.of(context)!.workout : (interval.title ?? AppLocalizations.of(context)!.interval),
-                currentInterval + idx + 1,
-                intervals.length,
+    final totalIntervalValue = isDistanceBased 
+      ? (remainingIntervals.isNotEmpty ? (remainingIntervals[0].distance ?? 0) : 0) 
+      : (remainingIntervals.isNotEmpty ? (remainingIntervals[0].duration ?? 0) : 0);
+    final currentIntervalProgress = totalIntervalValue > 0 ? intervalElapsed / totalIntervalValue : 0.0;
+    
+    return Column(
+      children: [
+        // Global progress bar for current interval
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+          child: Row(
+            children: [
+              Text(
+                isDistanceBased 
+                  ? (formatDistance?.call(intervalElapsed.toDouble()) ?? intervalElapsed.toString())
+                  : formatMMSS(intervalElapsed),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
               ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (isCurrent)
-                      Text(
-                        isDistanceBased 
-                          ? (formatDistance?.call(intervalElapsed.toDouble()) ?? intervalElapsed.toString())
-                          : formatMMSS(intervalElapsed),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    if (isCurrent) const SizedBox(width: 8),
-                    Expanded(
-                      child: LinearProgressIndicator(
-                        value: intervalProgress,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (isCurrent)
-                      Text(
-                        isDistanceBased 
-                          ? (formatDistance?.call(intervalTimeLeft.toDouble()) ?? intervalTimeLeft.toString())
-                          : formatMMSS(intervalTimeLeft),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      )
-                    else
-                      Text(isDistanceBased 
-                        ? (formatDistance?.call(totalIntervalValue.toDouble()) ?? totalIntervalValue.toString())
-                        : formatMMSS(totalIntervalValue)),
-                  ],
+              const SizedBox(width: 4),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: currentIntervalProgress,
+                    minHeight: 8,
+                  ),
                 ),
-                IntervalTargetFieldsDisplay(
-                  targets: interval.targets,
-                  config: config,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                isDistanceBased 
+                  ? (formatDistance?.call(intervalTimeLeft.toDouble()) ?? intervalTimeLeft.toString())
+                  : formatMMSS(intervalTimeLeft),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: ListView.separated(
+            itemCount: remainingIntervals.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 2),
+            itemBuilder: (context, idx) {
+              final ExpandedUnitTrainingInterval interval = remainingIntervals[idx];
+              final isCurrent = idx == 0;
+              final intervalTotalValue = isDistanceBased ? (interval.distance ?? 0) : (interval.duration ?? 0);
+              
+              return Card(
+                color: isCurrent ? Colors.blue[50] : null,
+                margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title and duration/distance on same line
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              interval.title == 'Workout' ? AppLocalizations.of(context)!.workout : (interval.title ?? AppLocalizations.of(context)!.interval),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${currentInterval + idx + 1}/${intervals.length})',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isCurrent
+                              ? (isDistanceBased 
+                                ? (formatDistance?.call(intervalTimeLeft.toDouble()) ?? intervalTimeLeft.toString())
+                                : formatMMSS(intervalTimeLeft))
+                              : (isDistanceBased 
+                                ? (formatDistance?.call(intervalTotalValue.toDouble()) ?? intervalTotalValue.toString())
+                                : formatMMSS(intervalTotalValue)),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Targets wrapped on same line with overflow
+                      IntervalTargetFieldsDisplay(
+                        targets: interval.targets,
+                        config: config,
+                        isInline: true,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
-}
-
-/// Returns the interval title with its index and total, e.g. "Warmup (3/5)"
-String _intervalTitleWithIndex(String title, int index, int total) {
-  return '$title ($index/$total)';
 }

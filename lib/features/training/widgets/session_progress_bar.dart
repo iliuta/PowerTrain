@@ -28,39 +28,42 @@ class SessionProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Left time label (elapsed)
-        SizedBox(
-          width: 70,
-          child: Text(
-            formatTime(elapsed),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Row(
+        children: [
+          // Left time label (elapsed)
+          SizedBox(
+            width: 40,
+            child: Text(
+              formatTime(elapsed),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        // Training session chart with progress indicator
-        Expanded(
-          child: TrainingSessionChart(
-            intervals: intervals,
-            machineType: machineType,
-            height: 60,
-            config: config,
-            currentProgress: progress,
-            isDistanceBased: isDistanceBased,
+          const SizedBox(width: 4),
+          // Training session chart with progress indicator
+          Expanded(
+            child: TrainingSessionChart(
+              intervals: intervals,
+              machineType: machineType,
+              height: 55,
+              config: config,
+              currentProgress: progress,
+              isDistanceBased: isDistanceBased,
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        // Right time label (remaining)
-        SizedBox(
-          width: 70,
-          child: Text(
-            formatTime(timeLeft),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            textAlign: TextAlign.right,
+          const SizedBox(width: 4),
+          // Right time label (remaining)
+          SizedBox(
+            width: 40,
+            child: Text(
+              formatTime(timeLeft),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              textAlign: TextAlign.right,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -11,6 +11,7 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
   final LiveDataDisplayConfig? config;
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
+  final bool isInline;
 
   const IntervalTargetFieldsDisplay({
     super.key,
@@ -18,6 +19,7 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
     required this.config,
     this.labelStyle,
     this.valueStyle,
+    this.isInline = false,
   });
 
   @override
@@ -27,6 +29,7 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
       // fallback: show raw
       return Text(AppLocalizations.of(context)!.targetsLabel(targets.toString()));
     }
+    
     final List<Widget> children = [];
     for (final entry in targets!.entries) {
       final field = config!.fields.firstWhere(
@@ -52,7 +55,8 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
       }
       
       children.add(Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (field.icon != null)
             Padding(
@@ -60,22 +64,28 @@ class IntervalTargetFieldsDisplay extends StatelessWidget {
               child: Icon(getLiveDataIcon(field.icon), size: 16),
             ),
           const SizedBox(width: 4),
-          Flexible(
-            flex: 1,
-            child: Text(
-              formattedValue,
-              style: valueStyle,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              softWrap: false,
-            ),
+          Text(
+            formattedValue,
+            style: valueStyle,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            softWrap: false,
           ),
         ],
       ));
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
-    );
+    
+    if (isInline) {
+      return Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: children,
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      );
+    }
   }
 }

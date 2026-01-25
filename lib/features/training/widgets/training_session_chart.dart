@@ -63,7 +63,7 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
           return Stack(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(2),
                 child: Column(
                   children: [
                     Expanded(
@@ -88,7 +88,7 @@ class _TrainingSessionChartState extends State<TrainingSessionChart> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     _buildAxisLabels(totalDuration),
                   ],
                 ),

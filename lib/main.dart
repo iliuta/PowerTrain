@@ -1,5 +1,6 @@
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
@@ -16,13 +17,18 @@ import 'features/common/bottom_action_buttons.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase (only available when Google Services plugin is applied)
-  try {
-    await Firebase.initializeApp();
-    AnalyticsService().initialize();
-    logger.i('🔥 Firebase initialized successfully');
-  } catch (e) {
-    logger.i('🔥 Firebase not available (likely dev build): $e');
+  // Initialize Firebase (only available when Google Services plugin is applied and not in debug mode)
+  logger.i('🔥 kDebugMode: $kDebugMode');
+  if (!kDebugMode) {
+    try {
+      await Firebase.initializeApp();
+      AnalyticsService().initialize();
+      logger.i('🔥 Firebase initialized successfully');
+    } catch (e) {
+      logger.i('🔥 Firebase not available (likely dev build): $e');
+    }
+  } else {
+    logger.i('🔥 Firebase not initialized in debug mode');
   }
   
   // Note: Edge-to-edge is automatically enabled on Android 15+ (Flutter 3.27+)

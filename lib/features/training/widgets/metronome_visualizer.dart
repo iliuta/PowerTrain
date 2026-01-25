@@ -30,15 +30,15 @@ class MetronomeVisualizer extends StatelessWidget {
         : (cycleSeconds * 2 / 3 * 1000).round(); // Recovery: 2/3 of cycle
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: SizedBox(
-          height: 40,
+          height: 30,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final trackWidth = constraints.maxWidth;
-              final circleRadius = 12.0;
+              final circleRadius = 10.0;
               
               // Calculate horizontal offset for the circle
               // Position 0.0 = left, 1.0 = right
@@ -50,7 +50,7 @@ class MetronomeVisualizer extends StatelessWidget {
                   Positioned(
                     left: circleRadius,
                     right: circleRadius,
-                    top: 18,
+                    top: 14,
                     child: Container(
                       height: 4,
                       decoration: BoxDecoration(
@@ -62,7 +62,7 @@ class MetronomeVisualizer extends StatelessWidget {
                   // End markers
                   Positioned(
                     left: 0,
-                    top: 14,
+                    top: 10,
                     child: Container(
                       width: circleRadius * 2,
                       height: 12,
@@ -74,7 +74,7 @@ class MetronomeVisualizer extends StatelessWidget {
                   ),
                   Positioned(
                     right: 0,
-                    top: 14,
+                    top: 10,
                     child: Container(
                       width: circleRadius * 2,
                       height: 12,
@@ -90,7 +90,7 @@ class MetronomeVisualizer extends StatelessWidget {
                     duration: Duration(milliseconds: animationDuration),
                     curve: isPullPhase ? Curves.easeOutCubic : Curves.easeInOutSine,
                     left: offset,
-                    top: 8,
+                    top: 6,
                     child: Container(
                       width: circleRadius * 2,
                       height: circleRadius * 2,
