@@ -253,4 +253,153 @@ void main() {
       );
     });
   });
+
+  group('defaultOfflineRange', () {
+    test('returns correct default range', () {
+      final defaultRange = SupportedResistanceLevelRange.defaultOfflineRange;
+      
+      expect(defaultRange.minResistanceLevel, equals(10));
+      expect(defaultRange.maxResistanceLevel, equals(150));
+      expect(defaultRange.minIncrement, equals(10));
+      expect(defaultRange.maxUserInput, equals(15));
+    });
+
+    test('defaultOfflineRange user input conversion works correctly', () {
+      final defaultRange = SupportedResistanceLevelRange.defaultOfflineRange;
+      
+      // User input 1 -> machine value 10
+      expect(defaultRange.convertUserInputToMachine(1), equals(10));
+      // User input 5 -> machine value 50
+      expect(defaultRange.convertUserInputToMachine(5), equals(50));
+      // User input 15 -> machine value 150
+      expect(defaultRange.convertUserInputToMachine(15), equals(150));
+    });
+  });
+
+  group('convertFromDefaultRange', () {
+    test('converts from default range to actual machine range - same range', () {
+      // Machine has the same range as default
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 10,
+        maxResistanceLevel: 150,
+        minIncrement: 10,
+      );
+
+      expect(range.convertFromDefaultRange(10), equals(10));
+      expect(range.convertFromDefaultRange(80), equals(80));
+      expect(range.convertFromDefaultRange(150), equals(150));
+    });
+
+    test('converts from default range to actual machine range - different range', () {
+      // Machine has range 0-100 with increment 10
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 0,
+        maxResistanceLevel: 100,
+        minIncrement: 10,
+      );
+
+      // Default 10 (min) -> 0 (min of actual)
+      expect(range.convertFromDefaultRange(10), equals(0));
+      // Default 150 (max) -> 100 (max of actual)
+      expect(range.convertFromDefaultRange(150), equals(100));
+      // Default 80 (50% of 10-150) -> 50 (50% of 0-100)
+      expect(range.convertFromDefaultRange(80), equals(50));
+    });
+
+    test('converts from default range - rounds to nearest valid step', () {
+      // Machine has range 1-32 with increment 1
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 1,
+        maxResistanceLevel: 32,
+        minIncrement: 1,
+      );
+
+      // Default 10 (min) -> 1 (min of actual)
+      expect(range.convertFromDefaultRange(10), equals(1));
+      // Default 150 (max) -> 32 (max of actual)
+      expect(range.convertFromDefaultRange(150), equals(32));
+      // Default 80 (50% of 10-150) -> 17 (approximately 50% of 1-32)
+      expect(range.convertFromDefaultRange(80), equals(17));
+    });
+
+    test('converts from default range - larger actual range', () {
+      // Machine has range 0-1500 with increment 100
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 0,
+        maxResistanceLevel: 1500,
+        minIncrement: 100,
+      );
+
+      // Default 10 (min) -> 0 (min of actual)
+      expect(range.convertFromDefaultRange(10), equals(0));
+      // Default 150 (max) -> 1500 (max of actual)
+      expect(range.convertFromDefaultRange(150), equals(1500));
+      // Default 80 (50% of 10-150) -> 750 (50% of 0-1500), rounded to nearest 100
+      expect(range.convertFromDefaultRange(80), equals(800));
+    });
+  });
+
+  group('convertToDefaultRange', () {
+    test('converts from actual machine range to default range - same range', () {
+      // Machine has the same range as default
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 10,
+        maxResistanceLevel: 150,
+        minIncrement: 10,
+      );
+
+      expect(range.convertToDefaultRange(10), equals(10));
+      expect(range.convertToDefaultRange(80), equals(80));
+      expect(range.convertToDefaultRange(150), equals(150));
+    });
+
+    test('converts from actual machine range to default range - different range', () {
+      // Machine has range 0-100 with increment 10
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 0,
+        maxResistanceLevel: 100,
+        minIncrement: 10,
+      );
+
+      // Actual 0 (min) -> 10 (min of default)
+      expect(range.convertToDefaultRange(0), equals(10));
+      // Actual 100 (max) -> 150 (max of default)
+      expect(range.convertToDefaultRange(100), equals(150));
+      // Actual 50 (50% of 0-100) -> 80 (50% of 10-150)
+      expect(range.convertToDefaultRange(50), equals(80));
+    });
+
+    test('converts from actual machine range - rounds to nearest valid step in default range', () {
+      // Machine has range 1-32 with increment 1
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 1,
+        maxResistanceLevel: 32,
+        minIncrement: 1,
+      );
+
+      // Actual 1 (min) -> 10 (min of default)
+      expect(range.convertToDefaultRange(1), equals(10));
+      // Actual 32 (max) -> 150 (max of default)
+      expect(range.convertToDefaultRange(32), equals(150));
+      // Actual 16 (approximately 50% of 1-32) -> 80 (50% of 10-150)
+      expect(range.convertToDefaultRange(16), equals(80));
+    });
+
+    test('round trip conversion preserves relative position', () {
+      // Machine has range 0-200 with increment 20
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 0,
+        maxResistanceLevel: 200,
+        minIncrement: 20,
+      );
+
+      // Start with machine value 100 (50% of 0-200)
+      final defaultValue = range.convertToDefaultRange(100);
+      // Convert back to machine value
+      final machineValue = range.convertFromDefaultRange(defaultValue);
+      
+      // Should be the same or very close
+      expect(machineValue, equals(100));
+    });
+  });
 }

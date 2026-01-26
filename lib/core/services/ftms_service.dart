@@ -248,7 +248,7 @@ class FTMSService {
     }, 'stopOrPauseWithControl');
   }
 
-  Future<void> setResistanceWithControl(int resistance) async {
+  Future<void> setResistanceWithControl(int resistance, {bool convertFromDefaultRange = true}) async {
     // Check if the device supports resistance level control
     final supportsResistance = await supportsResistanceControl();
     if (!supportsResistance) {
@@ -256,13 +256,23 @@ class FTMSService {
       return;
     }
 
+    // Convert from default offline range to actual machine range if needed
+    int actualResistance = resistance;
+    if (convertFromDefaultRange) {
+      final range = await readSupportedResistanceLevelRange();
+      if (range != null) {
+        actualResistance = range.convertFromDefaultRange(resistance);
+        logger.i('Converted resistance from default range: $resistance -> $actualResistance');
+      }
+    }
+
     await _executeWithRetry(() async {
       await writeCommand(MachineControlPointOpcodeType.requestControl);
       await Future.delayed(const Duration(milliseconds: 100));
       await writeCommand(
           MachineControlPointOpcodeType.setTargetResistanceLevel,
-          resistanceLevel: resistance);
-      logger.i('Requested control and sent setTargetResistanceLevel($resistance) command');
+          resistanceLevel: actualResistance);
+      logger.i('Requested control and sent setTargetResistanceLevel($actualResistance) command');
     }, 'setResistanceWithControl');
   }
 

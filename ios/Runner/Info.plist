@@ -56,5 +56,7 @@
 		<string>_ftms._tcp</string>
 		<string>_http._tcp</string>
 	</array>
+	<key>FirebaseAnalyticsCollectionEnabled</key>
+	<false/>
 </dict>
 </plist>

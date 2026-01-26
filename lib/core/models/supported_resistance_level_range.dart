@@ -96,4 +96,65 @@ class SupportedResistanceLevelRange {
   @override
   String toString() =>
       'SupportedResistanceLevelRange(min: $minResistanceLevel Ω, max: $maxResistanceLevel Ω, increment: $minIncrement Ω)';
+
+  /// Default resistance range used for offline editing when the machine is not connected.
+  /// Range: 10-150 with increment of 10 (user inputs 1-15, stored as 10-150).
+  static SupportedResistanceLevelRange get defaultOfflineRange =>
+      SupportedResistanceLevelRange(
+        minResistanceLevel: 10,
+        maxResistanceLevel: 150,
+        minIncrement: 10,
+      );
+
+  /// Converts a resistance value stored using the default offline range
+  /// to the equivalent value for this (actual machine) range.
+  /// 
+  /// The conversion maps the relative position (percentage) of the stored value
+  /// within the default range to the same relative position in this range.
+  /// 
+  /// For example, if stored value is 80 in default range (10-150), that's at ~50%,
+  /// so it maps to ~50% of this range.
+  int convertFromDefaultRange(int storedValue) {
+    final defaultRange = SupportedResistanceLevelRange.defaultOfflineRange;
+    
+    // Calculate the relative position (0.0 to 1.0) of the stored value in the default range
+    final relativePosition = (storedValue - defaultRange.minResistanceLevel) /
+        (defaultRange.maxResistanceLevel - defaultRange.minResistanceLevel);
+    
+    // Map to this range
+    final rawValue = minResistanceLevel +
+        (relativePosition * (maxResistanceLevel - minResistanceLevel));
+    
+    // Round to the nearest valid step
+    final steps = ((rawValue - minResistanceLevel) / minIncrement).round();
+    final clampedSteps = steps.clamp(0, (maxResistanceLevel - minResistanceLevel) ~/ minIncrement);
+    
+    return minResistanceLevel + (clampedSteps * minIncrement);
+  }
+
+  /// Converts a resistance value from this (actual machine) range
+  /// to the equivalent value in the default offline range for storage.
+  /// 
+  /// The conversion maps the relative position (percentage) of the value
+  /// within this range to the same relative position in the default range.
+  /// 
+  /// For example, if the actual machine has range 0-100 and value is 50,
+  /// that's at 50%, so it maps to 50% of default range (10-150) = 80.
+  int convertToDefaultRange(int machineValue) {
+    final defaultRange = SupportedResistanceLevelRange.defaultOfflineRange;
+    
+    // Calculate the relative position (0.0 to 1.0) of the value in this range
+    final relativePosition = (machineValue - minResistanceLevel) /
+        (maxResistanceLevel - minResistanceLevel);
+    
+    // Map to default range
+    final rawValue = defaultRange.minResistanceLevel +
+        (relativePosition * (defaultRange.maxResistanceLevel - defaultRange.minResistanceLevel));
+    
+    // Round to the nearest valid step in default range
+    final steps = ((rawValue - defaultRange.minResistanceLevel) / defaultRange.minIncrement).round();
+    final clampedSteps = steps.clamp(0, (defaultRange.maxResistanceLevel - defaultRange.minResistanceLevel) ~/ defaultRange.minIncrement);
+    
+    return defaultRange.minResistanceLevel + (clampedSteps * defaultRange.minIncrement);
+  }
 }

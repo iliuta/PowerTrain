@@ -179,7 +179,7 @@ void main() {
           Stream.value(BluetoothConnectionState.connected));
       
       // Mock the ftmsService writeCommand method
-      when(mockFtmsService.setResistanceWithControl(any))
+      when(mockFtmsService.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange')))
           .thenAnswer((_) async {});
       when(mockFtmsService.setPowerWithControl(any))
           .thenAnswer((_) async {});
@@ -247,7 +247,8 @@ void main() {
         await controller.initialized;
 
         // Verify that the FTMS commands were called at least once
-        verify(mockFtmsService.setResistanceWithControl(any)).called(greaterThanOrEqualTo(1));
+        // Note: resistanceNeedsConversion defaults to false for newly created intervals
+        verify(mockFtmsService.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange'))).called(greaterThanOrEqualTo(1));
 
         controller.dispose();
       });
@@ -1474,7 +1475,8 @@ void main() {
         expect(controller.state.currentInterval.title, 'Interval B');
 
         // Verify resistance was updated for new interval
-        verify(mockFtmsService.setResistanceWithControl(3)).called(greaterThanOrEqualTo(1));
+        // Note: resistanceNeedsConversion defaults to false for newly created intervals
+        verify(mockFtmsService.setResistanceWithControl(3, convertFromDefaultRange: false)).called(greaterThanOrEqualTo(1));
 
         // Wait for completion
         await Future.delayed(const Duration(milliseconds: 2500));
