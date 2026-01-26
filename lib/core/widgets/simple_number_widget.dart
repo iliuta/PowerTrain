@@ -35,7 +35,7 @@ class SimpleNumberWidget extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14 * scale)),
+            Text(getFieldLabel(displayField, Localizations.localeOf(context).languageCode), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10 * scale)),
             if (iconData != null)
               Padding(
                 padding: EdgeInsets.only(left: 6.0 * scale),
