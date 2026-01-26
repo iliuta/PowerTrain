@@ -874,4 +874,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get workoutTypeRaceSim => 'Rennsimulation';
+
+  @override
+  String get resistanceHelp => 'Widerstandshilfe';
+
+  @override
+  String resistanceHelpDescription(Object maxLevel) {
+    return 'Legen Sie die Widerstandsstufe von 1 bis $maxLevel fest. Dieser Wert wird nur verwendet, wenn das Gerät Widerstandsanpassung unterstützt, und wird in den von Ihrem Gerät akzeptierten Bereich umgewandelt.';
+  }
+
+  @override
+  String get resistanceHelpMachine => 'Widerstandsstufe';
+
+  @override
+  String resistanceHelpMachineDescription(Object maxLevel) {
+    return 'Legen Sie die Widerstandsstufe von 1 bis $maxLevel fest, die von Ihrer Maschine tatsächlich unterstützt wird.';
+  }
 }

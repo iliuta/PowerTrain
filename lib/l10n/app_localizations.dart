@@ -1605,6 +1605,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Race Simulation'**
   String get workoutTypeRaceSim;
+
+  /// No description provided for @resistanceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance Help'**
+  String get resistanceHelp;
+
+  /// No description provided for @resistanceHelpDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the resistance level from 1 to {maxLevel}. This value is used only if the machine supports resistance adjustment and will be converted to the range accepted by your machine.'**
+  String resistanceHelpDescription(Object maxLevel);
+
+  /// No description provided for @resistanceHelpMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance Level'**
+  String get resistanceHelpMachine;
+
+  /// No description provided for @resistanceHelpMachineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the resistance level from 1 to {maxLevel}, actually supported by your machine.'**
+  String resistanceHelpMachineDescription(Object maxLevel);
 }
 
 class _AppLocalizationsDelegate

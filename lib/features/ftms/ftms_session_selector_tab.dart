@@ -112,6 +112,27 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     }
   }
 
+  void _showResistanceMachineSupportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.resistanceHelpMachine),
+          content: Text(
+            AppLocalizations.of(context)!
+                .resistanceHelpMachineDescription(_maxResistanceUserInput.toString()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -577,10 +598,23 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                                   child: Row(
                                     children: [
-                                      SizedBox(
-                                        width: 80,
-                                        child: Text(AppLocalizations.of(context)!.resistance),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(AppLocalizations.of(context)!.resistance),
+                                          SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: IconButton(
+                                              icon: const Icon(Icons.help_outline, size: 16),
+                                              onPressed: () => _showResistanceMachineSupportDialog(context),
+                                              tooltip: AppLocalizations.of(context)!.resistanceHelpMachine,
+                                              padding: EdgeInsets.zero,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      const SizedBox(width: 8),
                                       Expanded(
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
@@ -835,10 +869,23 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                                     child: Row(
                                       children: [
-                                        SizedBox(
-                                          width: 80,
-                                          child: Text(AppLocalizations.of(context)!.resistance),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(AppLocalizations.of(context)!.resistance),
+                                            SizedBox(
+                                              height: 24,
+                                              width: 24,
+                                              child: IconButton(
+                                                icon: const Icon(Icons.help_outline, size: 16),
+                                                onPressed: () => _showResistanceMachineSupportDialog(context),
+                                                tooltip: AppLocalizations.of(context)!.resistanceHelpMachine,
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                            ),
+                                          ],
                                         ),
+                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.center,

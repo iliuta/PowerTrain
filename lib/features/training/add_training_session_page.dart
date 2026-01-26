@@ -709,7 +709,23 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                SizedBox(width: 80, child: Text(AppLocalizations.of(context)!.resistanceLabel)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(AppLocalizations.of(context)!.resistanceLabel),
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline, size: 16),
+                        onPressed: () => _showResistanceHelpDialog(context),
+                        tooltip: AppLocalizations.of(context)!.resistanceHelp,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     // Display user-friendly value (1-15) converted from stored machine value (10-150)
@@ -1042,5 +1058,24 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     });
   }
 
-
+  void _showResistanceHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.resistanceHelp),
+          content: Text(
+            AppLocalizations.of(context)!
+                .resistanceHelpDescription(_maxResistanceUserInput.toString()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

@@ -861,4 +861,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workoutTypeRaceSim => 'Race Simulation';
+
+  @override
+  String get resistanceHelp => 'Resistance Help';
+
+  @override
+  String resistanceHelpDescription(Object maxLevel) {
+    return 'Set the resistance level from 1 to $maxLevel. This value is used only if the machine supports resistance adjustment and will be converted to the range accepted by your machine.';
+  }
+
+  @override
+  String get resistanceHelpMachine => 'Resistance Level';
+
+  @override
+  String resistanceHelpMachineDescription(Object maxLevel) {
+    return 'Set the resistance level from 1 to $maxLevel, actually supported by your machine.';
+  }
 }

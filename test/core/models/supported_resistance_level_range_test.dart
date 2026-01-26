@@ -322,6 +322,32 @@ void main() {
       expect(range.convertFromDefaultRange(80), equals(17));
     });
 
+    test('converts from default range - rounds to nearest valid step', () {
+      // Machine has range 1-32 with increment 1
+      final range = SupportedResistanceLevelRange(
+        minResistanceLevel: 1,
+        maxResistanceLevel: 16,
+        minIncrement: 1,
+      );
+
+      // Default 10 (min) -> 1 (min of actual)
+      expect(range.convertFromDefaultRange(10), equals(1));
+      expect(range.convertFromDefaultRange(20), equals(2));
+      expect(range.convertFromDefaultRange(30), equals(3));
+      expect(range.convertFromDefaultRange(40), equals(4));
+      expect(range.convertFromDefaultRange(50), equals(5));
+      expect(range.convertFromDefaultRange(60), equals(6));
+      expect(range.convertFromDefaultRange(70), equals(7));
+      expect(range.convertFromDefaultRange(80), equals(9));
+      expect(range.convertFromDefaultRange(90), equals(10));
+      expect(range.convertFromDefaultRange(100), equals(11));
+      expect(range.convertFromDefaultRange(110), equals(12));
+      expect(range.convertFromDefaultRange(120), equals(13));
+      expect(range.convertFromDefaultRange(130), equals(14));
+      expect(range.convertFromDefaultRange(140), equals(15));
+      expect(range.convertFromDefaultRange(150), equals(16));
+    });
+
     test('converts from default range - larger actual range', () {
       // Machine has range 0-1500 with increment 100
       final range = SupportedResistanceLevelRange(
@@ -368,6 +394,7 @@ void main() {
       // Actual 50 (50% of 0-100) -> 80 (50% of 10-150)
       expect(range.convertToDefaultRange(50), equals(80));
     });
+
 
     test('converts from actual machine range - rounds to nearest valid step in default range', () {
       // Machine has range 1-32 with increment 1
