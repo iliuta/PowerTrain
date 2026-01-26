@@ -34,7 +34,7 @@ class SessionProgressBar extends StatelessWidget {
         children: [
           // Left time label (elapsed)
           SizedBox(
-            width: 40,
+            width: 60,
             child: Text(
               formatTime(elapsed),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -55,7 +55,7 @@ class SessionProgressBar extends StatelessWidget {
           const SizedBox(width: 4),
           // Right time label (remaining)
           SizedBox(
-            width: 40,
+            width: 60,
             child: Text(
               formatTime(timeLeft),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
