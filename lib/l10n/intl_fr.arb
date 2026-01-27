@@ -266,5 +266,6 @@
   "resistanceHelp": "Aide résistance",
   "resistanceHelpDescription": "Définissez le niveau de résistance de 1 à {maxLevel}. Cette valeur est utilisée uniquement si la machine supporte le changement de résistance et sera convertie dans la plage acceptée par votre machine.",
   "resistanceHelpMachine": "Niveau de résistance",
-  "resistanceHelpMachineDescription": "Définissez le niveau de résistance de 1 à {maxLevel}, réellement supporté par votre machine."
+  "resistanceHelpMachineDescription": "Définissez le niveau de résistance de 1 à {maxLevel}, réellement supportée par votre machine.",
+  "resistanceControlUnavailable": "Utiliser les commandes de votre machine pour régler la résistance"
 }

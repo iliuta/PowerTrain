@@ -141,7 +141,7 @@ class TrainingSessionDefinition {
           title: 'Warm Up ${i + 1}',
           distance: warmupDistance,
           targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
-          resistanceLevel: 20 + i * 10,
+          resistanceLevel: 20 + i * 10, resistanceNeedsConversion: true
         ));
         final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
         intervals.add(warmUpGroup);
@@ -151,7 +151,7 @@ class TrainingSessionDefinition {
         title: 'Workout',
         distance: workoutDistanceAdjusted > 0 ? workoutDistanceAdjusted : workoutValue,
         targets: targets ?? {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
-        resistanceLevel: resistanceLevel ?? 60,
+        resistanceLevel: resistanceLevel
       );
       intervals.add(workoutInterval);
 
@@ -160,7 +160,7 @@ class TrainingSessionDefinition {
           title: 'Cool down ${i + 1}',
           distance: cooldownDistance,
           targets: {'Instantaneous Pace': '${84 + (4 - i) * 3}%', 'Stroke Rate': 20},
-          resistanceLevel: 20 + (4 - i) * 10,
+          resistanceLevel: 20 + (4 - i) * 10, resistanceNeedsConversion: true
         ));
         final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
         intervals.add(coolDownGroup);
@@ -182,7 +182,7 @@ class TrainingSessionDefinition {
           title: 'Warm Up ${i + 1}',
           duration: 60,
           targets: {'Instantaneous Pace': '${84 + i * 3}%', 'Stroke Rate': 20},
-          resistanceLevel: 20 + i * 10,
+          resistanceLevel: 20 + i * 10, resistanceNeedsConversion: true
         ));
         final warmUpGroup = GroupTrainingInterval(intervals: warmUpIntervals, repeat: 1);
         intervals.add(warmUpGroup);
@@ -192,7 +192,7 @@ class TrainingSessionDefinition {
         title: 'Workout',
         duration: workoutDurationAdjusted,
         targets: targets ?? {'Instantaneous Pace': '96%', 'Stroke Rate': 22},
-        resistanceLevel: resistanceLevel ?? 60,
+        resistanceLevel: resistanceLevel
       );
       intervals.add(workoutInterval);
 
@@ -201,7 +201,7 @@ class TrainingSessionDefinition {
           title: 'Cool down ${i + 1}',
           duration: 60,
           targets: {'Instantaneous Pace': '${84 + (4 - i) * 3}%', 'Stroke Rate': 20},
-          resistanceLevel: 20 + (4 - i) * 10,
+          resistanceLevel: 20 + (4 - i) * 10, resistanceNeedsConversion: true
         ));
         final coolDownGroup = GroupTrainingInterval(intervals: coolDownIntervals, repeat: 1);
         intervals.add(coolDownGroup);

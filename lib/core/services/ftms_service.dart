@@ -256,14 +256,18 @@ class FTMSService {
       return;
     }
 
+    // Check if the resistance range is valid
+    final range = await readSupportedResistanceLevelRange();
+    if (range == null || !range.isRangeValid()) {
+      logger.w('Resistance range is not valid or not available');
+      return;
+    }
+
     // Convert from default offline range to actual machine range if needed
     int actualResistance = resistance;
     if (convertFromDefaultRange) {
-      final range = await readSupportedResistanceLevelRange();
-      if (range != null) {
-        actualResistance = range.convertFromDefaultRange(resistance);
-        logger.i('Converted resistance from default range: $resistance -> $actualResistance');
-      }
+      actualResistance = range.convertFromDefaultRange(resistance);
+      logger.i('Converted resistance from default range: $resistance -> $actualResistance');
     }
 
     await _executeWithRetry(() async {

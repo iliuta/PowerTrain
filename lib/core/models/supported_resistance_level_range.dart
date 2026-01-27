@@ -59,6 +59,10 @@ class SupportedResistanceLevelRange {
     }
   }
 
+  bool isRangeValid() {
+    return minResistanceLevel < maxResistanceLevel && minIncrement > 0;
+  }
+
   /// Parse the characteristic value (6 bytes minimum)
   /// Format (Supported Resistance Level Range characteristic):
   /// Bytes 0-1: Minimum Resistance Level (sint16)

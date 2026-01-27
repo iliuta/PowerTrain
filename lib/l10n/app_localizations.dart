@@ -1629,6 +1629,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set the resistance level from 1 to {maxLevel}, actually supported by your machine.'**
   String resistanceHelpMachineDescription(Object maxLevel);
+
+  /// No description provided for @resistanceControlUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your machine\'s controls to adjust the resistance'**
+  String get resistanceControlUnavailable;
 }
 
 class _AppLocalizationsDelegate

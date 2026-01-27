@@ -185,9 +185,9 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
 
     try {
       final ftmsService = FTMSService(widget.ftmsDevice);
-      final range = await ftmsService.readSupportedResistanceLevelRange();
       final supportsResistance = await ftmsService.supportsResistanceControl();
-      
+      final range = await ftmsService.readSupportedResistanceLevelRange();
+
       // Log FTMS device data to Firebase Analytics (only once)
       await _logFtmsDeviceDataOnce(supportsResistance, range);
       
@@ -592,114 +592,139 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                               // Resistance Level Field (only for rowing and indoor bike if supported)
                               if (_deviceType != null &&
                                   (_deviceType! == DeviceType.rower ||
-                                   _deviceType! == DeviceType.indoorBike) &&
-                                  (_supportedResistanceLevelRange != null || _supportsResistanceControl))
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                   _deviceType! == DeviceType.indoorBike))
+                                if (_supportsResistanceControl && _supportedResistanceLevelRange != null && _supportedResistanceLevelRange!.isRangeValid())
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    child: Row(
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(AppLocalizations.of(context)!.resistance),
+                                            SizedBox(
+                                              height: 24,
+                                              width: 24,
+                                              child: IconButton(
+                                                icon: const Icon(Icons.help_outline, size: 16),
+                                                onPressed: () => _showResistanceMachineSupportDialog(context),
+                                                tooltip: AppLocalizations.of(context)!.resistanceHelpMachine,
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.remove),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    if (_freeRideUserResistanceLevel == null) {
+                                                      _freeRideUserResistanceLevel = 1;
+                                                    } else if (_freeRideUserResistanceLevel! > 1) {
+                                                      _freeRideUserResistanceLevel = _freeRideUserResistanceLevel! - 1;
+                                                    }
+                                                    _freeRideResistanceLevel = _convertUserInputToMachine(_freeRideUserResistanceLevel!);
+                                                    _isResistanceLevelValid = true;
+                                                    _updateResistanceController();
+                                                  });
+                                                },
+                                              ),
+                                              SizedBox(
+                                                width: 100,
+                                                child: TextFormField(
+                                                  controller: _resistanceController,
+                                                  decoration: InputDecoration(
+                                                    hintText: '(1-$_maxResistanceUserInput)',
+                                                    hintStyle: const TextStyle(fontSize: 12.0),
+                                                    border: const OutlineInputBorder(),
+                                                    errorBorder: const OutlineInputBorder(
+                                                      borderSide: BorderSide(color: Colors.red),
+                                                    ),
+                                                    focusedErrorBorder: const OutlineInputBorder(
+                                                      borderSide: BorderSide(color: Colors.red, width: 2),
+                                                    ),
+                                                    isDense: true,
+                                                    errorText: !_isResistanceLevelValid ? 'Invalid value (1-$_maxResistanceUserInput)' : null,
+                                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                                  ),
+                                                  keyboardType: TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    LengthLimitingTextInputFormatter(4),
+                                                  ],
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      if (value.isEmpty) {
+                                                        _freeRideUserResistanceLevel = null;
+                                                        _freeRideResistanceLevel = null;
+                                                        _isResistanceLevelValid = true;
+                                                      } else {
+                                                        final intValue = int.tryParse(value);
+                                                        if (intValue != null && 
+                                                            intValue >= 1 && 
+                                                            intValue <= _maxResistanceUserInput) {
+                                                          _freeRideUserResistanceLevel = intValue;
+                                                          _freeRideResistanceLevel = _convertUserInputToMachine(intValue);
+                                                          _isResistanceLevelValid = true;
+                                                        } else {
+                                                          _isResistanceLevelValid = false;
+                                                        }
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.add),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    if (_freeRideUserResistanceLevel == null) {
+                                                      _freeRideUserResistanceLevel = 1;
+                                                    } else if (_freeRideUserResistanceLevel! < _maxResistanceUserInput) {
+                                                      _freeRideUserResistanceLevel = _freeRideUserResistanceLevel! + 1;
+                                                    }
+                                                    _freeRideResistanceLevel = _convertUserInputToMachine(_freeRideUserResistanceLevel!);
+                                                    _isResistanceLevelValid = true;
+                                                    _updateResistanceController();
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                else
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withValues(alpha: 0.1),
+                                        border: Border.all(color: Colors.orange),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Row(
                                         children: [
-                                          Text(AppLocalizations.of(context)!.resistance),
-                                          SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: IconButton(
-                                              icon: const Icon(Icons.help_outline, size: 16),
-                                              onPressed: () => _showResistanceMachineSupportDialog(context),
-                                              tooltip: AppLocalizations.of(context)!.resistanceHelpMachine,
-                                              padding: EdgeInsets.zero,
+                                          Icon(Icons.info_outline, color: Colors.orange),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              AppLocalizations.of(context)!.resistanceControlUnavailable,
+                                              style: TextStyle(color: Colors.orange.shade900),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.remove),
-                                              onPressed: () {
-                                                setState(() {
-                                                  if (_freeRideUserResistanceLevel == null) {
-                                                    _freeRideUserResistanceLevel = 1;
-                                                  } else if (_freeRideUserResistanceLevel! > 1) {
-                                                    _freeRideUserResistanceLevel = _freeRideUserResistanceLevel! - 1;
-                                                  }
-                                                  _freeRideResistanceLevel = _convertUserInputToMachine(_freeRideUserResistanceLevel!);
-                                                  _isResistanceLevelValid = true;
-                                                  _updateResistanceController();
-                                                });
-                                              },
-                                            ),
-                                            SizedBox(
-                                              width: 100,
-                                              child: TextFormField(
-                                                controller: _resistanceController,
-                                                decoration: InputDecoration(
-                                                  hintText: '(1-$_maxResistanceUserInput)',
-                                                  hintStyle: const TextStyle(fontSize: 12.0),
-                                                  border: const OutlineInputBorder(),
-                                                  errorBorder: const OutlineInputBorder(
-                                                    borderSide: BorderSide(color: Colors.red),
-                                                  ),
-                                                  focusedErrorBorder: const OutlineInputBorder(
-                                                    borderSide: BorderSide(color: Colors.red, width: 2),
-                                                  ),
-                                                  isDense: true,
-                                                  errorText: !_isResistanceLevelValid ? 'Invalid value (1-$_maxResistanceUserInput)' : null,
-                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                                ),
-                                                keyboardType: TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  LengthLimitingTextInputFormatter(4), // Max 4 digits for resistance
-                                                ],
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    if (value.isEmpty) {
-                                                      _freeRideUserResistanceLevel = null;
-                                                      _freeRideResistanceLevel = null;
-                                                      _isResistanceLevelValid = true;
-                                                    } else {
-                                                      final intValue = int.tryParse(value);
-                                                      if (intValue != null && 
-                                                          intValue >= 1 && 
-                                                          intValue <= _maxResistanceUserInput) {
-                                                        _freeRideUserResistanceLevel = intValue;
-                                                        _freeRideResistanceLevel = _convertUserInputToMachine(intValue);
-                                                        _isResistanceLevelValid = true;
-                                                      } else {
-                                                        _isResistanceLevelValid = false;
-                                                      }
-                                                    }
-                                                  });
-                                                },
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.add),
-                                              onPressed: () {
-                                                setState(() {
-                                                  if (_freeRideUserResistanceLevel == null) {
-                                                    _freeRideUserResistanceLevel = 1;
-                                                  } else if (_freeRideUserResistanceLevel! < _maxResistanceUserInput) {
-                                                    _freeRideUserResistanceLevel = _freeRideUserResistanceLevel! + 1;
-                                                  }
-                                                  _freeRideResistanceLevel = _convertUserInputToMachine(_freeRideUserResistanceLevel!);
-                                                  _isResistanceLevelValid = true;
-                                                  _updateResistanceController();
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
                               const SizedBox(height: 16),
                               // Warm-up and Cool-down checkboxes (only for rowers)
                               if (_deviceType != null && _deviceType! == DeviceType.rower)
@@ -864,7 +889,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                 ),
                                 const SizedBox(height: 16),
                                 // Resistance Level Field (only if supported)
-                                if (_supportedResistanceLevelRange != null || _supportsResistanceControl)
+                                if (_supportsResistanceControl && _supportedResistanceLevelRange != null && _supportedResistanceLevelRange!.isRangeValid())
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                                     child: Row(
@@ -969,6 +994,31 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
                                           ),
                                         ),
                                       ],
+                                    ),
+                                  )
+                                else if (_supportedResistanceLevelRange != null || _supportsResistanceControl)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withValues(alpha: 0.1),
+                                        border: Border.all(color: Colors.orange),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.info_outline, color: Colors.orange),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              AppLocalizations.of(context)!.resistanceControlUnavailable,
+                                              style: TextStyle(color: Colors.orange.shade900),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 const SizedBox(height: 16),

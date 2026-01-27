@@ -889,4 +889,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String resistanceHelpMachineDescription(Object maxLevel) {
     return 'Définissez le niveau de résistance de 1 à $maxLevel, réellement supportée par votre machine.';
   }
+
+  @override
+  String get resistanceControlUnavailable =>
+      'Utiliser les commandes de votre machine pour régler la résistance';
 }

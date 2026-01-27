@@ -266,5 +266,6 @@
   "resistanceHelp": "Resistance Help",
   "resistanceHelpDescription": "Set the resistance level from 1 to {maxLevel}. This value is used only if the machine supports resistance adjustment and will be converted to the range accepted by your machine.",
   "resistanceHelpMachine": "Resistance Level",
-  "resistanceHelpMachineDescription": "Set the resistance level from 1 to {maxLevel}, actually supported by your machine."
+  "resistanceHelpMachineDescription": "Set the resistance level from 1 to {maxLevel}, actually supported by your machine.",
+  "resistanceControlUnavailable": "Use your machine's controls to adjust the resistance"
 }
