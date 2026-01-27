@@ -85,6 +85,9 @@ class DemoFtmsDevice extends BluetoothDevice {
     // Supported Resistance Level Range characteristic (0x2AD6) - read-only
     final supportedResistanceUuid = Guid('00002ad6-0000-1000-8000-00805f9b34fb');
 
+    // Machine Feature characteristic (0x2ACC) - read-only, reports supported features
+    final machineFeatureUuid = Guid('00002acc-0000-1000-8000-00805f9b34fb');
+
     // Create the data characteristic
     final dataCharacteristic = _MockBluetoothCharacteristic(
       remoteId: remoteId,
@@ -129,12 +132,25 @@ class DemoFtmsDevice extends BluetoothDevice {
     // Set the supported range: min 10, max 150, increment 10
     supportedResistanceCharacteristic.emitData([10, 0, 150, 0, 10, 0]);
 
-    // Create the FTMS service with both characteristics
+    // Create the machine feature characteristic (read-only)
+    final machineFeatureCharacteristic = _MockBluetoothCharacteristic(
+      remoteId: remoteId,
+      serviceUuid: ftmsServiceUuid,
+      characteristicUuid: machineFeatureUuid,
+      primaryServiceUuid: null,
+      onWrite: null, // Read-only
+    );
+    // Set machine features: support resistance level control
+    // Feature flags (6 bytes): byte 0 bit 7 (0x80) = Resistance Level Supported
+    // According to flutter_ftms library mapping, resistanceLevelFlag is at index 7
+    machineFeatureCharacteristic.emitData([0x80, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+    // Create the FTMS service with all characteristics
     final ftmsService = _MockBluetoothService(
       remoteId: remoteId,
       serviceUuid: ftmsServiceUuid,
       primaryServiceUuid: null,
-      characteristics: [dataCharacteristic, controlPointCharacteristic, supportedResistanceCharacteristic],
+      characteristics: [dataCharacteristic, controlPointCharacteristic, supportedResistanceCharacteristic, machineFeatureCharacteristic],
     );
     _fakeServicesList = [ftmsService];
     return [ftmsService];
@@ -525,6 +541,21 @@ class _MockBluetoothCharacteristic extends BluetoothCharacteristic {
     }
     // For supported resistance level range, allow read
     if (characteristicUuid == Guid('00002ad6-0000-1000-8000-00805f9b34fb')) {
+      return CharacteristicProperties(
+        broadcast: false,
+        read: true,
+        writeWithoutResponse: false,
+        write: false,
+        notify: false,
+        indicate: false,
+        authenticatedSignedWrites: false,
+        extendedProperties: false,
+        notifyEncryptionRequired: false,
+        indicateEncryptionRequired: false,
+      );
+    }
+    // For machine feature characteristic, allow read
+    if (characteristicUuid == Guid('00002acc-0000-1000-8000-00805f9b34fb')) {
       return CharacteristicProperties(
         broadcast: false,
         read: true,
