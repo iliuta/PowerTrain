@@ -3,7 +3,7 @@ class StravaConfig {
   static const String clientId = '3929';
   static const String redirectUri = 'ftmsapp://strava/callback';
   static const String authUrl = 'https://www.strava.com/oauth/authorize';
-  static const String tokenExchangeUrl = 'https://strava-token-exchange.iliuta.workers.dev';
+  static const String tokenExchangeUrl = 'https://strava-token-exchange-staging.iliuta.workers.dev';
   static const String uploadUrl = 'https://www.strava.com/api/v3/uploads';
 
   // Authentication timeouts and scopes

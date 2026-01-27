@@ -75,10 +75,12 @@ class StravaService {
     String fitFilePath, 
     String activityName, {
     String activityType = 'workout',
+    BuildContext? context,
   }) => _activityUploader.uploadActivity(
     fitFilePath, 
     activityName, 
     activityType: activityType,
+    context: context,
   );
       
   Future<Map<String, dynamic>?> uploadActivityWithMetadata({
@@ -89,6 +91,7 @@ class StravaService {
     bool isPrivate = false,
     bool hasHeartrate = false,
     bool hasPower = false,
+    BuildContext? context,
   }) => _activityUploader.uploadActivityWithMetadata(
     fitFilePath: fitFilePath,
     name: name,
@@ -97,6 +100,7 @@ class StravaService {
     isPrivate: isPrivate,
     hasHeartrate: hasHeartrate,
     hasPower: hasPower,
+    context: context,
   );
   
   // Direct access to specialized components for advanced usage
