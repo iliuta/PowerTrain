@@ -187,7 +187,10 @@ class TrainingSessionController extends ChangeNotifier
 
       final firstResistance = firstInterval.resistanceLevel;
       if (firstResistance != null) {
-        operations.add(_ftmsService.setResistanceWithControl(firstResistance));
+        operations.add(_ftmsService.setResistanceWithControl(
+          firstResistance,
+          convertFromDefaultRange: firstInterval.resistanceNeedsConversion,
+        ));
       }
 
       final firstPower = firstInterval.targets?['Instantaneous Power'];
@@ -622,7 +625,10 @@ class TrainingSessionController extends ChangeNotifier
   void onIntervalChanged(ExpandedUnitTrainingInterval newInterval) {
     final resistance = newInterval.resistanceLevel;
     if (resistance != null) {
-      _ftmsService.setResistanceWithControl(resistance);
+      _ftmsService.setResistanceWithControl(
+        resistance,
+        convertFromDefaultRange: newInterval.resistanceNeedsConversion,
+      );
     }
     final power = newInterval.targets?['Instantaneous Power'];
     if (power != null) {

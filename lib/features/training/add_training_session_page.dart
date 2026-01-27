@@ -7,6 +7,7 @@ import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/l10n/app_localizations.dart';
+import 'package:ftms/core/models/supported_resistance_level_range.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import 'widgets/training_session_chart.dart';
 import 'widgets/edit_target_fields_widget.dart';
@@ -160,6 +161,30 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     return _distanceIncrement;
   }
 
+  /// The default resistance range used for offline editing.
+  /// User inputs values 1-15, which are stored as machine values 10-150.
+  SupportedResistanceLevelRange get _defaultResistanceRange =>
+      SupportedResistanceLevelRange.defaultOfflineRange;
+
+  /// Maximum user input value for resistance (1-based, user-friendly)
+  int get _maxResistanceUserInput => _defaultResistanceRange.maxUserInput;
+
+  /// Converts user-friendly input (1-15) to machine value (10-150) for storage
+  int _convertUserInputToMachine(int userInput) {
+    return _defaultResistanceRange.convertUserInputToMachine(userInput);
+  }
+
+  /// Converts stored machine value (10-150) to user-friendly display (1-15)
+  int? _convertMachineToUserInput(int? machineValue) {
+    if (machineValue == null) return null;
+    try {
+      return _defaultResistanceRange.convertMachineToUserInput(machineValue);
+    } catch (e) {
+      // If the stored value doesn't match the expected range, return null
+      return null;
+    }
+  }
+
   String _formatDistance(int distance) {
     switch (widget.machineType) {
       case DeviceType.rower:
@@ -178,6 +203,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         distance: _isDistanceBased ? 2000 : null, // 2km default for distance-based
         targets: {},
         resistanceLevel: null,
+        resistanceNeedsConversion: true, // Offline mode - needs conversion
         repeat: 1,
       );
     });
@@ -194,6 +220,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
             distance: _isDistanceBased ? 1500 : null, // 1.5km for distance-based
             targets: {},
             resistanceLevel: null,
+            resistanceNeedsConversion: true, // Offline mode - needs conversion
           ),
         ],
         repeat: 3,
@@ -531,6 +558,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                 distance: interval.distance,
                 targets: interval.targets,
                 resistanceLevel: interval.resistanceLevel,
+                resistanceNeedsConversion: interval.resistanceNeedsConversion,
                 repeat: interval.repeat,
               ));
             },
@@ -553,6 +581,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                             distance: newDistance.toInt(),
                             targets: interval.targets,
                             resistanceLevel: interval.resistanceLevel,
+                            resistanceNeedsConversion: interval.resistanceNeedsConversion,
                             repeat: interval.repeat,
                           ));
                         }
@@ -583,6 +612,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                             distance: newDistance.toInt(),
                             targets: interval.targets,
                             resistanceLevel: interval.resistanceLevel,
+                            resistanceNeedsConversion: interval.resistanceNeedsConversion,
                             repeat: interval.repeat,
                           ));
                         }
@@ -605,6 +635,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                             distance: interval.distance,
                             targets: interval.targets,
                             resistanceLevel: interval.resistanceLevel,
+                            resistanceNeedsConversion: interval.resistanceNeedsConversion,
                             repeat: interval.repeat,
                           ));
                         }
@@ -635,6 +666,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                             distance: interval.distance,
                             targets: interval.targets,
                             resistanceLevel: interval.resistanceLevel,
+                            resistanceNeedsConversion: interval.resistanceNeedsConversion,
                             repeat: interval.repeat,
                           ));
                         }
@@ -666,21 +698,40 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                 distance: interval.distance,
                 targets: newTargets,
                 resistanceLevel: interval.resistanceLevel,
+                resistanceNeedsConversion: interval.resistanceNeedsConversion,
                 repeat: interval.repeat,
               ));
             },
           ),
           // Resistance Level - only for non-indoor-bike machines
+          // User enters values 1-15, stored as machine values 10-150
           if (widget.machineType != DeviceType.indoorBike) ...[
             const SizedBox(height: 16),
             Row(
               children: [
-                SizedBox(width: 80, child: Text(AppLocalizations.of(context)!.resistanceLabel)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(AppLocalizations.of(context)!.resistanceLabel),
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline, size: 16),
+                        onPressed: () => _showResistanceHelpDialog(context),
+                        tooltip: AppLocalizations.of(context)!.resistanceHelp,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
-                    initialValue: interval.resistanceLevel?.toString() ?? '',
+                    // Display user-friendly value (1-15) converted from stored machine value (10-150)
+                    initialValue: _convertMachineToUserInput(interval.resistanceLevel)?.toString() ?? '',
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.resistanceLevel,
+                      hintText: '1-$_maxResistanceUserInput',
                       suffixText: AppLocalizations.of(context)!.level,
                       isDense: true,
                       border: const OutlineInputBorder(),
@@ -688,13 +739,19 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
-                      final intValue = int.tryParse(value);
+                      // Convert user input (1-15) to machine value (10-150) for storage
+                      final userInput = int.tryParse(value);
+                      int? machineValue;
+                      if (userInput != null && userInput >= 1 && userInput <= _maxResistanceUserInput) {
+                        machineValue = _convertUserInputToMachine(userInput);
+                      }
                       onUpdate(UnitTrainingInterval(
                         title: interval.title,
                         duration: interval.duration,
                         distance: interval.distance,
                         targets: interval.targets,
-                        resistanceLevel: intValue,
+                        resistanceLevel: machineValue,
+                        resistanceNeedsConversion: true, // Always true when editing in offline mode
                         repeat: interval.repeat,
                       ));
                     },
@@ -845,6 +902,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
         distance: _isDistanceBased ? 1000 : null, // 1km default for distance-based
         targets: {},
         resistanceLevel: null,
+        resistanceNeedsConversion: true, // Offline mode - needs conversion
       );
 
       final updatedIntervals = List<UnitTrainingInterval>.from(groupInterval.intervals)
@@ -1000,5 +1058,24 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
     });
   }
 
-
+  void _showResistanceHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.resistanceHelp),
+          content: Text(
+            AppLocalizations.of(context)!
+                .resistanceHelpDescription(_maxResistanceUserInput.toString()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(AppLocalizations.of(context)!.ok),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

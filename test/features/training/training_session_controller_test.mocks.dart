@@ -469,6 +469,22 @@ class MockFTMSService extends _i1.Mock implements _i12.FTMSService {
           as _i8.Future<_i14.SupportedPowerRange?>);
 
   @override
+  _i8.Future<bool> supportsPowerControl() =>
+      (super.noSuchMethod(
+            Invocation.method(#supportsPowerControl, []),
+            returnValue: _i8.Future<bool>.value(false),
+          )
+          as _i8.Future<bool>);
+
+  @override
+  _i8.Future<bool> supportsResistanceControl() =>
+      (super.noSuchMethod(
+            Invocation.method(#supportsResistanceControl, []),
+            returnValue: _i8.Future<bool>.value(false),
+          )
+          as _i8.Future<bool>);
+
+  @override
   _i8.Future<void> setPowerWithControl(dynamic power) =>
       (super.noSuchMethod(
             Invocation.method(#setPowerWithControl, [power]),
@@ -487,9 +503,16 @@ class MockFTMSService extends _i1.Mock implements _i12.FTMSService {
           as _i8.Future<void>);
 
   @override
-  _i8.Future<void> setResistanceWithControl(int? resistance) =>
+  _i8.Future<void> setResistanceWithControl(
+    int? resistance, {
+    bool? convertFromDefaultRange = true,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#setResistanceWithControl, [resistance]),
+            Invocation.method(
+              #setResistanceWithControl,
+              [resistance],
+              {#convertFromDefaultRange: convertFromDefaultRange},
+            ),
             returnValue: _i8.Future<void>.value(),
             returnValueForMissingStub: _i8.Future<void>.value(),
           )

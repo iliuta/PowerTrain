@@ -12,6 +12,11 @@ class UnitTrainingInterval extends TrainingInterval {
   final int? distance;
   final Map<String, dynamic>? targets;
   final int? resistanceLevel;
+  /// Whether the resistance level needs to be converted from the default offline range
+  /// to the actual machine's range when running the session.
+  /// - `true`: Created offline (e.g., in training session editor), stored in default range (10-150)
+  /// - `false`: Created online (e.g., free ride, training generator), stored in actual machine values
+  final bool resistanceNeedsConversion;
   @override
   final int? repeat;
 
@@ -21,6 +26,7 @@ class UnitTrainingInterval extends TrainingInterval {
       this.distance,
       this.targets,
       this.resistanceLevel,
+      this.resistanceNeedsConversion = false,
       this.repeat});
 
   factory UnitTrainingInterval.fromJson(Map<String, dynamic> json) {
@@ -32,6 +38,7 @@ class UnitTrainingInterval extends TrainingInterval {
           ? Map<String, dynamic>.from(json['targets'])
           : null,
       resistanceLevel: json['resistanceLevel'],
+      resistanceNeedsConversion: json['resistanceNeedsConversion'] ?? true, // Default to true for backward compatibility with existing sessions
       repeat: json['repeat'],
     );
   }
@@ -44,6 +51,7 @@ class UnitTrainingInterval extends TrainingInterval {
       'distance': distance,
       'targets': targets,
       'resistanceLevel': resistanceLevel,
+      'resistanceNeedsConversion': resistanceNeedsConversion,
       'repeat': repeat,
     };
   }
@@ -76,6 +84,7 @@ class UnitTrainingInterval extends TrainingInterval {
       distance: isDistanceBased ? distance : null,
       targets: expandedTargets,
       resistanceLevel: resistanceLevel,
+      resistanceNeedsConversion: resistanceNeedsConversion,
       originalInterval: this,
     );
   }
@@ -105,6 +114,7 @@ class UnitTrainingInterval extends TrainingInterval {
       distance: distance,
       targets: targets != null ? Map<String, dynamic>.from(targets!) : null,
       resistanceLevel: resistanceLevel,
+      resistanceNeedsConversion: resistanceNeedsConversion,
       repeat: repeat,
     );
   }
