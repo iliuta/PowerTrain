@@ -7,6 +7,7 @@ import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'bt_device.dart';
 import 'bt_device_navigation_registry.dart';
+import 'ftms_facade.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
 import '../../bloc/ftms_bloc.dart';
@@ -20,6 +21,9 @@ class Ftms extends BTDevice {
 
   DeviceType? _deviceType;
   final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
+  
+  /// Get the FTMS facade (real or demo)
+  FtmsFacade get _ftmsFacade => FtmsFacadeProvider().facade;
 
   @override
   String get deviceTypeName => 'FTMS';
@@ -136,7 +140,7 @@ class Ftms extends BTDevice {
   Future<bool> performConnection(BluetoothDevice device) async {
     try {
       logger.i('🔧 FTMS: Connecting to device: ${device.platformName}');
-      
+
       // Use direct device.connect with autoConnect instead of FTMS.connectToFTMSDevice
       // to enable automatic reconnection. This ensures the device will automatically
       // reconnect when it becomes available after any disconnection
@@ -200,7 +204,6 @@ class Ftms extends BTDevice {
         // Continue anyway - some devices may not require control request
       }
 
-      // Listen to FTMS data stream (flutter_ftms already handles packet merging)
       DeviceDataType? preferredDeviceDataType;
       if (detectedType == DeviceType.indoorBike) {
         preferredDeviceDataType = DeviceDataType.indoorBike;
@@ -208,7 +211,7 @@ class Ftms extends BTDevice {
         preferredDeviceDataType = DeviceDataType.rower;
       }
       
-      FTMS.useDeviceDataCharacteristic(
+      _ftmsFacade.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
           // Forward merged data to the global FTMS bloc for other consumers
