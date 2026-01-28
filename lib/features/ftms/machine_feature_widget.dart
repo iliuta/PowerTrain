@@ -6,19 +6,18 @@ import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/bloc/ftms_bloc.dart';
 import '../../core/models/supported_resistance_level_range.dart';
 import '../../core/models/supported_power_range.dart';
-import '../../core/services/ftms_service.dart';
+import '../../core/services/devices/ftms.dart';
 import '../../l10n/app_localizations.dart';
 
 class MachineFeatureWidget extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
-
-  const MachineFeatureWidget({super.key, required this.ftmsDevice});
+  const MachineFeatureWidget({super.key});
 
   @override
   State<MachineFeatureWidget> createState() => _MachineFeatureWidgetState();
 }
 
 class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
+  final Ftms _ftms = Ftms();
   final Map<String, TextEditingController> _controllers = {};
   String? _lastError;
   bool _isLoading = false;
@@ -43,7 +42,12 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
   Future<void> _loadMachineFeatures() async {
     setState(() => _isLoading = true);
     try {
-      final machineFeature = await FTMS.readMachineFeatureCharacteristic(widget.ftmsDevice);
+      final device = _ftms.connectedDevice;
+      if (device == null) {
+        setState(() => _lastError = 'No device connected');
+        return;
+      }
+      final machineFeature = await FTMS.readMachineFeatureCharacteristic(device);
       ftmsBloc.ftmsMachineFeaturesControllerSink.add(machineFeature);
       
       // Also try to load supported resistance level range and power range
@@ -58,8 +62,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
   
   Future<void> _loadSupportedResistanceLevelRange() async {
     try {
-      final ftmsService = FTMSService(widget.ftmsDevice);
-      final range = await ftmsService.readSupportedResistanceLevelRange();
+      final range = await _ftms.readSupportedResistanceLevelRange();
       setState(() => _resistanceLevelRange = range);
     } catch (e) {
       // Not all devices support this characteristic, so we silently fail
@@ -69,8 +72,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
   
   Future<void> _loadSupportedPowerRange() async {
     try {
-      final ftmsService = FTMSService(widget.ftmsDevice);
-      final range = await ftmsService.readSupportedPowerRange();
+      final range = await _ftms.readSupportedPowerRange();
       setState(() => _powerRange = range);
     } catch (e) {
       // Not all devices support this characteristic, so we silently fail
@@ -86,19 +88,18 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
   }
   
   Future<void> _executeCommand(MachineControlPointOpcodeType opcode, {int? value}) async {
-    final ftmsService = FTMSService(widget.ftmsDevice);
     setState(() => _lastError = null);
     
     try {
       switch (opcode) {
         case MachineControlPointOpcodeType.setTargetResistanceLevel:
-          await ftmsService.writeCommand(opcode, resistanceLevel: value);
+          await _ftms.writeCommand(opcode, resistanceLevel: value);
           break;
         case MachineControlPointOpcodeType.setTargetPower:
-          await ftmsService.writeCommand(opcode, power: value);
+          await _ftms.writeCommand(opcode, power: value);
           break;
         default:
-          await ftmsService.writeCommand(opcode);
+          await _ftms.writeCommand(opcode);
       }
       
       if (mounted) {
@@ -239,7 +240,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
         }
         
         final features = snapshot.data!.getFeatureFlags();
-        final deviceName = widget.ftmsDevice.platformName;
+        final deviceName = _ftms.name;
 
         return SingleChildScrollView(
           child: Column(

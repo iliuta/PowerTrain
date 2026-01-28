@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import '../../../core/config/live_data_display_config.dart';
 import '../../settings/model/user_settings.dart';
@@ -15,7 +14,6 @@ class TrainingSessionScaffold extends StatefulWidget {
   final ExpandedTrainingSessionDefinition session;
   final TrainingSessionController controller;
   final LiveDataDisplayConfig? config;
-  final BluetoothDevice ftmsDevice;
   final UserSettings userSettings;
 
   const TrainingSessionScaffold({
@@ -23,7 +21,6 @@ class TrainingSessionScaffold extends StatefulWidget {
     required this.session,
     required this.controller,
     this.config,
-    required this.ftmsDevice,
     required this.userSettings,
   });
 
@@ -123,7 +120,6 @@ class _TrainingSessionScaffoldState extends State<TrainingSessionScaffold> {
               session: widget.controller.session,
               controller: widget.controller,
               config: widget.config,
-              ftmsDevice: widget.ftmsDevice,
             ),
           ),
           // Route map overlay (non-interactive)

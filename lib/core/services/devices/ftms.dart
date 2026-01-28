@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'bt_device.dart';
 import 'bt_device_navigation_registry.dart';
 import 'last_connected_devices_service.dart';
 import '../../models/bt_device_service_type.dart';
+import '../../models/supported_resistance_level_range.dart';
+import '../../models/supported_power_range.dart';
 import '../../bloc/ftms_bloc.dart';
+import '../../config/live_data_display_config.dart';
+import '../ftms_data_processor.dart';
 import '../ftms_service.dart';
 
 /// Service for FTMS (Fitness Machine Service) devices
@@ -20,6 +25,12 @@ class Ftms extends BTDevice {
 
   DeviceType? _deviceType;
   final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
+
+  /// Cached FTMSService for the connected device
+  FTMSService? _ftmsService;
+  
+  /// Data processor for averaging and sensor overrides
+  final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
 
   @override
   String get deviceTypeName => 'FTMS';
@@ -32,6 +43,123 @@ class Ftms extends BTDevice {
 
   /// Stream of device type changes
   Stream<DeviceType> get deviceTypeStream => _deviceTypeController.stream;
+
+  /// Reset the data processor to clear accumulated state.
+  /// Call this when starting a new training session to ensure
+  /// calories, distance, averages etc. start from zero.
+  void resetDataProcessor() {
+    _dataProcessor.reset();
+  }
+
+  // ============================================
+  // FTMS Control Methods (wrapping FTMSService)
+  // ============================================
+
+  /// Get or create the FTMSService for the connected device
+  FTMSService? get _service {
+    if (connectedDevice == null) return null;
+    _ftmsService ??= FTMSService(connectedDevice!);
+    return _ftmsService;
+  }
+
+  /// Write a raw FTMS command to the device
+  Future<void> writeCommand(MachineControlPointOpcodeType opcodeType,
+      {int? resistanceLevel, int? power}) async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot write command: no device connected');
+      return;
+    }
+    await service.writeCommand(opcodeType, resistanceLevel: resistanceLevel, power: power);
+  }
+
+  /// Set target power with control request
+  Future<void> setPowerWithControl(dynamic power) async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot set power: no device connected');
+      return;
+    }
+    await service.setPowerWithControl(power);
+  }
+
+  /// Set target resistance with control request
+  Future<void> setResistanceWithControl(int resistance, {bool convertFromDefaultRange = true}) async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot set resistance: no device connected');
+      return;
+    }
+    await service.setResistanceWithControl(resistance, convertFromDefaultRange: convertFromDefaultRange);
+  }
+
+  /// Stop or pause the device with control request
+  Future<void> stopOrPauseWithControl() async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot stop/pause: no device connected');
+      return;
+    }
+    await service.stopOrPauseWithControl();
+  }
+
+  /// Start or resume the device with control request
+  Future<void> startOrResumeWithControl() async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot start/resume: no device connected');
+      return;
+    }
+    await service.startOrResumeWithControl();
+  }
+
+  /// Reset the device with control request
+  Future<void> resetWithControl() async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot reset: no device connected');
+      return;
+    }
+    await service.resetWithControl();
+  }
+
+  /// Request control only (without other commands)
+  Future<void> requestControlOnly() async {
+    final service = _service;
+    if (service == null) {
+      logger.w('Cannot request control: no device connected');
+      return;
+    }
+    await service.requestControlOnly();
+  }
+
+  /// Check if the device supports power control
+  Future<bool> supportsPowerControl() async {
+    final service = _service;
+    if (service == null) return false;
+    return await service.supportsPowerControl();
+  }
+
+  /// Check if the device supports resistance control
+  Future<bool> supportsResistanceControl() async {
+    final service = _service;
+    if (service == null) return false;
+    return await service.supportsResistanceControl();
+  }
+
+  /// Read supported resistance level range from the device
+  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange() async {
+    final service = _service;
+    if (service == null) return null;
+    return await service.readSupportedResistanceLevelRange();
+  }
+
+  /// Read supported power range from the device
+  Future<SupportedPowerRange?> readSupportedPowerRange() async {
+    final service = _service;
+    if (service == null) return null;
+    return await service.readSupportedPowerRange();
+  }
 
   /// Update device type (for FTMS devices)
   void updateDeviceType(DeviceType deviceType) {
@@ -136,7 +264,7 @@ class Ftms extends BTDevice {
   Future<bool> performConnection(BluetoothDevice device) async {
     try {
       logger.i('🔧 FTMS: Connecting to device: ${device.platformName}');
-      
+
       // Use direct device.connect with autoConnect instead of FTMS.connectToFTMSDevice
       // to enable automatic reconnection. This ensures the device will automatically
       // reconnect when it becomes available after any disconnection
@@ -194,13 +322,15 @@ class Ftms extends BTDevice {
         if (detectedType != null) {
           logger.i('🔧 FTMS: Detected machine type from characteristics: $detectedType');
           updateDeviceType(detectedType);
+          
+          // Configure data processor for the detected device type
+          await _configureDataProcessor(detectedType);
         }
       } catch(e) {
         logger.w('⚠️ FTMS: Failed to determine ftms device type: $e');
         // Continue anyway - some devices may not require control request
       }
 
-      // Listen to FTMS data stream (flutter_ftms already handles packet merging)
       DeviceDataType? preferredDeviceDataType;
       if (detectedType == DeviceType.indoorBike) {
         preferredDeviceDataType = DeviceDataType.indoorBike;
@@ -211,8 +341,10 @@ class Ftms extends BTDevice {
       FTMS.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
-          // Forward merged data to the global FTMS bloc for other consumers
-          ftmsBloc.ftmsDeviceDataControllerSink.add(data);
+          // Process the raw data and forward to the global FTMS bloc
+          final processedParamMap = _dataProcessor.processDeviceData(data);
+          final processedData = ProcessedFtmsData.fromDeviceData(data, processedParamMap);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(processedData);
         },
         preferredDeviceDataType: preferredDeviceDataType,
       );
@@ -222,18 +354,38 @@ class Ftms extends BTDevice {
     }
   }
   
+  /// Configure the data processor for a given device type
+  Future<void> _configureDataProcessor(DeviceType deviceType) async {
+    try {
+      final config = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+      if (config != null) {
+        _dataProcessor.configure(config);
+        logger.i('🔧 FTMS: Data processor configured for $deviceType');
+      }
+    } catch (e) {
+      logger.w('⚠️ FTMS: Failed to configure data processor: $e');
+    }
+  }
+  
   /// Handle device reconnection by re-establishing data streams
   Future<void> _handleReconnection(BluetoothDevice device) async {
     try {
       // Wait a moment for the connection to stabilize
       await Future.delayed(Duration(milliseconds: 500));
       
+      // Clear cached service to ensure fresh instance after reconnection
+      _ftmsService = null;
+      
+      // Note: We do NOT reset the data processor here - if the user is mid-workout
+      // and the machine briefly disconnects (standby mode), we want to preserve
+      // accumulated values (calories, distance, etc.) for seamless resumption
+
       logger.i('🔧 FTMS: Re-establishing data stream after reconnection');
       
       await _detectFtmsMachineTypeAndConnectToDataStream(device);
 
       logger.i('🔧 FTMS: Data stream re-established after reconnection');
-      await FTMSService(device).requestControlOnly();
+      await requestControlOnly();
     } catch (e) {
       logger.e('❌ FTMS: Failed to re-establish data stream after reconnection: $e');
     }
@@ -289,6 +441,7 @@ class Ftms extends BTDevice {
 
   @override
   Future<void> performDisconnection(BluetoothDevice device) async {
+    _ftmsService = null; // Clear cached service on disconnect
     await FTMS.disconnectFromFTMSDevice(device);
   }
 

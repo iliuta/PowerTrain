@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/services/analytics/analytics_service.dart';
@@ -16,13 +15,11 @@ import 'widgets/training_session_scaffold.dart';
 /// Main screen for displaying training session progress
 class TrainingSessionProgressScreen extends StatefulWidget {
   final TrainingSessionDefinition session;
-  final BluetoothDevice ftmsDevice;
   final String? gpxAssetPath;
 
   const TrainingSessionProgressScreen({
     super.key,
     required this.session,
-    required this.ftmsDevice,
     this.gpxAssetPath,
   });
 
@@ -106,7 +103,6 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
             return ChangeNotifierProvider(
               create: (_) => TrainingSessionController(
                 session: expandedSession,
-                ftmsDevice: widget.ftmsDevice,
                 gpxFilePath: _gpxFilePath,
               ),
               child: Consumer<TrainingSessionController>(
@@ -160,7 +156,6 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
                         session: expandedSession,
                         controller: controller,
                         config: snapshot.data,
-                        ftmsDevice: widget.ftmsDevice,
                         userSettings: _userSettings!,
                       );
                     },

@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/l10n/app_localizations.dart';
-import 'package:mockito/annotations.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/features/common/bottom_action_buttons.dart';
-import 'bottom_action_buttons_test.mocks.dart';
 
-// Mock BluetoothDevice for testing
-@GenerateMocks([BluetoothDevice])
 void main() {
   group('BottomActionButtons', () {
     testWidgets('should show all action buttons', (WidgetTester tester) async {
@@ -101,20 +96,18 @@ void main() {
       expect(find.ancestor(of: helpButton, matching: find.byType(IconButton)), findsOneWidget);
     });
 
-    testWidgets('should accept connected device parameter', (WidgetTester tester) async {
-      final mockDevice = MockBluetoothDevice();
-
+    testWidgets('should build without any parameters', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: BottomActionButtons(connectedDevice: mockDevice),
+          home: const Scaffold(
+            body: BottomActionButtons(),
           ),
         ),
       );
 
-      // Widget should build successfully with connected device
+      // Widget should build successfully
       expect(find.byType(BottomActionButtons), findsOneWidget);
       expect(find.byIcon(Icons.fitness_center), findsOneWidget);
     });

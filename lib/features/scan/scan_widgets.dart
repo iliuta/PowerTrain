@@ -385,7 +385,7 @@ void initializeDeviceNavigation() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FTMSPage(ftmsDevice: device),
+        builder: (context) => const FTMSPage(),
       ),
     );
   });

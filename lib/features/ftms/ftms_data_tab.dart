@@ -1,25 +1,21 @@
 // This file was moved from lib/ftms_data_tab.dart
 import 'package:flutter/material.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
 import '../../core/utils/logger.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/bloc/ftms_bloc.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
 import '../../l10n/app_localizations.dart';
 import '../training/training_session_progress_screen.dart';
-import '../../core/utils/ftms_debug_utils.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/widgets/ftms_live_data_display_widget.dart';
-import '../../core/services/ftms_data_processor.dart';
 import '../settings/model/user_settings.dart';
 import '../../core/services/user_settings_service.dart';
-class FTMSDataTab extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
 
-  const FTMSDataTab({super.key, required this.ftmsDevice});
+class FTMSDataTab extends StatefulWidget {
+  const FTMSDataTab({super.key});
 
   @override
   State<FTMSDataTab> createState() => FTMSDataTabState();
@@ -29,7 +25,6 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   bool _started = false;
   LiveDataDisplayConfig? _config;
   String? _configError;
-  final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
   UserSettings? _userSettings;
   Map<DeviceType, LiveDataDisplayConfig?>? _configs;
   bool _isLoadingSettings = true;
@@ -56,18 +51,13 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   }
 
   Future<void> _loadConfigForFtmsDeviceType(
-      DeviceDataType ftmsMachineType) async {
+      DeviceType ftmsMachineType) async {
     final config = await LiveDataDisplayConfig.loadForFtmsMachineType(
-        DeviceType.fromFtms(ftmsMachineType));
+        ftmsMachineType);
     setState(() {
       _config = config;
       _configError = config == null ? 'No config for this machine type' : null;
     });
-
-    // Configure data processor for averaging
-    if (config != null) {
-      _dataProcessor.configure(config);
-    }
 
     // Check if device is available based on developer mode
     _checkDeviceAvailability(config);
@@ -95,16 +85,16 @@ class FTMSDataTabState extends State<FTMSDataTab> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: StreamBuilder<DeviceData?>(
+      child: StreamBuilder<ProcessedFtmsData?>(
         stream: ftmsBloc.ftmsDeviceDataControllerStream,
         builder: (c, snapshot) {
           if (!snapshot.hasData) {
             return Center(child: Text(AppLocalizations.of(context)!.noFtmsDataFound));
           }
-          final deviceData = snapshot.data!;
+          final processedData = snapshot.data!;
           // Load config if not loaded or if type changed
           if (_config == null || _configError != null) {
-            _loadConfigForFtmsDeviceType(deviceData.deviceDataType);
+            _loadConfigForFtmsDeviceType(processedData.deviceType);
             if (_configError != null) {
               return Center(child: Text(_configError!));
             }
@@ -159,19 +149,15 @@ class FTMSDataTabState extends State<FTMSDataTab> {
             );
           }
 
-          // Show normal device data content
-          final parameterValues = deviceData.getDeviceDataParameterValues();
-          logFtmsParameterAttributes(parameterValues);
-
-          // Process device data with averaging
-          final paramValueMap = _dataProcessor.processDeviceData(deviceData);
+          // Show normal device data content - data is already processed
+          final paramValueMap = processedData.paramValueMap;
 
           return Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
               children: [
                 Text(
-                  FTMS.convertDeviceDataTypeToString(deviceData.deviceDataType),
+                  processedData.deviceType.name,
                   textScaler: const TextScaler.linear(4),
                   style: TextStyle(color: Theme.of(context).primaryColor),
                 ),
@@ -179,7 +165,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                   config: _config!,
                   paramValueMap: paramValueMap,
                   defaultColor: Colors.blue,
-                  machineType: DeviceType.fromFtms(deviceData.deviceDataType),
+                  machineType: processedData.deviceType,
                 ),
                 const SizedBox(height: 24),
                 // Start Training Button
@@ -190,12 +176,12 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                     label: Text(AppLocalizations.of(context)!.loadTrainingSessionButton),
                     onPressed: () async {
                       logger.i(
-                          'Start Training pressed. deviceData.deviceDataType: '
-                          '${deviceData.deviceDataType}');
+                          'Start Training pressed. deviceType: '
+                          '${processedData.deviceType}');
                       // Load training sessions (default user settings are now loaded inside the loader)
                       final storageService = TrainingSessionStorageService();
                       final sessions = await storageService.loadTrainingSessions(
-                          DeviceType.fromFtms(deviceData.deviceDataType));
+                          processedData.deviceType);
                       if (sessions.isEmpty) {
                         if (!context.mounted) return;
                         showDialog(
@@ -233,7 +219,6 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                               builder: (context) =>
                                   TrainingSessionProgressScreen(
                                 session: selectedSession,
-                                ftmsDevice: widget.ftmsDevice,
                                 gpxAssetPath: null,
                               ),
                             ),

@@ -2,26 +2,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import '../../core/services/ftms_service.dart';
+import '../../core/services/devices/ftms.dart';
 import 'ftms_session_selector_tab.dart';
 
 class FTMSPage extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
-
-  const FTMSPage({super.key, required this.ftmsDevice});
+  const FTMSPage({super.key});
 
   @override
   State<FTMSPage> createState() => _FTMSPageState();
 }
 
 class _FTMSPageState extends State<FTMSPage> {
-  late final FTMSService _ftmsService;
-
-  @override
-  void initState() {
-    super.initState();
-    _ftmsService = FTMSService(widget.ftmsDevice);
-  }
+  final Ftms _ftms = Ftms();
 
   @override
   void dispose() {
@@ -31,18 +23,17 @@ class _FTMSPageState extends State<FTMSPage> {
   }
 
   Future<void> writeCommand(MachineControlPointOpcodeType opcodeType) async {
-    await _ftmsService.writeCommand(opcodeType);
+    await _ftms.writeCommand(opcodeType);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.ftmsDevice.platformName),
+        title: Text(_ftms.name),
         toolbarHeight: 40,
       ),
       body: FTMSessionSelectorTab(
-        ftmsDevice: widget.ftmsDevice,
         writeCommand: writeCommand,
       ),
     );
