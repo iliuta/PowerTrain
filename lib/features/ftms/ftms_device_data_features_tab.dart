@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/bloc/ftms_bloc.dart';
+import '../../core/models/processed_ftms_data.dart';
 import '../../core/services/devices/ftms.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -64,7 +65,7 @@ class FTMSDeviceDataFeaturesTabState extends State<FTMSDeviceDataFeaturesTab> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DeviceData?>(
+    return StreamBuilder<ProcessedFtmsData?>(
       stream: ftmsBloc.ftmsDeviceDataControllerStream,
       builder: (c, snapshot) {
         if (!snapshot.hasData) {
@@ -80,15 +81,16 @@ class FTMSDeviceDataFeaturesTabState extends State<FTMSDeviceDataFeaturesTab> {
           );
         }
 
-        final deviceData = snapshot.data!;
-        final features = deviceData.getDeviceDataFeatures();
-        final parameterValues = deviceData.getDeviceDataParameterValues();
+        final processedData = snapshot.data!;
+        final features = processedData.features ?? {};
+        final paramValueMap = processedData.paramValueMap;
         
-        // Create a map using the ParameterName.name string as key
+        // Create a map for formatted values from the processed param value map
         final valueMap = <String, String>{};
-        for (var param in parameterValues) {
-          final formattedValue = '${(param.value * param.factor).toStringAsFixed(2)} ${param.unit}';
-          valueMap[param.name.name] = formattedValue;
+        for (var entry in paramValueMap.entries) {
+          final param = entry.value;
+          final formattedValue = '${param.getScaledValue().toStringAsFixed(2)} ${param.unit}';
+          valueMap[entry.key] = formattedValue;
         }
         
         // Helper to get value by name string

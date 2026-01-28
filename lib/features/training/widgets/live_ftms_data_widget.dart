@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import '../../../core/bloc/ftms_bloc.dart';
 import '../../../core/config/live_data_display_config.dart';
 import '../../../core/widgets/ftms_live_data_display_widget.dart';
-import '../../../core/services/ftms_data_processor.dart';
 
 /// Widget for displaying live FTMS data during training
 class LiveFTMSDataWidget extends StatefulWidget {
@@ -25,7 +24,6 @@ class LiveFTMSDataWidget extends StatefulWidget {
 class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
   LiveDataDisplayConfig? _config;
   String? _configError;
-  final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
 
   @override
   void didChangeDependencies() {
@@ -34,31 +32,12 @@ class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
   }
 
   Future<void> _loadConfig() async {
-    final deviceDataType = await _getDeviceType();
-    if (deviceDataType == null) {
-      setState(() {
-        _config = null;
-        _configError = AppLocalizations.of(context)!.deviceTypeNotDetected;
-      });
-      return;
-    }
-    final deviceType = DeviceType.fromFtms(deviceDataType);
-    final config = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+    // Load config based on the widget's machine type
+    final config = await LiveDataDisplayConfig.loadForFtmsMachineType(widget.machineType);
     setState(() {
       _config = config;
       _configError = config == null ? AppLocalizations.of(context)!.noConfigForMachineType : null;
     });
-
-    if (config != null) {
-      _dataProcessor.configure(config);
-    }
-  }
-
-  Future<DeviceDataType?> _getDeviceType() async {
-    // Try to get the latest device data from the stream
-    final snapshot = await ftmsBloc.ftmsDeviceDataControllerStream
-        .firstWhere((d) => d != null);
-    return snapshot?.deviceDataType;
   }
 
   @override
@@ -77,7 +56,7 @@ class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: StreamBuilder<DeviceData?>(
+                child: StreamBuilder<ProcessedFtmsData?>(
                   stream: ftmsBloc.ftmsDeviceDataControllerStream,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -86,15 +65,12 @@ class _LiveFTMSDataWidgetState extends State<LiveFTMSDataWidget> {
                         child: Text(AppLocalizations.of(context)!.noFtmsData),
                       );
                     }
-                    final deviceData = snapshot.data!;
+                    final processedData = snapshot.data!;
 
-                    // Process device data with averaging
-                    final paramValueMap =
-                        _dataProcessor.processDeviceData(deviceData);
-
+                    // Use already processed data directly
                     return FtmsLiveDataDisplayWidget(
                       config: _config!,
-                      paramValueMap: paramValueMap,
+                      paramValueMap: processedData.paramValueMap,
                       targets: widget.targets,
                       machineType: widget.machineType,
                     );

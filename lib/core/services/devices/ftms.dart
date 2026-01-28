@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
 import 'package:ftms/core/utils/logger.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'bt_device.dart';
@@ -12,6 +13,8 @@ import '../../models/bt_device_service_type.dart';
 import '../../models/supported_resistance_level_range.dart';
 import '../../models/supported_power_range.dart';
 import '../../bloc/ftms_bloc.dart';
+import '../../config/live_data_display_config.dart';
+import '../ftms_data_processor.dart';
 import '../ftms_service.dart';
 
 /// Service for FTMS (Fitness Machine Service) devices
@@ -25,6 +28,9 @@ class Ftms extends BTDevice {
 
   /// Cached FTMSService for the connected device
   FTMSService? _ftmsService;
+  
+  /// Data processor for averaging and sensor overrides
+  final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
 
   @override
   String get deviceTypeName => 'FTMS';
@@ -37,6 +43,13 @@ class Ftms extends BTDevice {
 
   /// Stream of device type changes
   Stream<DeviceType> get deviceTypeStream => _deviceTypeController.stream;
+
+  /// Reset the data processor to clear accumulated state.
+  /// Call this when starting a new training session to ensure
+  /// calories, distance, averages etc. start from zero.
+  void resetDataProcessor() {
+    _dataProcessor.reset();
+  }
 
   // ============================================
   // FTMS Control Methods (wrapping FTMSService)
@@ -309,6 +322,9 @@ class Ftms extends BTDevice {
         if (detectedType != null) {
           logger.i('🔧 FTMS: Detected machine type from characteristics: $detectedType');
           updateDeviceType(detectedType);
+          
+          // Configure data processor for the detected device type
+          await _configureDataProcessor(detectedType);
         }
       } catch(e) {
         logger.w('⚠️ FTMS: Failed to determine ftms device type: $e');
@@ -325,14 +341,29 @@ class Ftms extends BTDevice {
       FTMS.useDeviceDataCharacteristic(
         device,
         (DeviceData data) {
-          // Forward merged data to the global FTMS bloc for other consumers
-          ftmsBloc.ftmsDeviceDataControllerSink.add(data);
+          // Process the raw data and forward to the global FTMS bloc
+          final processedParamMap = _dataProcessor.processDeviceData(data);
+          final processedData = ProcessedFtmsData.fromDeviceData(data, processedParamMap);
+          ftmsBloc.ftmsDeviceDataControllerSink.add(processedData);
         },
         preferredDeviceDataType: preferredDeviceDataType,
       );
     } catch (e) {
       logger.i('❌ FTMS: Machine type detection failed: $e');
       // Continue without machine type detection
+    }
+  }
+  
+  /// Configure the data processor for a given device type
+  Future<void> _configureDataProcessor(DeviceType deviceType) async {
+    try {
+      final config = await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
+      if (config != null) {
+        _dataProcessor.configure(config);
+        logger.i('🔧 FTMS: Data processor configured for $deviceType');
+      }
+    } catch (e) {
+      logger.w('⚠️ FTMS: Failed to configure data processor: $e');
     }
   }
   
@@ -344,6 +375,10 @@ class Ftms extends BTDevice {
       
       // Clear cached service to ensure fresh instance after reconnection
       _ftmsService = null;
+      
+      // Note: We do NOT reset the data processor here - if the user is mid-workout
+      // and the machine briefly disconnects (standby mode), we want to preserve
+      // accumulated values (calories, distance, etc.) for seamless resumption
 
       logger.i('🔧 FTMS: Re-establishing data stream after reconnection');
       

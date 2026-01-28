@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/models/live_data_field_value.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
@@ -16,7 +17,6 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../core/bloc/ftms_bloc.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/services/fit/training_data_recorder.dart';
-import '../../core/services/ftms_data_processor.dart';
 import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
@@ -27,14 +27,13 @@ class TrainingSessionController extends ChangeNotifier
     implements SessionEffectHandler {
   ExpandedTrainingSessionDefinition session;
   final Ftms _ftms;
-  late final Stream<DeviceData?> _ftmsStream;
-  StreamSubscription<DeviceData?>? _ftmsSub;
+  late final Stream<ProcessedFtmsData?> _ftmsStream;
+  StreamSubscription<ProcessedFtmsData?>? _ftmsSub;
   StreamSubscription<BluetoothConnectionState>? _connectionStateSub;
   Timer? _timer;
 
   // FIT file recording
   TrainingDataRecorder? _dataRecorder;
-  final FtmsDataProcessor _dataProcessor = FtmsDataProcessor();
   bool _isRecordingConfigured = false;
   final bool _enableFitFileGeneration;
   late final StravaService _stravaService;
@@ -164,9 +163,11 @@ class TrainingSessionController extends ChangeNotifier
   // ============ Initialization ============
 
   Future<void> _initFTMS() async {
-    _dataProcessor.reset();
-
     if (_disposed) return;
+
+    // Reset data processor to clear accumulated state from previous sessions
+    // (calories, distance, averages should start fresh for a new session)
+    _ftms.resetDataProcessor();
 
     // Execute operations concurrently where possible
     await Future.wait([
@@ -214,13 +215,8 @@ class TrainingSessionController extends ChangeNotifier
       // Get device type from the machine type string
       final deviceType = session.ftmsMachineType;
 
-      // Load config for data processor
-      final config =
-          await LiveDataDisplayConfig.loadForFtmsMachineType(deviceType);
-      if (config != null) {
-        _dataProcessor.configure(config);
-        _isRecordingConfigured = true;
-      }
+      // Mark recording as configured (data processing is now handled by ftms.dart)
+      _isRecordingConfigured = true;
 
       // Initialize GPX route tracker for GPS coordinates
       if (_gpxFilePath != null) {
@@ -255,14 +251,10 @@ class TrainingSessionController extends ChangeNotifier
 
   // ============ Event handlers ============
 
-  void _onFtmsData(DeviceData? data) {
+  void _onFtmsData(ProcessedFtmsData? data) {
     if (data == null) return;
 
-    final paramValueMap = _dataProcessor.processDeviceData(data);
-    
-    // Create raw param value map for activity detection (no averaging)
-    // This ensures immediate response to activity/inactivity changes
-    final rawParamValueMap = _createRawParamValueMap(data);
+    final paramValueMap = data.paramValueMap;
     
     // For distance-based sessions, update distance from FTMS data
     if (session.isDistanceBased && _state.isRunning) {
@@ -276,13 +268,13 @@ class TrainingSessionController extends ChangeNotifier
     // Record data if session is running and check for inactivity
     if (_state.isRunning) {
       _recordDataPoint(paramValueMap);
-      _checkForInactivity(rawParamValueMap);
+      _checkForInactivity(paramValueMap);
       return;
     }
 
     // If paused by inactivity, check if activity resumed
     if (_state.wasInactivityPaused) {
-      _checkForActivityResume(rawParamValueMap);
+      _checkForActivityResume(paramValueMap);
       return;
     }
 
@@ -292,17 +284,7 @@ class TrainingSessionController extends ChangeNotifier
     }
 
     // Check if user started exercising to trigger session auto-start
-    _checkForActivityStart(rawParamValueMap);
-  }
-  
-  /// Creates a raw param value map from device data without any averaging.
-  /// Used for activity detection where immediate response is needed.
-  Map<String, LiveDataFieldValue> _createRawParamValueMap(DeviceData deviceData) {
-    final parameterValues = deviceData.getDeviceDataParameterValues();
-    return {
-      for (final p in parameterValues)
-        p.name.name: LiveDataFieldValue.fromDeviceDataParameterValue(p)
-    };
+    _checkForActivityStart(paramValueMap);
   }
 
   /// Returns the list of parameter names used to detect user activity, in priority order.

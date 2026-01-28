@@ -8,6 +8,8 @@ import 'package:flutter_ftms/src/ftms/parameter_name.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/bloc/ftms_bloc.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/models/live_data_field_value.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
 import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/core/services/fit/training_data_recorder.dart';
 import 'package:ftms/core/services/sound_service.dart';
@@ -30,7 +32,24 @@ import 'package:mockito/mockito.dart';
 ])
 import 'training_session_controller_test.mocks.dart';
 
-// Mock classes for FTMS data
+/// Helper function to create mock ProcessedFtmsData from a list of parameters
+ProcessedFtmsData createMockProcessedData(List<MockParameter> parameters) {
+  final paramValueMap = <String, LiveDataFieldValue>{};
+  for (final p in parameters) {
+    paramValueMap[p.name.name] = LiveDataFieldValue(
+      name: p.name.name,
+      value: p.value,
+      factor: p.factor,
+      unit: p.unit,
+    );
+  }
+  return ProcessedFtmsData(
+    deviceType: DeviceType.indoorBike,
+    paramValueMap: paramValueMap,
+  );
+}
+
+// Mock classes for FTMS data (kept for backwards compatibility with other tests)
 class MockDeviceData extends DeviceData {
   final List<MockParameter> _parameters;
 
@@ -180,6 +199,7 @@ void main() {
       
       // Mock the Ftms methods
       when(mockFtms.connectedDevice).thenReturn(mockDevice);
+      when(mockFtms.resetDataProcessor()).thenReturn(null);
       when(mockFtms.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange')))
           .thenAnswer((_) async {});
       when(mockFtms.setPowerWithControl(any))
@@ -282,13 +302,13 @@ void main() {
         clearInteractions(mockFtms);
         
         // Simulate starting the session by sending FTMS data changes
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([
+        final changedData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
@@ -552,12 +572,12 @@ void main() {
         await controller.initialized;
         
         // Create mock device data with changing values
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
           MockParameter('Instantaneous Speed', 20),
         ]);
 
-        final changedData = MockDeviceData([
+        final changedData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
           MockParameter('Instantaneous Speed', 25),
         ]);
@@ -580,11 +600,11 @@ void main() {
       test('does not start timer if values have not changed', () async {
         await controller.initialized;
         
-        final sameData1 = MockDeviceData([
+        final sameData1 = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
 
-        final sameData2 = MockDeviceData([
+        final sameData2 = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
 
@@ -606,13 +626,13 @@ void main() {
         await controller.initialized;
         
         // Start the session
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([
+        final changedData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
@@ -622,7 +642,7 @@ void main() {
         expect(controller.state.status, SessionStatus.running);
 
         // Send more data - should continue recording
-        final moreData = MockDeviceData([
+        final moreData = createMockProcessedData([
           MockParameter('Instantaneous Power', 200),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(moreData);
@@ -636,13 +656,13 @@ void main() {
         await controller.initialized;
         
         // Start and pause session
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([
+        final changedData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
@@ -685,13 +705,13 @@ void main() {
         await controller.initialized;
         
         // Start session with active power
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Power', 50),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final activeData = MockDeviceData([
+        final activeData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -705,7 +725,7 @@ void main() {
 
         // Send low power data (< 5W) repeatedly to trigger inactivity
         for (int i = 0; i < 5; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -724,7 +744,7 @@ void main() {
 
         // Send low power data but not enough times
         for (int i = 0; i < 3; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -734,7 +754,7 @@ void main() {
         expect(controller.state.status, SessionStatus.running);
 
         // Resume activity
-        final activeData = MockDeviceData([
+        final activeData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -749,7 +769,7 @@ void main() {
 
         // Trigger inactivity pause
         for (int i = 0; i < 5; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -760,7 +780,7 @@ void main() {
 
         // Resume activity with power above threshold - need 2 consecutive seconds
         for (int i = 0; i < 2; i++) {
-          final activeData = MockDeviceData([
+          final activeData = createMockProcessedData([
             MockParameter('Instantaneous Power', 50),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -774,13 +794,13 @@ void main() {
 
       test('auto-pauses when speed drops below threshold', () async {
         // Start with speed-based session
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Speed', 5),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final activeData = MockDeviceData([
+        final activeData = createMockProcessedData([
           MockParameter('Instantaneous Speed', 25),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -790,7 +810,7 @@ void main() {
 
         // Send low speed data (< 3 km/h) repeatedly
         for (int i = 0; i < 5; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Speed', 1),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -805,7 +825,7 @@ void main() {
 
         // Trigger inactivity pause
         for (int i = 0; i < 5; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -830,7 +850,7 @@ void main() {
 
         // Trigger inactivity pause
         for (int i = 0; i < 5; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -847,7 +867,7 @@ void main() {
 
         // Trigger inactivity pause
         for (int i = 0; i < 5; i++) {
-          final inactiveData = MockDeviceData([
+          final inactiveData = createMockProcessedData([
             MockParameter('Instantaneous Power', 2),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -861,7 +881,7 @@ void main() {
 
         // Resume with activity - need 2 consecutive seconds for auto-resume
         for (int i = 0; i < 2; i++) {
-          final activeData = MockDeviceData([
+          final activeData = createMockProcessedData([
             MockParameter('Instantaneous Power', 50),
           ]);
           ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -916,7 +936,7 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // First reading: pace = 0 (user not rowing, machine reports 0)
-        final inactiveData = MockDeviceData([
+        final inactiveData = createMockProcessedData([
           MockParameter('Instantaneous Pace', 0),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -926,7 +946,7 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // User starts rowing: pace = 120 (2:00/500m - active rowing)
-        final activeData = MockDeviceData([
+        final activeData = createMockProcessedData([
           MockParameter('Instantaneous Pace', 120),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -940,7 +960,7 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // First reading: pace = 999 (very high, user not rowing effectively)
-        final inactiveData = MockDeviceData([
+        final inactiveData = createMockProcessedData([
           MockParameter('Instantaneous Pace', 999),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData);
@@ -950,7 +970,7 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // User starts rowing: pace = 150 (2:30/500m)
-        final activeData = MockDeviceData([
+        final activeData = createMockProcessedData([
           MockParameter('Instantaneous Pace', 150),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(activeData);
@@ -964,7 +984,7 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // First reading: pace = 250 (slow but in active range)
-        final slowData = MockDeviceData([
+        final slowData = createMockProcessedData([
           MockParameter('Instantaneous Pace', 250),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(slowData);
@@ -974,7 +994,7 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // Pace drops significantly: 250 * 0.9 = 225, so 150 < 225
-        final fasterData = MockDeviceData([
+        final fasterData = createMockProcessedData([
           MockParameter('Instantaneous Pace', 150),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(fasterData);
@@ -988,14 +1008,14 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // First reading: pace = 0
-        final inactiveData1 = MockDeviceData([
+        final inactiveData1 = createMockProcessedData([
           MockParameter('Instantaneous Pace', 0),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData1);
         await Future.delayed(const Duration(milliseconds: 50));
 
         // Still inactive: pace = 0
-        final inactiveData2 = MockDeviceData([
+        final inactiveData2 = createMockProcessedData([
           MockParameter('Instantaneous Pace', 0),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(inactiveData2);
@@ -1023,11 +1043,11 @@ void main() {
         expect(controller.state.isRunning, false);
 
         // Start session
-        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
+        final initialData = createMockProcessedData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
+        final changedData = createMockProcessedData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1208,14 +1228,14 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // Simulate starting the session with FTMS data changes
-        final mockData = MockDeviceData([
+        final mockData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         
         ftmsBloc.ftmsDeviceDataControllerSink.add(mockData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([
+        final changedData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
         ]);
         
@@ -1280,11 +1300,11 @@ void main() {
         expect(controller.state.hasEnded, false);
 
         // Start the session with FTMS data changes
-        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
+        final initialData = createMockProcessedData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
+        final changedData = createMockProcessedData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1341,11 +1361,11 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 200));
 
         // Start the session
-        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
+        final initialData = createMockProcessedData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
+        final changedData = createMockProcessedData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1408,11 +1428,11 @@ void main() {
         await controller.initialized;
 
         // Start the session (rower uses Instantaneous Pace as primary activity indicator)
-        final initialData = MockDeviceData([MockParameter('Instantaneous Pace', 240)]);
+        final initialData = createMockProcessedData([MockParameter('Instantaneous Pace', 240)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Instantaneous Pace', 150)]);
+        final changedData = createMockProcessedData([MockParameter('Instantaneous Pace', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1469,11 +1489,11 @@ void main() {
         await controller.initialized;
 
         // Start the session
-        final initialData = MockDeviceData([MockParameter('Instantaneous Power', 100)]);
+        final initialData = createMockProcessedData([MockParameter('Instantaneous Power', 100)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(initialData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changedData = MockDeviceData([MockParameter('Instantaneous Power', 150)]);
+        final changedData = createMockProcessedData([MockParameter('Instantaneous Power', 150)]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changedData);
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -1608,7 +1628,7 @@ void main() {
         await controller.initialized;
 
         // First send data to establish baseline
-        final initialData = MockDeviceData([
+        final initialData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
           MockParameter('Instantaneous Speed', 20),
         ]);
@@ -1616,7 +1636,7 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 50));
 
         // Send changed data to trigger timer start and recording
-        final mockData = MockDeviceData([
+        final mockData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
           MockParameter('Instantaneous Speed', 25),
         ]);
@@ -1962,13 +1982,13 @@ void main() {
         expect(controller.state.status, SessionStatus.created);
 
         // Start with FTMS data to begin timer
-        final startData = MockDeviceData([
+        final startData = createMockProcessedData([
           MockParameter('Instantaneous Power', 100),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(startData);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        final changeData = MockDeviceData([
+        final changeData = createMockProcessedData([
           MockParameter('Instantaneous Power', 150),
         ]);
         ftmsBloc.ftmsDeviceDataControllerSink.add(changeData);

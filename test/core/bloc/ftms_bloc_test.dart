@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/bloc/ftms_bloc.dart';
-import 'package:flutter_ftms/src/ftms/characteristic/data/device_data.dart';
+import 'package:ftms/core/models/processed_ftms_data.dart';
+import 'package:ftms/core/models/device_types.dart';
 import 'package:flutter_ftms/src/ftms/characteristic/machine/feature/machine_feature.dart';
-// Import Flag and DeviceDataParameter for the fake class
-import 'package:flutter_ftms/src/ftms/flag.dart';
-import 'package:flutter_ftms/src/ftms/characteristic/data/device_data_parameter.dart';
 
 
 
@@ -12,8 +10,11 @@ import 'package:flutter_ftms/src/ftms/characteristic/data/device_data_parameter.
 void main() {
   group('FTMSBloc', () {
 
-    test('should add and receive DeviceData', () async {
-      final testData = FakeDeviceData();
+    test('should add and receive ProcessedFtmsData', () async {
+      final testData = ProcessedFtmsData(
+        deviceType: DeviceType.indoorBike,
+        paramValueMap: {},
+      );
       final future = expectLater(
         ftmsBloc.ftmsDeviceDataControllerStream.timeout(const Duration(seconds: 2)),
         emits(testData),
@@ -32,15 +33,5 @@ void main() {
       await future;
     });
   });
-}
-
-class FakeDeviceData extends DeviceData {
-  FakeDeviceData() : super([0, 0, 0, 0]);
-  @override
-  DeviceDataType get deviceDataType => DeviceDataType.indoorBike;
-  @override
-  List<Flag> get allDeviceDataFlags => [];
-  @override
-  List<DeviceDataParameter> get allDeviceDataParameters => [];
 }
 
