@@ -16,13 +16,11 @@ import 'widgets/widgets.dart';
 import '../../l10n/app_localizations.dart';
 
 class FTMSessionSelectorTab extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
   final Future<void> Function(MachineControlPointOpcodeType) writeCommand;
   final SessionSelectorService? service; // For testing injection
 
   const FTMSessionSelectorTab({
     super.key,
-    required this.ftmsDevice,
     required this.writeCommand,
     this.service,
   });
@@ -43,7 +41,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
     _resistanceController = TextEditingController();
     _trainingSessionGeneratorResistanceController = TextEditingController();
     
-    _service = widget.service ?? SessionSelectorService(ftmsDevice: widget.ftmsDevice);
+    _service = widget.service ?? SessionSelectorService();
     _service.addListener(_onStateChanged);
     _service.initialize();
   }
@@ -236,9 +234,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
               onTap: _service.toggleDeviceDataFeaturesExpanded,
               child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.5,
-                child: FTMSDeviceDataFeaturesTab(
-                  ftmsDevice: widget.ftmsDevice,
-                ),
+                child: const FTMSDeviceDataFeaturesTab(),
               ),
             ),
             const SizedBox(height: 16),
@@ -253,7 +249,6 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
               child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.6,
                 child: FTMSMachineFeaturesTab(
-                  ftmsDevice: widget.ftmsDevice,
                   writeCommand: widget.writeCommand,
                 ),
               ),
@@ -330,7 +325,6 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         MaterialPageRoute(
           builder: (context) => TrainingSessionProgressScreen(
             session: session,
-            ftmsDevice: widget.ftmsDevice,
             gpxAssetPath: _state.selectedGpxAssetPath,
           ),
         ),
@@ -347,7 +341,6 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         MaterialPageRoute(
           builder: (context) => TrainingSessionProgressScreen(
             session: session,
-            ftmsDevice: widget.ftmsDevice,
             gpxAssetPath: _state.selectedGpxAssetPath,
           ),
         ),
@@ -363,7 +356,6 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
         MaterialPageRoute(
           builder: (context) => TrainingSessionProgressScreen(
             session: session,
-            ftmsDevice: widget.ftmsDevice,
             gpxAssetPath: _state.selectedGpxAssetPath,
           ),
         ),

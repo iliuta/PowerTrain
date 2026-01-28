@@ -6,6 +6,7 @@ import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/models/live_data_field_value.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
+import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
 import 'package:ftms/features/training/model/expanded_unit_training_interval.dart';
 import 'package:ftms/features/training/model/unit_training_interval.dart';
@@ -16,7 +17,6 @@ import '../../core/bloc/ftms_bloc.dart';
 import '../../core/config/live_data_display_config.dart';
 import '../../core/services/fit/training_data_recorder.dart';
 import '../../core/services/ftms_data_processor.dart';
-import '../../core/services/ftms_service.dart';
 import '../../core/services/gpx/gpx_route_tracker.dart';
 import '../../core/services/strava/strava_activity_types.dart';
 import '../../core/services/strava/strava_service.dart';
@@ -26,11 +26,10 @@ import '../../core/utils/logger.dart';
 class TrainingSessionController extends ChangeNotifier
     implements SessionEffectHandler {
   ExpandedTrainingSessionDefinition session;
-  final BluetoothDevice ftmsDevice;
-  late final FTMSService _ftmsService;
+  final Ftms _ftms;
   late final Stream<DeviceData?> _ftmsStream;
   StreamSubscription<DeviceData?>? _ftmsSub;
-  late final StreamSubscription<BluetoothConnectionState> _connectionStateSub;
+  StreamSubscription<BluetoothConnectionState>? _connectionStateSub;
   Timer? _timer;
 
   // FIT file recording
@@ -88,15 +87,14 @@ class TrainingSessionController extends ChangeNotifier
   // Allow injection of dependencies for testing
   TrainingSessionController({
     required this.session,
-    required this.ftmsDevice,
-    FTMSService? ftmsService,
+    Ftms? ftms,
     StravaService? stravaService,
     TrainingDataRecorder? dataRecorder,
     bool enableFitFileGeneration = true, // Allow disabling for tests
     String? gpxFilePath, // Optional GPX file path for route display
   })  : _enableFitFileGeneration = enableFitFileGeneration,
-        _gpxFilePath = gpxFilePath {
-    _ftmsService = ftmsService ?? FTMSService(ftmsDevice);
+        _gpxFilePath = gpxFilePath,
+        _ftms = ftms ?? Ftms() {
     _stravaService = stravaService ?? StravaService();
 
     // Initialize session state with this controller as the effect handler
@@ -117,8 +115,11 @@ class TrainingSessionController extends ChangeNotifier
     // Ensure wakelock stays enabled during training sessions
     _enableWakeLock();
 
-    _connectionStateSub =
-        ftmsDevice.connectionState.listen(_onConnectionStateChanged);
+    // Listen to connection state changes if device is connected
+    final device = _ftms.connectedDevice;
+    if (device != null) {
+      _connectionStateSub = device.connectionState.listen(_onConnectionStateChanged);
+    }
     _performInitialization();
   }
 
@@ -169,16 +170,16 @@ class TrainingSessionController extends ChangeNotifier
 
     // Execute operations concurrently where possible
     await Future.wait([
-      _ftmsService.resetWithControl(),
-      _ftmsService.startOrResumeWithControl(),
+      _ftms.resetWithControl(),
+      _ftms.startOrResumeWithControl(),
     ]);
 
     // Some FTMS devices need a brief pause/resume cycle to properly start calculating averages
     // This ensures Average Speed, Average Power, and Total Distance start working correctly
     await Future.delayed(const Duration(milliseconds: 200));
-    await _ftmsService.stopOrPauseWithControl();
+    await _ftms.stopOrPauseWithControl();
     await Future.delayed(const Duration(milliseconds: 200));
-    await _ftmsService.startOrResumeWithControl();
+    await _ftms.startOrResumeWithControl();
 
     // Handle conditional operations that depend on the above
     final firstInterval = _state.intervals.isNotEmpty ? _state.intervals[0] : null;
@@ -187,7 +188,7 @@ class TrainingSessionController extends ChangeNotifier
 
       final firstResistance = firstInterval.resistanceLevel;
       if (firstResistance != null) {
-        operations.add(_ftmsService.setResistanceWithControl(
+        operations.add(_ftms.setResistanceWithControl(
           firstResistance,
           convertFromDefaultRange: firstInterval.resistanceNeedsConversion,
         ));
@@ -195,7 +196,7 @@ class TrainingSessionController extends ChangeNotifier
 
       final firstPower = firstInterval.targets?['Instantaneous Power'];
       if (firstPower != null) {
-        await _ftmsService.setPowerWithControl(firstPower);
+        await _ftms.setPowerWithControl(firstPower);
       }
 
       if (operations.isNotEmpty) {
@@ -625,14 +626,14 @@ class TrainingSessionController extends ChangeNotifier
   void onIntervalChanged(ExpandedUnitTrainingInterval newInterval) {
     final resistance = newInterval.resistanceLevel;
     if (resistance != null) {
-      _ftmsService.setResistanceWithControl(
+      _ftms.setResistanceWithControl(
         resistance,
         convertFromDefaultRange: newInterval.resistanceNeedsConversion,
       );
     }
     final power = newInterval.targets?['Instantaneous Power'];
     if (power != null) {
-      _ftmsService.setPowerWithControl(power);
+      _ftms.setPowerWithControl(power);
     }
 
     // Update metronome
@@ -658,8 +659,8 @@ class TrainingSessionController extends ChangeNotifier
   void onSessionCompleted() {
     Future.microtask(() async {
       if (_disposed) return;
-      await _ftmsService.stopOrPauseWithControl();
-      await _ftmsService.resetWithControl();
+      await _ftms.stopOrPauseWithControl();
+      await _ftms.resetWithControl();
     });
     // Recording will be handled by the completion dialog
   }
@@ -669,7 +670,7 @@ class TrainingSessionController extends ChangeNotifier
     _logSessionCompleted();
     Future.microtask(() async {
       if (_disposed) return;
-      await _ftmsService.stopOrPauseWithControl();
+      await _ftms.stopOrPauseWithControl();
     });
     // Recording will be handled by the completion dialog
   }
@@ -678,7 +679,7 @@ class TrainingSessionController extends ChangeNotifier
   void onSendFtmsPause() {
     Future.microtask(() async {
       if (_disposed) return;
-      await _ftmsService.stopOrPauseWithControl();
+      await _ftms.stopOrPauseWithControl();
     });
   }
 
@@ -686,7 +687,7 @@ class TrainingSessionController extends ChangeNotifier
   void onSendFtmsResume() {
     Future.microtask(() async {
       if (_disposed) return;
-      await _ftmsService.startOrResumeWithControl();
+      await _ftms.startOrResumeWithControl();
     });
   }
 
@@ -694,8 +695,8 @@ class TrainingSessionController extends ChangeNotifier
   void onSendFtmsStopAndReset() {
     Future.microtask(() async {
       if (_disposed) return;
-      await _ftmsService.stopOrPauseWithControl();
-      await _ftmsService.resetWithControl();
+      await _ftms.stopOrPauseWithControl();
+      await _ftms.resetWithControl();
     });
   }
 
@@ -988,13 +989,13 @@ class TrainingSessionController extends ChangeNotifier
   void dispose() {
     _disposed = true;
     _ftmsSub?.cancel();
-    _connectionStateSub.cancel();
+    _connectionStateSub?.cancel();
     onStopTimer();
     _stopMetronome();
 
     if (!_state.hasEnded) {
       Future.microtask(() async {
-        await _ftmsService.stopOrPauseWithControl();
+        await _ftms.stopOrPauseWithControl();
       });
     }
 

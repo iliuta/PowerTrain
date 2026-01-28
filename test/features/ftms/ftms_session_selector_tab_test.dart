@@ -34,7 +34,6 @@ class MockSessionSelectorService extends SessionSelectorService {
   final List<String> methodCalls = [];
 
   MockSessionSelectorService({
-    required super.ftmsDevice,
     SessionSelectorState? initialState,
   })  : _testState = initialState ?? const SessionSelectorState();
 
@@ -188,7 +187,6 @@ Widget createTestApp({required Widget child}) {
 }
 
 void main() {
-  late MockBluetoothDevice mockDevice;
   late MockSessionSelectorService mockService;
 
   final testUserSettings = UserSettings(
@@ -203,15 +201,11 @@ void main() {
     deviceType: DeviceType.rower,
   );
 
-  setUp(() {
-    mockDevice = MockBluetoothDevice();
-  });
-
   group('FTMSessionSelectorTab', () {
     group('Initial State', () {
       testWidgets('shows loading indicator when deviceType is null', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: const SessionSelectorState(
             status: SessionSelectorLoadingStatus.initial,
             deviceType: null,
@@ -220,7 +214,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -232,7 +226,7 @@ void main() {
 
       testWidgets('shows loading indicator when status is loading', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: const SessionSelectorState(
             status: SessionSelectorLoadingStatus.loading,
             deviceType: DeviceType.rower,
@@ -241,7 +235,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -253,7 +247,7 @@ void main() {
 
       testWidgets('shows error message when status is error', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: const SessionSelectorState(
             status: SessionSelectorLoadingStatus.error,
             errorMessage: 'Test error message',
@@ -262,7 +256,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -276,7 +270,7 @@ void main() {
     group('Developer Mode Required', () {
       testWidgets('shows developer mode required when device not available', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -288,7 +282,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -304,7 +298,7 @@ void main() {
     group('Content Rendering', () {
       testWidgets('shows Free Ride section when loaded', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -316,7 +310,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -328,7 +322,7 @@ void main() {
 
       testWidgets('shows Load Training Session section', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -340,7 +334,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -352,7 +346,7 @@ void main() {
 
       testWidgets('shows Training Session Generator for rower', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -364,7 +358,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -376,7 +370,7 @@ void main() {
 
       testWidgets('does not show Training Session Generator for indoor bike', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.indoorBike,
@@ -388,7 +382,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -407,7 +401,7 @@ void main() {
         );
 
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -419,7 +413,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -432,7 +426,7 @@ void main() {
 
       testWidgets('hides developer sections when developerMode is false', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -444,7 +438,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -459,7 +453,7 @@ void main() {
     group('Expansion Panel Interactions', () {
       testWidgets('toggles Free Ride expansion when tapped', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -471,7 +465,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -487,7 +481,7 @@ void main() {
 
       testWidgets('toggles Load Training Session expansion when tapped', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -499,7 +493,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -515,7 +509,7 @@ void main() {
 
       testWidgets('toggles Training Session Generator expansion when tapped', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -527,7 +521,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -545,7 +539,7 @@ void main() {
     group('Training Sessions Content', () {
       testWidgets('shows loading indicator when loading training sessions', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -559,7 +553,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -574,7 +568,7 @@ void main() {
 
       testWidgets('shows error message when training sessions failed to load', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -589,7 +583,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -601,7 +595,7 @@ void main() {
 
       testWidgets('shows no sessions message when list is empty', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -616,7 +610,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -630,7 +624,7 @@ void main() {
     group('Service Lifecycle', () {
       testWidgets('initializes service on mount', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -642,7 +636,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -651,29 +645,29 @@ void main() {
         expect(mockService.methodCalls, contains('initialize'));
       });
 
-      testWidgets('passes ftmsDevice to widget', (WidgetTester tester) async {
+      testWidgets('passes service to widget', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: const SessionSelectorState(),
         );
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
         ));
 
         final widget = tester.widget<FTMSessionSelectorTab>(find.byType(FTMSessionSelectorTab));
-        expect(widget.ftmsDevice, mockDevice);
+        expect(widget.service, mockService);
       });
     });
 
     group('Expandable Card Display', () {
       testWidgets('shows expand_more icon when collapsed', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -686,7 +680,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),
@@ -699,7 +693,7 @@ void main() {
 
       testWidgets('shows expand_less icon when expanded', (WidgetTester tester) async {
         mockService = MockSessionSelectorService(
-          ftmsDevice: mockDevice,
+          
           initialState: SessionSelectorState(
             status: SessionSelectorLoadingStatus.loaded,
             deviceType: DeviceType.rower,
@@ -716,7 +710,7 @@ void main() {
 
         await tester.pumpWidget(createTestApp(
           child: FTMSessionSelectorTab(
-            ftmsDevice: mockDevice,
+            
             writeCommand: (_) async {},
             service: mockService,
           ),

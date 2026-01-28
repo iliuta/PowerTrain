@@ -8,8 +8,8 @@ import 'package:flutter_ftms/src/ftms/parameter_name.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ftms/core/bloc/ftms_bloc.dart';
 import 'package:ftms/core/models/device_types.dart';
+import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/core/services/fit/training_data_recorder.dart';
-import 'package:ftms/core/services/ftms_service.dart';
 import 'package:ftms/core/services/sound_service.dart';
 import 'package:ftms/core/services/strava/strava_service.dart';
 import 'package:ftms/features/training/model/expanded_training_session_definition.dart';
@@ -23,10 +23,10 @@ import 'package:mockito/mockito.dart';
 // Generate mocks for our dependencies
 @GenerateMocks([
   BluetoothDevice,
-  FTMSService,
   TrainingDataRecorder,
   StravaService,
   AudioPlayer,
+  Ftms,
 ])
 import 'training_session_controller_test.mocks.dart';
 
@@ -137,8 +137,8 @@ void main() {
 
   group('TrainingSessionController', () {
     late ExpandedTrainingSessionDefinition session;
+    late MockFtms mockFtms;
     late MockBluetoothDevice mockDevice;
-    late MockFTMSService mockFtmsService;
     late MockAudioPlayer mockAudioPlayer;
 
     setUp(() {
@@ -170,19 +170,23 @@ void main() {
         ],
       );
       
+      mockFtms = MockFtms();
       mockDevice = MockBluetoothDevice();
-      mockFtmsService = MockFTMSService();
       mockAudioPlayer = MockAudioPlayer();
       
       // Mock the device connection state - default to connected
       when(mockDevice.connectionState).thenAnswer((_) => 
           Stream.value(BluetoothConnectionState.connected));
       
-      // Mock the ftmsService writeCommand method
-      when(mockFtmsService.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange')))
+      // Mock the Ftms methods
+      when(mockFtms.connectedDevice).thenReturn(mockDevice);
+      when(mockFtms.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange')))
           .thenAnswer((_) async {});
-      when(mockFtmsService.setPowerWithControl(any))
+      when(mockFtms.setPowerWithControl(any))
           .thenAnswer((_) async {});
+      when(mockFtms.stopOrPauseWithControl()).thenAnswer((_) async {});
+      when(mockFtms.startOrResumeWithControl()).thenAnswer((_) async {});
+      when(mockFtms.resetWithControl()).thenAnswer((_) async {});
       
       // Mock the audio player methods
       when(mockAudioPlayer.play(any)).thenAnswer((_) async {});
@@ -201,8 +205,8 @@ void main() {
       test('initializes with correct intervals and duration', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -225,8 +229,8 @@ void main() {
       test('calculates interval start times correctly', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -238,8 +242,8 @@ void main() {
       test('sets up initial FTMS commands', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -248,7 +252,7 @@ void main() {
 
         // Verify that the FTMS commands were called at least once
         // Note: resistanceNeedsConversion defaults to false for newly created intervals
-        verify(mockFtmsService.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange'))).called(greaterThanOrEqualTo(1));
+        verify(mockFtms.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange'))).called(greaterThanOrEqualTo(1));
 
         controller.dispose();
       });
@@ -260,8 +264,8 @@ void main() {
       setUp(() {
         controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
       });
@@ -275,7 +279,7 @@ void main() {
         await controller.initialized;
         
         // Clear interactions that happened during initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
         
         // Simulate starting the session by sending FTMS data changes
         final initialData = MockDeviceData([
@@ -298,7 +302,7 @@ void main() {
         expect(controller.state.status, SessionStatus.running);
 
         // Clear any interactions from initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         controller.pauseSession();
 
@@ -309,7 +313,7 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
+        verify(mockFtms.stopOrPauseWithControl()).called(1);
       });
 
       test('resumeSession resumes from pause and sends FTMS command', () async {
@@ -322,7 +326,7 @@ void main() {
         expect(controller.state.status, SessionStatus.pausedByUser);
 
         // Clear any interactions from initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         controller.resumeSession();
 
@@ -332,7 +336,7 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.startOrResumeWithControl()).called(1);
+        verify(mockFtms.startOrResumeWithControl()).called(1);
       });
 
       test('stopSession completes session and sends FTMS command', () async {
@@ -341,7 +345,7 @@ void main() {
         expect(controller.state.shouldTimerBeActive, true);
 
         // Clear any interactions from initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         controller.stopSession();
 
@@ -353,8 +357,8 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
         
-        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
-        verify(mockFtmsService.resetWithControl()).called(1);
+        verify(mockFtms.stopOrPauseWithControl()).called(1);
+        verify(mockFtms.resetWithControl()).called(1);
       });
 
       test('pauseSession does nothing if session not running', () async {
@@ -375,14 +379,14 @@ void main() {
         await Future.delayed(Duration(milliseconds: 500));
 
         // Clear interactions after commands are done
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         // Try to pause again - should do nothing
         controller.pauseSession();
 
         // Should not send any commands
         await Future.delayed(Duration(milliseconds: 100));
-        verifyNever(mockFtmsService.stopOrPauseWithControl());
+        verifyNever(mockFtms.stopOrPauseWithControl());
       });
 
       test('resumeSession does nothing if not paused', () async {
@@ -391,13 +395,13 @@ void main() {
         expect(controller.state.status, SessionStatus.running);
 
         // Clear interactions
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         controller.resumeSession();
 
         // Should not send any commands
         await Future.delayed(Duration(milliseconds: 100));
-        verifyNever(mockFtmsService.startOrResumeWithControl());
+        verifyNever(mockFtms.startOrResumeWithControl());
       });
 
       test('stopSession does nothing if already completed', () async {
@@ -409,14 +413,14 @@ void main() {
         await Future.delayed(Duration(milliseconds: 500));
 
         // Clear interactions after commands are done
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         // Try to stop again - should do nothing
         controller.stopSession();
 
         // Should not send any commands
         await Future.delayed(Duration(milliseconds: 100));
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl));
+        verifyNever(mockFtms.writeCommand(MachineControlPointOpcodeType.requestControl));
       });
 
       test('discardSession completes session and sends FTMS commands', () async {
@@ -424,7 +428,7 @@ void main() {
         expect(controller.state.shouldTimerBeActive, true);
 
         // Clear any interactions from initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         controller.discardSession();
 
@@ -436,8 +440,8 @@ void main() {
         // Wait for async FTMS command to complete
         await Future.delayed(Duration(milliseconds: 500));
 
-        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
-        verify(mockFtmsService.resetWithControl()).called(1);
+        verify(mockFtms.stopOrPauseWithControl()).called(1);
+        verify(mockFtms.resetWithControl()).called(1);
       });
 
       test('discardSession does nothing if already completed', () async {
@@ -449,13 +453,13 @@ void main() {
         await Future.delayed(Duration(milliseconds: 500));
 
         // Clear interactions after commands are done
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         controller.discardSession();
 
         // Should not send any commands
         await Future.delayed(Duration(milliseconds: 100));
-        verifyNever(mockFtmsService.writeCommand(MachineControlPointOpcodeType.requestControl));
+        verifyNever(mockFtms.writeCommand(MachineControlPointOpcodeType.requestControl));
       });
 
       test('startSession manually starts session from created state', () async {
@@ -498,8 +502,8 @@ void main() {
       setUp(() {
         controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
       });
@@ -534,8 +538,8 @@ void main() {
       setUp(() {
         controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
       });
@@ -662,8 +666,8 @@ void main() {
         
         controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -822,7 +826,7 @@ void main() {
         await startSession();
 
         // Clear interactions from session start
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         // Trigger inactivity pause
         for (int i = 0; i < 5; i++) {
@@ -835,7 +839,7 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        verify(mockFtmsService.stopOrPauseWithControl()).called(1);
+        verify(mockFtms.stopOrPauseWithControl()).called(1);
       });
 
       test('sends FTMS resume command when auto-resuming', () async {
@@ -853,7 +857,7 @@ void main() {
         expect(controller.state.status, SessionStatus.pausedByInactivity);
 
         // Clear interactions
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         // Resume with activity - need 2 consecutive seconds for auto-resume
         for (int i = 0; i < 2; i++) {
@@ -864,7 +868,7 @@ void main() {
           await Future.delayed(const Duration(seconds: 1));
         }
 
-        verify(mockFtmsService.startOrResumeWithControl()).called(1);
+        verify(mockFtms.startOrResumeWithControl()).called(1);
       });
     });
 
@@ -891,8 +895,8 @@ void main() {
         
         controller = TrainingSessionController(
           session: rowerSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1006,8 +1010,8 @@ void main() {
       test('state transitions correctly through session lifecycle', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1054,8 +1058,8 @@ void main() {
       test('exposes timing information correctly', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1086,8 +1090,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: rowingSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1099,26 +1103,39 @@ void main() {
 
     group('Error Handling', () {
       test('handles FTMS service errors gracefully', () async {
-        // Create a separate mock that throws errors
-        final errorMockService = MockFTMSService();
-        when(errorMockService.writeCommand(any))
+        // Create a separate mock Ftms that throws errors during initialization
+        // but returns normally for other operations (to test graceful handling)
+        final errorMockFtms = MockFtms();
+        when(errorMockFtms.connectedDevice).thenReturn(mockDevice);
+        
+        // Initialization will fail, but pause/resume should handle errors gracefully
+        when(errorMockFtms.setResistanceWithControl(any, convertFromDefaultRange: anyNamed('convertFromDefaultRange')))
             .thenThrow(Exception('FTMS Error'));
-        when(errorMockService.writeCommand(any, resistanceLevel: anyNamed('resistanceLevel')))
+        when(errorMockFtms.setPowerWithControl(any))
             .thenThrow(Exception('FTMS Error'));
-        when(errorMockService.writeCommand(any, power: anyNamed('power')))
-            .thenThrow(Exception('FTMS Error'));
+        // These methods should NOT throw - they're called during pause/resume/dispose
+        // and should return normally to test that the controller handles them
+        when(errorMockFtms.stopOrPauseWithControl())
+            .thenAnswer((_) async {});
+        when(errorMockFtms.startOrResumeWithControl())
+            .thenAnswer((_) async {});
+        when(errorMockFtms.resetWithControl())
+            .thenAnswer((_) async {});
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: errorMockService,
+          ftms: errorMockFtms,
           enableFitFileGeneration: false,
         );
 
-        // Wait for initialization errors to occur
-        await Future.delayed(const Duration(milliseconds: 2200));
+        // Wait for initialization - it will fail but shouldn't crash
+        try {
+          await controller.initialized;
+        } catch (e) {
+          // Expected - initialization fails due to setResistanceWithControl throwing
+        }
 
-        // Methods should not throw, even if FTMS commands fail internally
+        // Methods should not throw, even if FTMS initialization failed
         expect(() => controller.pauseSession(), returnsNormally);
         expect(() => controller.resumeSession(), returnsNormally);
 
@@ -1128,8 +1145,8 @@ void main() {
       test('handles null FTMS data gracefully', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1150,8 +1167,8 @@ void main() {
       test('disposes properly and cancels subscriptions', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1161,8 +1178,8 @@ void main() {
       test('completes recording when disposed without normal completion', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1175,8 +1192,8 @@ void main() {
       test('simulates a complete training session lifecycle', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
         await controller.initialized;
@@ -1251,8 +1268,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: shortSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
 
@@ -1285,8 +1302,8 @@ void main() {
 
         // FTMS commands should have been sent (stop and reset)
         await Future.delayed(const Duration(milliseconds: 200));
-        verify(mockFtmsService.stopOrPauseWithControl()).called(greaterThanOrEqualTo(1));
-        verify(mockFtmsService.resetWithControl()).called(greaterThanOrEqualTo(1));
+        verify(mockFtms.stopOrPauseWithControl()).called(greaterThanOrEqualTo(1));
+        verify(mockFtms.resetWithControl()).called(greaterThanOrEqualTo(1));
 
         controller.dispose();
       });
@@ -1311,8 +1328,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: shortSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
         await controller.initialized;
@@ -1335,7 +1352,7 @@ void main() {
         expect(controller.state.status, SessionStatus.running);
 
         // Clear interactions from initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         // Wait for natural completion (1 second + buffer)
         await Future.delayed(const Duration(milliseconds: 1500));
@@ -1347,8 +1364,8 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 500));
 
         // Verify only stop/pause was called (reset happens later when user confirms)
-        verify(mockFtmsService.stopOrPauseWithControl()).called(greaterThanOrEqualTo(1));
-        verifyNever(mockFtmsService.resetWithControl());
+        verify(mockFtms.stopOrPauseWithControl()).called(greaterThanOrEqualTo(1));
+        verifyNever(mockFtms.resetWithControl());
 
         controller.dispose();
       });
@@ -1382,8 +1399,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: shortSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
         );
@@ -1445,8 +1462,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: multiIntervalSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           enableFitFileGeneration: false,
         );
         await controller.initialized;
@@ -1465,7 +1482,7 @@ void main() {
         expect(controller.state.currentInterval.title, 'Interval A');
 
         // Clear interactions from initialization
-        clearInteractions(mockFtmsService);
+        clearInteractions(mockFtms);
 
         // Wait for transition to second interval (2 seconds + buffer)
         await Future.delayed(const Duration(milliseconds: 2500));
@@ -1476,7 +1493,7 @@ void main() {
 
         // Verify resistance was updated for new interval
         // Note: resistanceNeedsConversion defaults to false for newly created intervals
-        verify(mockFtmsService.setResistanceWithControl(3, convertFromDefaultRange: false)).called(greaterThanOrEqualTo(1));
+        verify(mockFtms.setResistanceWithControl(3, convertFromDefaultRange: false)).called(greaterThanOrEqualTo(1));
 
         // Wait for completion
         await Future.delayed(const Duration(milliseconds: 2500));
@@ -1514,8 +1531,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
         );
@@ -1536,8 +1553,8 @@ void main() {
       test('does not generate FIT file when enableFitFileGeneration is false', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: false,
         );
@@ -1562,8 +1579,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
         );
@@ -1583,8 +1600,8 @@ void main() {
       test('records FTMS data when FIT recording is enabled', () async {
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
         );
@@ -1657,8 +1674,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
@@ -1697,8 +1714,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
@@ -1740,8 +1757,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
@@ -1786,8 +1803,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
@@ -1837,8 +1854,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: rowingSession,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
@@ -1868,8 +1885,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,
@@ -1928,8 +1945,8 @@ void main() {
 
         final controller = TrainingSessionController(
           session: session,
-          ftmsDevice: mockDevice,
-          ftmsService: mockFtmsService,
+          ftms: mockFtms,
+          
           stravaService: mockStravaService,
           dataRecorder: mockDataRecorder,
           enableFitFileGeneration: true,

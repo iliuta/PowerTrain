@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../../core/config/live_data_display_config.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../training_session_controller.dart';
@@ -13,14 +12,12 @@ class TrainingSessionBody extends StatelessWidget {
   final ExpandedTrainingSessionDefinition session;
   final TrainingSessionController controller;
   final LiveDataDisplayConfig? config;
-  final BluetoothDevice ftmsDevice;
 
   const TrainingSessionBody({
     super.key,
     required this.session,
     required this.controller,
     this.config,
-    required this.ftmsDevice,
   });
 
   @override
@@ -82,7 +79,6 @@ class TrainingSessionBody extends StatelessWidget {
                   Expanded(
                     flex: 3,
                     child: LiveFTMSDataWidget(
-                      ftmsDevice: ftmsDevice,
                       targets: controller.state.currentInterval.targets,
                       machineType: session.ftmsMachineType,
                     ),

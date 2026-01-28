@@ -201,9 +201,7 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
                 stream: SupportedBTDeviceManager().connectedDevicesStream,
                 initialData: SupportedBTDeviceManager().allConnectedDevices,
                 builder: (context, snapshot) {
-                  final connectedDevices = snapshot.data ?? [];
-                  final connectedDevice = connectedDevices.isNotEmpty ? connectedDevices.first.connectedDevice : null;
-                  return BottomActionButtons(connectedDevice: connectedDevice);
+                  return const BottomActionButtons();
                 },
               ),
             ),

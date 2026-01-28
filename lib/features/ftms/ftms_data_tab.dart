@@ -4,7 +4,6 @@ import 'package:ftms/core/models/device_types.dart';
 import '../../core/utils/logger.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/bloc/ftms_bloc.dart';
 import '../../features/training/services/training_session_storage_service.dart';
 import '../training/training_session_expansion_panel.dart';
@@ -16,10 +15,9 @@ import '../../core/widgets/ftms_live_data_display_widget.dart';
 import '../../core/services/ftms_data_processor.dart';
 import '../settings/model/user_settings.dart';
 import '../../core/services/user_settings_service.dart';
-class FTMSDataTab extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
 
-  const FTMSDataTab({super.key, required this.ftmsDevice});
+class FTMSDataTab extends StatefulWidget {
+  const FTMSDataTab({super.key});
 
   @override
   State<FTMSDataTab> createState() => FTMSDataTabState();
@@ -233,7 +231,6 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                               builder: (context) =>
                                   TrainingSessionProgressScreen(
                                 session: selectedSession,
-                                ftmsDevice: widget.ftmsDevice,
                                 gpxAssetPath: null,
                               ),
                             ),

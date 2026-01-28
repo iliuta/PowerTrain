@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../core/bloc/ftms_bloc.dart';
+import '../../core/services/devices/ftms.dart';
 import '../../l10n/app_localizations.dart';
 
 class FTMSDeviceDataFeaturesTab extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
-  const FTMSDeviceDataFeaturesTab({super.key, required this.ftmsDevice});
+  const FTMSDeviceDataFeaturesTab({super.key});
 
   @override
   State<FTMSDeviceDataFeaturesTab> createState() => FTMSDeviceDataFeaturesTabState();
@@ -115,7 +115,7 @@ class FTMSDeviceDataFeaturesTabState extends State<FTMSDeviceDataFeaturesTab> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Device: ${widget.ftmsDevice.platformName}",
+                      "Device: ${Ftms().name}",
                       style: const TextStyle(fontSize: 14, color: Colors.black54),
                     ),
                     const SizedBox(height: 8),

@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:flutter_ftms/flutter_ftms.dart';
 import '../../../core/models/device_types.dart';
 import '../../../core/services/devices/ftms.dart';
 import '../../../core/services/analytics/analytics_service.dart';
-import '../../../core/services/ftms_service.dart';
 import '../../../core/services/user_settings_service.dart';
 import '../../../core/services/gpx/gpx_file_provider.dart';
 import '../../../core/services/gpx/gpx_data.dart';
@@ -25,28 +23,32 @@ typedef StateCallback = void Function(SessionSelectorState state);
 abstract class FtmsDeviceOperations {
   DeviceType? getDeviceType();
   Stream<DeviceType> get deviceTypeStream;
-  Future<bool> supportsResistanceControl(BluetoothDevice device);
-  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange(BluetoothDevice device);
+  String getDeviceName();
+  Future<bool> supportsResistanceControl();
+  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange();
 }
 
-/// Default implementation using real FTMS service
+/// Default implementation using real FTMS service via Ftms singleton
 class DefaultFtmsDeviceOperations implements FtmsDeviceOperations {
+  final Ftms _ftms = Ftms();
+  
   @override
-  DeviceType? getDeviceType() => Ftms().deviceType;
+  DeviceType? getDeviceType() => _ftms.deviceType;
 
   @override
-  Stream<DeviceType> get deviceTypeStream => Ftms().deviceTypeStream;
+  Stream<DeviceType> get deviceTypeStream => _ftms.deviceTypeStream;
 
   @override
-  Future<bool> supportsResistanceControl(BluetoothDevice device) async {
-    final service = FTMSService(device);
-    return await service.supportsResistanceControl();
+  String getDeviceName() => _ftms.name;
+
+  @override
+  Future<bool> supportsResistanceControl() async {
+    return await _ftms.supportsResistanceControl();
   }
 
   @override
-  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange(BluetoothDevice device) async {
-    final service = FTMSService(device);
-    return await service.readSupportedResistanceLevelRange();
+  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange() async {
+    return await _ftms.readSupportedResistanceLevelRange();
   }
 }
 
@@ -98,7 +100,6 @@ class DefaultGpxOperations implements GpxOperations {
 
 /// Service that manages the business logic for session selector
 class SessionSelectorService {
-  final BluetoothDevice ftmsDevice;
   final FtmsDeviceOperations _ftmsOperations;
   final SettingsOperations _settingsOperations;
   final TrainingSessionOperations _trainingSessionOperations;
@@ -112,7 +113,6 @@ class SessionSelectorService {
   final List<StateCallback> _listeners = [];
 
   SessionSelectorService({
-    required this.ftmsDevice,
     FtmsDeviceOperations? ftmsOperations,
     SettingsOperations? settingsOperations,
     TrainingSessionOperations? trainingSessionOperations,
@@ -241,8 +241,8 @@ class SessionSelectorService {
     if (_state.deviceType == null) return;
 
     try {
-      final supportsResistance = await _ftmsOperations.supportsResistanceControl(ftmsDevice);
-      final range = await _ftmsOperations.readSupportedResistanceLevelRange(ftmsDevice);
+      final supportsResistance = await _ftmsOperations.supportsResistanceControl();
+      final range = await _ftmsOperations.readSupportedResistanceLevelRange();
 
       await _logFtmsDeviceDataOnce(supportsResistance, range);
 
@@ -300,7 +300,7 @@ class SessionSelectorService {
   ) async {
     if (_ftmsDataEventLogged) return;
 
-    final deviceName = ftmsDevice.platformName;
+    final deviceName = _ftmsOperations.getDeviceName();
     final resistanceRangeStr = range != null
         ? '${range.minResistanceLevel}-${range.maxResistanceLevel}'
         : 'none';

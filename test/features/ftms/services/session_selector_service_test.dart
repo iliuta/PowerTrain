@@ -27,24 +27,28 @@ class MockFtmsDeviceOperations implements FtmsDeviceOperations {
   final StreamController<DeviceType> _deviceTypeController = StreamController<DeviceType>.broadcast();
   bool supportsResistanceResult = true;
   SupportedResistanceLevelRange? resistanceRangeResult;
+  String deviceNameToReturn = 'Test Device';
   
   @override
   DeviceType? getDeviceType() => deviceTypeToReturn;
   
   @override
   Stream<DeviceType> get deviceTypeStream => _deviceTypeController.stream;
+
+  @override
+  String getDeviceName() => deviceNameToReturn;
   
   void emitDeviceType(DeviceType type) {
     _deviceTypeController.add(type);
   }
   
   @override
-  Future<bool> supportsResistanceControl(BluetoothDevice device) async {
+  Future<bool> supportsResistanceControl() async {
     return supportsResistanceResult;
   }
   
   @override
-  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange(BluetoothDevice device) async {
+  Future<SupportedResistanceLevelRange?> readSupportedResistanceLevelRange() async {
     return resistanceRangeResult;
   }
   
@@ -142,7 +146,6 @@ void main() {
     )).thenAnswer((_) async {});
     
     service = SessionSelectorService(
-      ftmsDevice: mockDevice,
       ftmsOperations: mockFtmsOperations,
       settingsOperations: mockSettingsOperations,
       trainingSessionOperations: mockTrainingSessionOperations,

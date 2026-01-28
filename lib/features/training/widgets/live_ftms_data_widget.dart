@@ -9,13 +9,11 @@ import '../../../core/services/ftms_data_processor.dart';
 
 /// Widget for displaying live FTMS data during training
 class LiveFTMSDataWidget extends StatefulWidget {
-  final BluetoothDevice ftmsDevice;
   final Map<String, dynamic>? targets;
   final DeviceType machineType;
 
   const LiveFTMSDataWidget({
     super.key,
-    required this.ftmsDevice,
     this.targets,
     required this.machineType,
   });

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/models/device_types.dart';
 import 'package:ftms/core/services/analytics/analytics_service.dart';
+import 'package:ftms/core/services/devices/ftms.dart';
 import 'package:ftms/features/training/services/training_session_storage_service.dart';
 import 'package:ftms/core/config/live_data_display_config.dart';
 import 'package:ftms/features/settings/model/user_settings.dart';
@@ -14,11 +14,8 @@ import 'model/training_session.dart';
 
 /// A dedicated page for browsing and selecting training sessions
 class TrainingSessionsPage extends StatefulWidget {
-  final BluetoothDevice? connectedDevice;
-
   const TrainingSessionsPage({
     super.key,
-    this.connectedDevice,
   });
 
   @override
@@ -26,6 +23,7 @@ class TrainingSessionsPage extends StatefulWidget {
 }
 
 class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
+  final Ftms _ftms = Ftms();
   List<TrainingSessionDefinition>? _sessions;
   bool _isLoading = true;
   String? _error;
@@ -130,7 +128,7 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
   }
 
   void _onSessionSelected(TrainingSessionDefinition session) {
-    if (widget.connectedDevice == null) {
+    if (!_ftms.isConnected) {
       // Show helpful dialog about connecting a device
       showDialog(
         context: context,
@@ -161,7 +159,6 @@ class _TrainingSessionsPageState extends State<TrainingSessionsPage> {
       MaterialPageRoute(
         builder: (context) => TrainingSessionProgressScreen(
           session: session,
-          ftmsDevice: widget.connectedDevice!,
           gpxAssetPath: null,
         ),
       ),
