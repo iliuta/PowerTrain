@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// A visual metronome representation showing a circle moving left-right
-/// synchronized with the audio metronome ticks.
-/// The circle moves from left (pull phase - faster) to right (recovery phase - slower).
+/// A compact version of the metronome visualizer for use in the app bar.
+/// Shows a smaller horizontal track with a moving circle.
 class MetronomeVisualizer extends StatelessWidget {
   final double targetCadence;
   final int tickCount;
@@ -29,89 +28,57 @@ class MetronomeVisualizer extends StatelessWidget {
         ? (cycleSeconds / 3 * 1000).round()  // Pull: 1/3 of cycle
         : (cycleSeconds * 2 / 3 * 1000).round(); // Recovery: 2/3 of cycle
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: SizedBox(
-          height: 30,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final trackWidth = constraints.maxWidth;
-              final circleRadius = 10.0;
-              
-              // Calculate horizontal offset for the circle
-              // Position 0.0 = left, 1.0 = right
-              final offset = (trackWidth - circleRadius * 2) * position;
+    return SizedBox(
+      height: 16,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final trackWidth = constraints.maxWidth;
+          const circleRadius = 6.0;
+          
+          // Calculate horizontal offset for the circle
+          // Position 0.0 = left, 1.0 = right
+          final offset = (trackWidth - circleRadius * 2) * position;
 
-              return Stack(
-                children: [
-                  // Track bar
-                  Positioned(
-                    left: circleRadius,
-                    right: circleRadius,
-                    top: 14,
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.blue[200],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+          return Stack(
+            children: [
+              // Track bar
+              Positioned(
+                left: circleRadius,
+                right: circleRadius,
+                top: 7,
+                child: Container(
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: Colors.blue[200],
+                    borderRadius: BorderRadius.circular(1),
                   ),
-                  // End markers
-                  Positioned(
-                    left: 0,
-                    top: 10,
-                    child: Container(
-                      width: circleRadius * 2,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.blue[300],
-                        borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              // Animated circle with smooth transition
+              AnimatedPositioned(
+                duration: Duration(milliseconds: animationDuration),
+                curve: isPullPhase ? Curves.easeOutCubic : Curves.easeInOutSine,
+                left: offset,
+                top: 2,
+                child: Container(
+                  width: circleRadius * 2,
+                  height: circleRadius * 2,
+                  decoration: BoxDecoration(
+                    color: Colors.blue[700],
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        spreadRadius: 1,
                       ),
-                    ),
+                    ],
                   ),
-                  Positioned(
-                    right: 0,
-                    top: 10,
-                    child: Container(
-                      width: circleRadius * 2,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.blue[300],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                  ),
-                  // Animated circle with smooth transition
-                  // Use different curves for pull (faster, explosive) vs recovery (slower, smooth)
-                  AnimatedPositioned(
-                    duration: Duration(milliseconds: animationDuration),
-                    curve: isPullPhase ? Curves.easeOutCubic : Curves.easeInOutSine,
-                    left: offset,
-                    top: 6,
-                    child: Container(
-                      width: circleRadius * 2,
-                      height: circleRadius * 2,
-                      decoration: BoxDecoration(
-                        color: Colors.blue[700],
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withValues(alpha: 0.5),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -5,7 +5,6 @@ import '../training_session_controller.dart';
 import 'session_progress_bar.dart';
 import 'training_interval_list.dart';
 import 'live_ftms_data_widget.dart';
-import 'metronome_visualizer.dart';
 
 /// Body content for the training session screen
 class TrainingSessionBody extends StatelessWidget {
@@ -48,13 +47,6 @@ class TrainingSessionBody extends StatelessWidget {
                     flex: 1,
                     child: Column(
                       children: [
-                        // Show metronome visualizer when metronome is active
-                        if (controller.currentMetronomeTarget != null)
-                          MetronomeVisualizer(
-                            targetCadence: controller.currentMetronomeTarget!,
-                            tickCount: controller.metronomeTickCount,
-                            isPullPhase: controller.isPullPhase,
-                          ),
                         // Interval list
                         Expanded(
                           child: TrainingIntervalList(
