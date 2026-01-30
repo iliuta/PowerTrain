@@ -81,7 +81,7 @@ class _TrainingSessionAppBarState extends State<TrainingSessionAppBar> {
           if (widget.controller.currentMetronomeTarget != null) ...[
             const SizedBox(width: 8),
             SizedBox(
-              width: 80,
+              width: 120,
               child: MetronomeVisualizer(
                 targetCadence: widget.controller.currentMetronomeTarget!,
                 tickCount: widget.controller.metronomeTickCount,

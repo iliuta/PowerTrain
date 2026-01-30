@@ -29,11 +29,11 @@ class MetronomeVisualizer extends StatelessWidget {
         : (cycleSeconds * 2 / 3 * 1000).round(); // Recovery: 2/3 of cycle
 
     return SizedBox(
-      height: 16,
+      height: 20,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final trackWidth = constraints.maxWidth;
-          const circleRadius = 6.0;
+          const circleRadius = 7.0;
           
           // Calculate horizontal offset for the circle
           // Position 0.0 = left, 1.0 = right
@@ -45,7 +45,7 @@ class MetronomeVisualizer extends StatelessWidget {
               Positioned(
                 left: circleRadius,
                 right: circleRadius,
-                top: 7,
+                top: 9,
                 child: Container(
                   height: 2,
                   decoration: BoxDecoration(
@@ -59,7 +59,7 @@ class MetronomeVisualizer extends StatelessWidget {
                 duration: Duration(milliseconds: animationDuration),
                 curve: isPullPhase ? Curves.easeOutCubic : Curves.easeInOutSine,
                 left: offset,
-                top: 2,
+                top: 3,
                 child: Container(
                   width: circleRadius * 2,
                   height: circleRadius * 2,
