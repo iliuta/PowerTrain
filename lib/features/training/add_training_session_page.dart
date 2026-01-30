@@ -80,11 +80,15 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
       });
 
       // Initialize form with existing session data if in edit mode
-      if (_isEditMode) {
-        _initializeFromExistingSession();
-      } else {
-        _initializeWithTemplate();
-      }
+      // Use addPostFrameCallback to ensure context is fully available for localization
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_isEditMode) {
+          _initializeFromExistingSession();
+        } else {
+          _initializeWithTemplate();
+        }
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -102,9 +106,15 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
   }
 
   void _initializeWithTemplate({bool isDistanceBased = false}) {
-    // Create templated session
+    // Create templated session with localized title
+    final machineTypeText = widget.machineType == DeviceType.rower 
+        ? AppLocalizations.of(context)!.rowingMachine
+        : AppLocalizations.of(context)!.indoorBike;
+    final title = AppLocalizations.of(context)!.newSessionGeneratedTitle(machineTypeText);
+    
     final templateSession = TrainingSessionDefinition.createTemplate(
       widget.machineType,
+      title: title,
       isDistanceBased: isDistanceBased,
     );
     _initializeSession(templateSession);

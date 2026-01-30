@@ -9,7 +9,7 @@ on:
     branches: [ main ]
 
 env:
-  FLUTTER_VERSION: '3.38.6'
+  FLUTTER_VERSION: '3.38.9'
 
 jobs:
   build:

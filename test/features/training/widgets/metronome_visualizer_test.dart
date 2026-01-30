@@ -17,14 +17,14 @@ void main() {
         ),
       );
 
-      // Should render a Card
-      expect(find.byType(Card), findsOneWidget);
-
-      // Should render a Stack with positioned elements
-      expect(find.byType(Stack), findsNWidgets(2)); // One from Scaffold, one from our widget
+      // Should render a Stack with positioned elements (one from our widget, one from AppBar)
+      expect(find.byType(Stack), findsWidgets);
 
       // Should render the animated circle
       expect(find.byType(AnimatedPositioned), findsOneWidget);
+
+      // Should render a LayoutBuilder for responsive design
+      expect(find.byType(LayoutBuilder), findsOneWidget);
     });
 
     testWidgets('circle position changes based on phase', (WidgetTester tester) async {
@@ -186,11 +186,11 @@ void main() {
         ),
       );
 
-      // Should have multiple Positioned widgets (track bar + 2 end markers + animated circle)
-      expect(find.byType(Positioned), findsNWidgets(4)); // track bar + 2 end markers + circle
+      // Should have Positioned/AnimatedPositioned widgets (track bar + animated circle)
+      expect(find.byType(Positioned), findsNWidgets(2)); // track bar + circle
 
-      // Should have containers for visual elements
-      expect(find.byType(Container), findsNWidgets(4)); // track bar + 2 end markers + circle
+      // Should have containers for visual elements (track bar + circle)
+      expect(find.byType(Container), findsNWidgets(2)); // track bar + circle
     });
 
     testWidgets('uses different curves for pull and recovery phases', (WidgetTester tester) async {

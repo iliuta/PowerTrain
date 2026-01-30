@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import '../training/training_sessions_page.dart';
 import '../settings/settings_page.dart';
 import '../fit_files/fit_file_manager_page.dart';
-import 'package:flutter_ftms/flutter_ftms.dart';
 import 'help_page.dart';
 
 /// A bottom widget with action buttons for navigation and device control
 class BottomActionButtons extends StatelessWidget {
-  final BluetoothDevice? connectedDevice;
-
   const BottomActionButtons({
     super.key,
-    this.connectedDevice,
   });
 
   @override
@@ -39,9 +35,7 @@ class BottomActionButtons extends StatelessWidget {
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => TrainingSessionsPage(
-                connectedDevice: connectedDevice,
-              ),
+              builder: (context) => const TrainingSessionsPage(),
             ),
           );
         },

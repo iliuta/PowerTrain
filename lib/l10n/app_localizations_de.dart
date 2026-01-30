@@ -119,6 +119,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get freeRide => 'Freie Fahrt';
 
   @override
+  String freeRideSessionTitle(Object target) {
+    return 'Freie Fahrt $target';
+  }
+
+  @override
   String get time => 'Zeit';
 
   @override
@@ -445,6 +450,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get newSessionTitle => 'Neuer Sitzungstitel';
+
+  @override
+  String newSessionGeneratedTitle(Object machineType) {
+    return 'Neuer Sitzungstitel $machineType';
+  }
 
   @override
   String get sessionTitleCannotBeEmpty => 'Sitzungstitel darf nicht leer sein';

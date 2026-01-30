@@ -5,6 +5,7 @@ import '../../settings/model/user_settings.dart';
 import '../model/expanded_training_session_definition.dart';
 import '../model/session_state.dart';
 import '../training_session_controller.dart';
+import 'metronome_visualizer.dart';
 
 /// App bar for the training session screen
 class TrainingSessionAppBar extends StatefulWidget
@@ -70,12 +71,24 @@ class _TrainingSessionAppBarState extends State<TrainingSessionAppBar> {
       ),
       title: Row(
         children: [
-          Expanded(
+          Flexible(
             child: Text(
               widget.session.title,
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          // Metronome visualizer - compact version in app bar
+          if (widget.controller.currentMetronomeTarget != null) ...[
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 120,
+              child: MetronomeVisualizer(
+                targetCadence: widget.controller.currentMetronomeTarget!,
+                tickCount: widget.controller.metronomeTickCount,
+                isPullPhase: widget.controller.isPullPhase,
+              ),
+            ),
+          ],
           if (isWaitingForAutoStart) ...[
             const SizedBox(width: 8),
             const Icon(

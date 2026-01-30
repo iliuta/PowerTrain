@@ -92,12 +92,9 @@ class TrainingSessionDefinition {
   }
 
   /// Creates a templated training session based on machine type
-  static TrainingSessionDefinition createTemplate(DeviceType machineType, {bool isDistanceBased = false, int? workoutValue, Map<String, dynamic>? targets, int? resistanceLevel, bool hasWarmup = true, bool hasCooldown = true}) {
+  static TrainingSessionDefinition createTemplate(DeviceType machineType, {required String title, bool isDistanceBased = false, int? workoutValue, Map<String, dynamic>? targets, int? resistanceLevel, bool hasWarmup = true, bool hasCooldown = true}) {
     final defaultWorkoutValue = isDistanceBased ? 5000 : 1200; // 5km for distance, 20min for time
     final actualWorkoutValue = workoutValue ?? defaultWorkoutValue;
-    final String machineName = machineType == DeviceType.rower ? 'Rowing' : 'Cycling';
-    final String sessionType = isDistanceBased ? 'Distance' : 'Time';
-    final String title = 'New $machineName $sessionType Training Session';
 
     final intervals = machineType == DeviceType.indoorBike
         ? _createBikeTemplate(actualWorkoutValue, isDistanceBased: isDistanceBased, targets: targets, resistanceLevel: resistanceLevel, hasWarmup: hasWarmup, hasCooldown: hasCooldown)

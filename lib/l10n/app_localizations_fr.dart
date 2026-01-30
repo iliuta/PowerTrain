@@ -24,7 +24,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get trainingSessions => 'Sessions d\'entraînement';
+  String get trainingSessions => 'Séances d\'entraînement';
 
   @override
   String get unsynchronizedActivities => 'Activités non synchronisées';
@@ -116,6 +116,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get freeRide => 'Sortie libre';
+
+  @override
+  String freeRideSessionTitle(Object target) {
+    return 'Sortie libre $target';
+  }
 
   @override
   String get time => 'Temps';
@@ -444,6 +449,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get newSessionTitle => 'Nouveau titre de session';
+
+  @override
+  String newSessionGeneratedTitle(Object machineType) {
+    return 'Nouvelle session $machineType';
+  }
 
   @override
   String get sessionTitleCannotBeEmpty =>
