@@ -349,16 +349,9 @@ class TrainingSessionController extends ChangeNotifier
     final lastValue = _lastActivityValue!;
 
     // Pace-based detection (rower): pace is in active range
-    // When inactive, pace is 0 or very high (>300 = 5:00/500m)
-    // When active, pace is between ~60 (1:00/500m) and 300 (5:00/500m)
+    // When active, pace is between ~30 (0:30/500m) and 300 (5:30/500m)
     if (paramName == 'Instantaneous Pace') {
-      final wasInactive = lastValue == 0 || lastValue > 300;
-      final isNowActive = currentValue > 0 && currentValue <= 300;
-      // Activity detected if:
-      // - Was inactive (0 or high pace) and now in active range, OR
-      // - Pace decreased significantly while already in active range
-      return (wasInactive && isNowActive) ||
-             (lastValue > 0 && currentValue < lastValue * 0.9 && isNowActive);
+      return currentValue > 30 && currentValue <= 330;
     }
 
     // Speed-based detection: speed increases above threshold
