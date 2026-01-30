@@ -106,6 +106,25 @@
       "unit": "kcal",
       "icon": "calories",
       "isCumulative": true
+    },
+    {
+      "name": "Stroke Rate",
+      "label": "Stroke Rate",
+      "labelI18n": {
+        "en": "Stroke Rate",
+        "fr": "Cadence",
+        "de": "Schlagfrequenz"
+      },
+      "display": "animatedRower",
+      "formatter": "intFormatter",
+      "unit": "spm",
+      "icon": "rowing",
+      "min": 15,
+      "max": 40,
+      "availableAsTarget": true,
+      "targetRange": 0.08,
+      "metronome": true,
+      "samplePeriodSeconds": 10
     }
   ]
 }
