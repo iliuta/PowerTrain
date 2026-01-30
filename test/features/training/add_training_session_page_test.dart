@@ -99,7 +99,7 @@ void main() {
         );
 
         // Wait for initialization
-        await tester.pumpAndSettle();
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
         // Verify the page title
         expect(find.text('Add Training Session'), findsOneWidget);
@@ -112,7 +112,8 @@ void main() {
         final titleField = find.byType(TextField).first;
         final TextField textFieldWidget = tester.widget(titleField);
         final TextEditingController controller = textFieldWidget.controller!;
-        expect(controller.text, contains('Cycling'));
+        expect(controller.text, isNotEmpty);
+        expect(controller.text, contains('Indoor Bike'));
       });
 
       testWidgets('initializes with template for new rower session', (tester) async {
@@ -130,7 +131,7 @@ void main() {
         );
 
         // Wait for initialization
-        await tester.pumpAndSettle();
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
         // Verify template was created (should have multiple intervals for rower)
         // Check that there are multiple interval cards rendered
@@ -140,7 +141,8 @@ void main() {
         final titleField = find.byType(TextField).first;
         final TextField textFieldWidget = tester.widget(titleField);
         final TextEditingController controller = textFieldWidget.controller!;
-        expect(controller.text, contains('Rowing'));
+        expect(controller.text, isNotEmpty);
+        expect(controller.text, contains('Rowing Machine'));
       });
 
       testWidgets('initializes from existing session for edit mode', (tester) async {

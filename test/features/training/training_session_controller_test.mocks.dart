@@ -1027,6 +1027,12 @@ class MockFtms extends _i1.Mock implements _i16.Ftms {
           as bool);
 
   @override
+  void resetDataProcessor() => super.noSuchMethod(
+    Invocation.method(#resetDataProcessor, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   _i7.Future<void> writeCommand(
     _i18.MachineControlPointOpcodeType? opcodeType, {
     int? resistanceLevel,

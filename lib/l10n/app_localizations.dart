@@ -280,6 +280,12 @@ abstract class AppLocalizations {
   /// **'Free Ride'**
   String get freeRide;
 
+  /// No description provided for @freeRideSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Ride {target}'**
+  String freeRideSessionTitle(Object target);
+
   /// No description provided for @time.
   ///
   /// In en, this message translates to:
@@ -849,6 +855,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Session Title'**
   String get newSessionTitle;
+
+  /// No description provided for @newSessionGeneratedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New {machineType} Session'**
+  String newSessionGeneratedTitle(Object machineType);
 
   /// No description provided for @sessionTitleCannotBeEmpty.
   ///

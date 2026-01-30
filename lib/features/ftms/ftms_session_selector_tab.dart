@@ -317,7 +317,7 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
   }
 
   void _startFreeRide() async {
-    final session = _service.createFreeRideSession();
+    final session = _service.createFreeRideSession(AppLocalizations.of(context)!);
     await _service.logFreeRideStarted();
     
     if (mounted) {

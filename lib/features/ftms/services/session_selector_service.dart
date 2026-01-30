@@ -543,12 +543,17 @@ class SessionSelectorService {
   // ============ Session Creation & Analytics ============
 
   /// Create a free ride session
-  TrainingSessionDefinition createFreeRideSession() {
+  TrainingSessionDefinition createFreeRideSession(AppLocalizations localizations) {
     final deviceType = _state.deviceType!;
     final config = _state.freeRideConfig;
     
+    final title = config.isDistanceBased
+        ? localizations.freeRideSessionTitle(_formatDistance(config.workoutValue))
+        : localizations.freeRideSessionTitle(_formatTime(config.workoutValue));
+    
     return TrainingSessionDefinition.createTemplate(
       deviceType,
+      title: title,
       isDistanceBased: config.isDistanceBased,
       workoutValue: config.workoutValue,
       targets: config.targets,
@@ -605,5 +610,20 @@ class SessionSelectorService {
       isCustom: session.isCustom,
       isDistanceBased: session.isDistanceBased,
     );
+  }
+
+  /// Formats distance in meters to a readable string (m or km)
+  String _formatDistance(int meters) {
+    if (meters >= 1000) {
+      return '${(meters / 1000).toStringAsFixed(1)}km';
+    } else {
+      return '${meters}m';
+    }
+  }
+
+  /// Formats time in seconds to a readable string (total minutes with "min" suffix)
+  String _formatTime(int seconds) {
+    final totalMinutes = (seconds / 60).round();
+    return '${totalMinutes}min';
   }
 }
