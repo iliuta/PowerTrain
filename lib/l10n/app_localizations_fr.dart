@@ -754,7 +754,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noDevicesFound =>
-      'Aucun appareil trouvé. Essayez de rechercher des appareils.';
+      'Aucun appareil détecté. Sortez votre appareil de veille et relancez la recherche.';
 
   @override
   String get connected => 'Connecté';

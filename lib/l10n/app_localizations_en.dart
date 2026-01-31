@@ -742,7 +742,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sensors => 'Sensors';
 
   @override
-  String get noDevicesFound => 'No devices found. Try scanning for devices.';
+  String get noDevicesFound =>
+      'No devices found. Wake up your machine and try searching for devices again.';
 
   @override
   String get connected => 'Connected';

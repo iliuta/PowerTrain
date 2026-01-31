@@ -755,7 +755,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noDevicesFound =>
-      'Keine Geräte gefunden. Versuchen Sie, nach Geräten zu suchen.';
+      'Keine Geräte gefunden. Reaktivieren Sie Ihr Gerät und suchen Sie erneut nach Geräten.';
 
   @override
   String get connected => 'Verbunden';

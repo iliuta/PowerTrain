@@ -1393,7 +1393,7 @@ abstract class AppLocalizations {
   /// No description provided for @noDevicesFound.
   ///
   /// In en, this message translates to:
-  /// **'No devices found. Try scanning for devices.'**
+  /// **'No devices found. Wake up your machine and try searching for devices again.'**
   String get noDevicesFound;
 
   /// No description provided for @connected.

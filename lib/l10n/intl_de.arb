@@ -223,7 +223,7 @@
   "scanning": "Suche...",
   "fitnessMachines": "Fitnessmaschinen",
   "sensors": "Sensoren",
-  "noDevicesFound": "Keine Geräte gefunden. Versuchen Sie, nach Geräten zu suchen.",
+  "noDevicesFound": "Keine Geräte gefunden. Reaktivieren Sie Ihr Gerät und suchen Sie erneut nach Geräten.",
   "connected": "Verbunden",
   "unknownDevice": "(unbekanntes Gerät)",
   "connect": "Verbinden",

@@ -223,7 +223,7 @@
   "scanning": "Scanning...",
   "fitnessMachines": "Fitness machines",
   "sensors": "Sensors",
-  "noDevicesFound": "No devices found. Try scanning for devices.",
+  "noDevicesFound": "No devices found. Wake up your machine and try searching for devices again.",
   "connected": "Connected",
   "unknownDevice": "(unknown device)",
   "connect": "Connect",
