@@ -121,7 +121,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Developer Mode Required',
+                      AppLocalizations.of(context)!.developerModeRequired,
                       style:
                           Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -130,7 +130,7 @@ class FTMSDataTabState extends State<FTMSDataTab> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.',
+                      AppLocalizations.of(context)!.developerModeRequiredDescription,
                       style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),

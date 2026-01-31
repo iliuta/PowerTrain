@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import '../model/user_settings.dart';
 import 'settings_section.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/config/live_data_display_config.dart';
+import '../../../core/models/device_types.dart';
 
 /// Widget for editing user fitness preferences
 class UserPreferencesSection extends StatefulWidget {
@@ -23,6 +25,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
   String? _editingField;
   late TextEditingController _cyclingFtpController;
   late TextEditingController _rowingFtpController;
+  LiveDataDisplayConfig? _indoorBikeConfig;
+  LiveDataDisplayConfig? _rowerConfig;
 
   @override
   void initState() {
@@ -31,6 +35,18 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         TextEditingController(text: widget.userSettings.cyclingFtp.toString());
     _rowingFtpController =
         TextEditingController(text: widget.userSettings.rowingFtp);
+    _loadConfigs();
+  }
+
+  Future<void> _loadConfigs() async {
+    final indoorBikeConfig = await LiveDataDisplayConfig.loadForFtmsMachineType(DeviceType.indoorBike);
+    final rowerConfig = await LiveDataDisplayConfig.loadForFtmsMachineType(DeviceType.rower);
+    if (mounted) {
+      setState(() {
+        _indoorBikeConfig = indoorBikeConfig;
+        _rowerConfig = rowerConfig;
+      });
+    }
   }
 
   @override
@@ -55,12 +71,24 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
       title: AppLocalizations.of(context)!.fitnessProfileTitle,
       subtitle: AppLocalizations.of(context)!.fitnessProfileSubtitle,
       children: [
-        _buildCyclingFtpField(),
-        _buildRowingFtpField(),
+        if (_shouldDisplayCyclingFtp())
+          _buildCyclingFtpField(),
+        if (_shouldDisplayRowingFtp())
+          _buildRowingFtpField(),
         const Divider(),
         _buildDeveloperModeField(),
       ],
     );
+  }
+
+  bool _shouldDisplayCyclingFtp() {
+    if (_indoorBikeConfig == null) return true; // Show while loading (better UX)
+    return !_indoorBikeConfig!.availableInDeveloperModeOnly || widget.userSettings.developerMode;
+  }
+
+  bool _shouldDisplayRowingFtp() {
+    if (_rowerConfig == null) return true; // Show while loading (better UX)
+    return !_rowerConfig!.availableInDeveloperModeOnly || widget.userSettings.developerMode;
   }
 
   Widget _buildCyclingFtpField() {

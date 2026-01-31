@@ -904,4 +904,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get resistanceControlUnavailable =>
       'Verwenden Sie die Steuerelemente Ihres Geräts, um den Widerstand einzustellen';
+
+  @override
+  String get developerModeRequired => 'Entwicklermodus Erforderlich';
+
+  @override
+  String get developerModeRequiredDescription =>
+      'Dieses Gerät erfordert die Aktivierung des Entwicklermodus. Bitte aktivieren Sie den Entwicklermodus in den Einstellungen, um Gerätedaten und -funktionen anzuzeigen.';
 }

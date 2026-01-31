@@ -269,5 +269,7 @@
   "resistanceHelpDescription": "Legen Sie die Widerstandsstufe von 1 bis {maxLevel} fest. Dieser Wert wird nur verwendet, wenn das Gerät Widerstandsanpassung unterstützt, und wird in den von Ihrem Gerät akzeptierten Bereich umgewandelt.",
   "resistanceHelpMachine": "Widerstandsstufe",
   "resistanceHelpMachineDescription": "Legen Sie die Widerstandsstufe von 1 bis {maxLevel} fest, die von Ihrer Maschine tatsächlich unterstützt wird.",
-  "resistanceControlUnavailable": "Verwenden Sie die Steuerelemente Ihres Geräts, um den Widerstand einzustellen"
+  "resistanceControlUnavailable": "Verwenden Sie die Steuerelemente Ihres Geräts, um den Widerstand einzustellen",
+  "developerModeRequired": "Entwicklermodus Erforderlich",
+  "developerModeRequiredDescription": "Dieses Gerät erfordert die Aktivierung des Entwicklermodus. Bitte aktivieren Sie den Entwicklermodus in den Einstellungen, um Gerätedaten und -funktionen anzuzeigen."
 }

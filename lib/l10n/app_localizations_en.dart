@@ -891,4 +891,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resistanceControlUnavailable =>
       'Use your machine\'s controls to adjust the resistance';
+
+  @override
+  String get developerModeRequired => 'Developer Mode Required';
+
+  @override
+  String get developerModeRequiredDescription =>
+      'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.';
 }

@@ -269,5 +269,7 @@
   "resistanceHelpDescription": "Set the resistance level from 1 to {maxLevel}. This value is used only if the machine supports resistance adjustment and will be converted to the range accepted by your machine.",
   "resistanceHelpMachine": "Resistance Level",
   "resistanceHelpMachineDescription": "Set the resistance level from 1 to {maxLevel}, actually supported by your machine.",
-  "resistanceControlUnavailable": "Use your machine's controls to adjust the resistance"
+  "resistanceControlUnavailable": "Use your machine's controls to adjust the resistance",
+  "developerModeRequired": "Developer Mode Required",
+  "developerModeRequiredDescription": "This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features."
 }

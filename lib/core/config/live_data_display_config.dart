@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:ftms/core/config/live_data_field_config.dart';
 import 'package:ftms/core/models/device_types.dart';
@@ -37,6 +38,17 @@ class LiveDataDisplayConfig {
   }
 
   static final Map<DeviceType, Future<LiveDataDisplayConfig?>> _configCache = {};
+
+  /// Clears the config cache. Used for testing.
+  static void clearCache() {
+    _configCache.clear();
+  }
+
+  /// Sets a config directly in the cache. Used for testing.
+  @visibleForTesting
+  static void setTestConfig(DeviceType deviceType, LiveDataDisplayConfig? config) {
+    _configCache[deviceType] = Future.value(config);
+  }
 
   static Future<LiveDataDisplayConfig?> loadForFtmsMachineType(DeviceType deviceType) {
 

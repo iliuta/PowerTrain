@@ -1647,6 +1647,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use your machine\'s controls to adjust the resistance'**
   String get resistanceControlUnavailable;
+
+  /// No description provided for @developerModeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Mode Required'**
+  String get developerModeRequired;
+
+  /// No description provided for @developerModeRequiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.'**
+  String get developerModeRequiredDescription;
 }
 
 class _AppLocalizationsDelegate

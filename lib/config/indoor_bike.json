@@ -1,6 +1,6 @@
 {
   "ftmsMachineType": "DeviceDataType.indoorBike",
-  "availableInDeveloperModeOnly": false,
+  "availableInDeveloperModeOnly": true,
   "fields": [
     {
       "name": "Instantaneous Speed",
