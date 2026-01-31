@@ -90,7 +90,7 @@ class EditTargetFieldsWidget extends StatelessWidget {
                     ],
                   )
                 : TextFormField(
-                    initialValue: currentValue?.toString() ?? '',
+                    initialValue: _formatInitialValue(field, currentValue),
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.enterValue,
                       border: const OutlineInputBorder(),
@@ -174,5 +174,17 @@ class EditTargetFieldsWidget extends StatelessWidget {
 
     // Default formatting with unit
     return '≈ ${absoluteValue.round()} ${field.unit}';
+  }
+
+  String _formatInitialValue(LiveDataFieldConfig field, dynamic currentValue) {
+    if (currentValue == null) return '';
+
+    // If field uses intFormatter, display as integer
+    if (field.formatter == 'intFormatter' && currentValue is num) {
+      return currentValue.toInt().toString();
+    }
+
+    // Default: convert to string
+    return currentValue.toString();
   }
 }

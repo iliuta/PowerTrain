@@ -754,7 +754,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noDevicesFound =>
-      'Aucun appareil trouvé. Essayez de rechercher des appareils.';
+      'Aucun appareil détecté. Sortez votre appareil de veille et relancez la recherche.';
 
   @override
   String get connected => 'Connecté';
@@ -903,4 +903,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get resistanceControlUnavailable =>
       'Utiliser les commandes de votre machine pour régler la résistance';
+
+  @override
+  String get developerModeRequired => 'Mode Développeur Requis';
+
+  @override
+  String get developerModeRequiredDescription =>
+      'Cet appareil nécessite l\'activation du mode développeur. Veuillez activer le mode développeur dans les paramètres pour afficher les données et fonctionnalités de l\'appareil.';
 }

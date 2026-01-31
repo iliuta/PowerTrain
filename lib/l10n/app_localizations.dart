@@ -1393,7 +1393,7 @@ abstract class AppLocalizations {
   /// No description provided for @noDevicesFound.
   ///
   /// In en, this message translates to:
-  /// **'No devices found. Try scanning for devices.'**
+  /// **'No devices found. Wake up your machine and try searching for devices again.'**
   String get noDevicesFound;
 
   /// No description provided for @connected.
@@ -1647,6 +1647,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use your machine\'s controls to adjust the resistance'**
   String get resistanceControlUnavailable;
+
+  /// No description provided for @developerModeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Mode Required'**
+  String get developerModeRequired;
+
+  /// No description provided for @developerModeRequiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.'**
+  String get developerModeRequiredDescription;
 }
 
 class _AppLocalizationsDelegate

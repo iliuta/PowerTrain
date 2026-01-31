@@ -742,7 +742,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sensors => 'Sensors';
 
   @override
-  String get noDevicesFound => 'No devices found. Try scanning for devices.';
+  String get noDevicesFound =>
+      'No devices found. Wake up your machine and try searching for devices again.';
 
   @override
   String get connected => 'Connected';
@@ -891,4 +892,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resistanceControlUnavailable =>
       'Use your machine\'s controls to adjust the resistance';
+
+  @override
+  String get developerModeRequired => 'Developer Mode Required';
+
+  @override
+  String get developerModeRequiredDescription =>
+      'This device requires developer mode to be enabled. Please enable developer mode in the settings to view device data and features.';
 }
