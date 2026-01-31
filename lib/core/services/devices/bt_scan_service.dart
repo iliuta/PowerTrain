@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:ftms/core/services/devices/flutter_blue_plus_facade_provider.dart';
 import '../../utils/logger.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
+import 'flutter_blue_plus_facade.dart';
 
 /// Result of a Bluetooth scan operation
 enum BTScanResult {
@@ -24,6 +26,12 @@ class BluetoothScanService {
     Guid.fromString("0000180D"), // Heart Rate Service UUID
     Guid.fromString("00001816"), // Cycling Speed and Cadence Service UUID
   ];
+  
+  /// Get the FlutterBluePlus facade (real or demo)
+  FlutterBluePlusFacade get _facade => FlutterBluePlusFacadeProvider().facade;
+  
+  /// Stream of scan results (uses facade)
+  Stream<List<ScanResult>> get scanResults => _facade.scanResults;
 
   /// Start scanning for the supported Bluetooth devices
   Future<BTScanResult> startScan({
@@ -31,9 +39,9 @@ class BluetoothScanService {
   }) async {
     logger.i('Starting Bluetooth scan process...');
 
-    // Check if Bluetooth adapter is on
-    if (FlutterBluePlus.adapterStateNow != BluetoothAdapterState.on) {
-      logger.w('Bluetooth adapter is not on. Current state: ${FlutterBluePlus.adapterStateNow}');
+    // Check if Bluetooth adapter is on (demo mode always returns on)
+    if (_facade.adapterStateNow != BluetoothAdapterState.on) {
+      logger.w('Bluetooth adapter is not on. Current state: ${_facade.adapterStateNow}');
       return BTScanResult.scanError;
     }
 
@@ -49,7 +57,7 @@ class BluetoothScanService {
     logger.i('Bluetooth permissions granted, starting scan...');
 
     try {
-      await FlutterBluePlus.startScan(
+      await _facade.startScan(
         timeout: timeout,
         withServices: supportedServices,
       );

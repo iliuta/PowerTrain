@@ -37,7 +37,8 @@ void main() {
         'rowingFtp': '1:55',
         'developerMode': true,
         'soundEnabled': false,
-        'metronomeSoundEnabled': true
+        'metronomeSoundEnabled': true,
+        'demoModeEnabled': false
       });
     });
 
