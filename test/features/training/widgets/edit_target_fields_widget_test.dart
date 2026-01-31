@@ -190,5 +190,52 @@ void main() {
 
       expect(changedFields, contains('Power:null'));
     });
+
+    testWidgets('displays cadence as integer without decimal point', (WidgetTester tester) async {
+      // Update config to include cadence as a target with intFormatter
+      final configWithCadence = LiveDataDisplayConfig(
+        deviceType: DeviceType.indoorBike,
+        fields: [
+          LiveDataFieldConfig(
+            name: 'Instantaneous Cadence',
+            label: 'Cadence',
+            display: 'speedometer',
+            unit: 'rpm',
+            availableAsTarget: true,
+            userSetting: null,
+            formatter: 'intFormatter',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: EditTargetFieldsWidget(
+              machineType: DeviceType.indoorBike,
+              userSettings: userSettings,
+              config: configWithCadence,
+              targets: {'Instantaneous Cadence': 85.0}, // Double value that should display as 85
+              onTargetChanged: (name, value) {},
+            ),
+          ),
+        ),
+      );
+
+      // The TextFormField should display '85', not '85.0'
+      final textField = find.byType(TextFormField);
+      expect(textField, findsOneWidget);
+      final inputField = find.descendant(
+        of: textField,
+        matching: find.byType(TextField),
+      );
+      expect(inputField, findsOneWidget);
+
+      // Get the TextField widget and check its value
+      final state = tester.widget<TextField>(inputField);
+      expect(state.controller?.text, '85');
+    });
   });
 }
