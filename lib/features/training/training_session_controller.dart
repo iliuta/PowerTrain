@@ -136,14 +136,14 @@ class TrainingSessionController extends ChangeNotifier
       if (!_initializationCompleter.isCompleted) {
         _initializationCompleter.completeError(e);
       }
-      debugPrint('Initialization error: $e');
+      logger.d('Initialization error: $e');
     }
   }
 
   void _enableWakeLock() {
     // Ensure wakelock stays enabled during training sessions
     WakelockPlus.enable().catchError((e) {
-      debugPrint('Failed to enable wakelock during training: $e');
+      logger.d('Failed to enable wakelock during training: $e');
     });
   }
 
@@ -225,16 +225,16 @@ class TrainingSessionController extends ChangeNotifier
           await _gpxRouteTracker!.loadFromAsset(_gpxFilePath);
           if (!_gpxRouteTracker!.isLoaded) {
             _gpxRouteTracker = null;
-            debugPrint('GPX route not available - recording without GPS coordinates');
+            logger.d('GPX route not available - recording without GPS coordinates');
           } else {
-            debugPrint('GPX route loaded from $_gpxFilePath: ${_gpxRouteTracker!.pointCount} points, ${_gpxRouteTracker!.totalRouteDistance.toStringAsFixed(0)}m');
+            logger.d('GPX route loaded from $_gpxFilePath: ${_gpxRouteTracker!.pointCount} points, ${_gpxRouteTracker!.totalRouteDistance.toStringAsFixed(0)}m');
           }
         } catch (e) {
-          debugPrint('Failed to load GPX route from $_gpxFilePath: $e');
+          logger.d('Failed to load GPX route from $_gpxFilePath: $e');
           _gpxRouteTracker = null;
         }
       } else {
-        debugPrint('No GPX file path provided - skipping route display');
+        logger.d('No GPX file path provided - skipping route display');
       }
 
       // Initialize data recorder only if not injected for testing
@@ -245,7 +245,7 @@ class TrainingSessionController extends ChangeNotifier
       );
       _dataRecorder!.startRecording();
     } catch (e) {
-      debugPrint('Failed to initialize data recording: $e');
+      logger.d('Failed to initialize data recording: $e');
     }
   }
 
@@ -316,7 +316,7 @@ class TrainingSessionController extends ChangeNotifier
     }
 
     if (activityParam == null) {
-      debugPrint('⚠️ No activity indicator found in data. Tried: $_activityIndicatorParamNames');
+      logger.d('⚠️ No activity indicator found in data. Tried: $_activityIndicatorParamNames');
       return;
     }
 
@@ -332,7 +332,7 @@ class TrainingSessionController extends ChangeNotifier
     final bool activityDetected = _detectActivity(currentValue, usedParamName!);
 
     if (activityDetected) {
-      debugPrint('🚀 Activity detected! Starting session ($usedParamName: $currentValue)');
+      logger.d('🚀 Activity detected! Starting session ($usedParamName: $currentValue)');
       _state.onDataChanged();
       _logSessionStarted();
       _recordDataPoint(data);
@@ -407,7 +407,7 @@ class TrainingSessionController extends ChangeNotifier
       final isNowActive = currentValue > 0 && currentValue <= 280;
       // Also detect significant pace improvement while already in borderline range
       final isImproving = lastValue > 280 && lastValue <= 350 && currentValue <= 280;
-      debugPrint('🔍 Pace resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive, isImproving=$isImproving');
+      logger.d('🔍 Pace resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive, isImproving=$isImproving');
       return (wasInactive && isNowActive) || isImproving;
     }
 
@@ -415,7 +415,7 @@ class TrainingSessionController extends ChangeNotifier
     if (paramName == 'Instantaneous Speed') {
       final wasInactive = lastValue < 3.0;
       final isNowActive = currentValue >= 4.0; // Hysteresis: resume at 4.0, pause at 3.0
-      debugPrint('🔍 Speed resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive');
+      logger.d('🔍 Speed resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive');
       return wasInactive && isNowActive;
     }
 
@@ -423,7 +423,7 @@ class TrainingSessionController extends ChangeNotifier
     if (paramName == 'Instantaneous Power') {
       final wasInactive = lastValue < 5.0;
       final isNowActive = currentValue >= 8.0; // Hysteresis: resume at 8.0, pause at 5.0
-      debugPrint('🔍 Power resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive');
+      logger.d('🔍 Power resume check: last=$lastValue, current=$currentValue, wasInactive=$wasInactive, isNowActive=$isNowActive');
       return wasInactive && isNowActive;
     }
 
@@ -445,7 +445,7 @@ class TrainingSessionController extends ChangeNotifier
     }
 
     if (activityParam == null) {
-      debugPrint('⚠️ No activity indicator found for inactivity check');
+      logger.d('⚠️ No activity indicator found for inactivity check');
       return;
     }
 
@@ -455,17 +455,17 @@ class TrainingSessionController extends ChangeNotifier
     if (isInactive) {
       _inactivityCounter++;
       if (_inactivityCounter >= _inactivityThresholdSeconds) {
-        debugPrint('⏸️ Inactivity detected! Auto-pausing session ($usedParamName: $currentValue, counter: $_inactivityCounter/$_inactivityThresholdSeconds)');
+        logger.d('⏸️ Inactivity detected! Auto-pausing session ($usedParamName: $currentValue, counter: $_inactivityCounter/$_inactivityThresholdSeconds)');
         _state.onInactivityDetected();
         _inactivityCounter = 0;
         _lastResumeCheckValue = currentValue; // Initialize with current inactive value for transition detection
       } else {
-        debugPrint('⏱️ Inactivity counter: $_inactivityCounter/$_inactivityThresholdSeconds ($usedParamName: $currentValue)');
+        logger.d('⏱️ Inactivity counter: $_inactivityCounter/$_inactivityThresholdSeconds ($usedParamName: $currentValue)');
       }
     } else {
       // Reset counter when activity is detected
       if (_inactivityCounter > 0) {
-        debugPrint('✅ Activity detected, resetting inactivity counter (was $_inactivityCounter)');
+        logger.d('✅ Activity detected, resetting inactivity counter (was $_inactivityCounter)');
       }
       _inactivityCounter = 0;
     }
@@ -487,7 +487,7 @@ class TrainingSessionController extends ChangeNotifier
     }
 
     if (activityParam == null) {
-      debugPrint('⚠️ No activity indicator found for resume check');
+      logger.d('⚠️ No activity indicator found for resume check');
       return;
     }
 
@@ -512,21 +512,21 @@ class TrainingSessionController extends ChangeNotifier
       // Start or reset resume attempt
       _isAttemptingResume = true;
       _activityResumeCounter = 1;
-      debugPrint('⏱️ Activity resume started: $_activityResumeCounter/$_activityResumeThresholdSeconds ($usedParamName: $currentValue)');
+      logger.d('⏱️ Activity resume started: $_activityResumeCounter/$_activityResumeThresholdSeconds ($usedParamName: $currentValue)');
     } else if (_isAttemptingResume && isCurrentlyActive) {
       // Continue counting sustained activity
       _activityResumeCounter++;
-      debugPrint('⏱️ Activity resume counter: $_activityResumeCounter/$_activityResumeThresholdSeconds ($usedParamName: $currentValue)');
+      logger.d('⏱️ Activity resume counter: $_activityResumeCounter/$_activityResumeThresholdSeconds ($usedParamName: $currentValue)');
     } else if (_isAttemptingResume && !isCurrentlyActive) {
       // Activity not sustained
-      debugPrint('❌ Activity not sustained, resetting resume counter (was $_activityResumeCounter)');
+      logger.d('❌ Activity not sustained, resetting resume counter (was $_activityResumeCounter)');
       _isAttemptingResume = false;
       _activityResumeCounter = 0;
     }
 
     // Check if resume threshold reached
     if (_activityResumeCounter >= _activityResumeThresholdSeconds) {
-      debugPrint('▶️ Activity resumed! Auto-resuming session ($usedParamName: last=$_lastResumeCheckValue, current=$currentValue)');
+      logger.d('▶️ Activity resumed! Auto-resuming session ($usedParamName: last=$_lastResumeCheckValue, current=$currentValue)');
       _inactivityCounter = 0;
       _activityResumeCounter = 0;
       _isAttemptingResume = false;
@@ -543,7 +543,7 @@ class TrainingSessionController extends ChangeNotifier
     try {
       _dataRecorder!.recordDataPoint(ftmsParams: data);
     } catch (e) {
-      debugPrint('Failed to record data point: $e');
+      logger.d('Failed to record data point: $e');
     }
   }
 
@@ -571,7 +571,7 @@ class TrainingSessionController extends ChangeNotifier
   void _onTick() {
     if (!_state.isRunning) return;
     _state.onTimerTick();
-    debugPrint(
+    logger.d(
         '🕐 Timer tick: elapsed=${_state.elapsedSeconds}, status=${_state.status}');
   }
 
@@ -684,14 +684,14 @@ class TrainingSessionController extends ChangeNotifier
 
   Future<void> _playWarningSound() async {
     if (_soundService == null) {
-      debugPrint('🔔 SoundService not available, skipping sound playback');
+      logger.d('🔔 SoundService not available, skipping sound playback');
       return;
     }
 
     try {
       await _soundService!.playBeep();
     } catch (e) {
-      debugPrint('🔔 Failed to play warning sound: $e');
+      logger.d('🔔 Failed to play warning sound: $e');
     }
   }
 
@@ -757,7 +757,7 @@ class TrainingSessionController extends ChangeNotifier
           lastGeneratedFitFile = fitFilePath;
           logger.i(
               '***************** Training session completed successfully. FIT file saved to: $fitFilePath');
-          debugPrint('FIT file generated: $fitFilePath');
+          logger.d('FIT file generated: $fitFilePath');
 
           if (fitFilePath != null) {
             // Log analytics event for FIT file saved
@@ -777,7 +777,7 @@ class TrainingSessionController extends ChangeNotifier
         }
       } catch (e) {
         logger.e('**************** Failed to generate FIT file: $e');
-        debugPrint('***************** Failed to generate FIT file: $e');
+        logger.d('***************** Failed to generate FIT file: $e');
       }
     }
   }
@@ -790,11 +790,11 @@ class TrainingSessionController extends ChangeNotifier
           await file.delete();
           logger.i(
               '🗑️ FIT file deleted after successful Strava upload: $fitFilePath');
-          debugPrint('FIT file deleted: $fitFilePath');
+          logger.d('FIT file deleted: $fitFilePath');
         }
       } catch (e) {
         logger.w('Failed to delete FIT file after Strava upload: $e');
-        debugPrint('Failed to delete FIT file: $e');
+        logger.d('Failed to delete FIT file: $e');
       }
     }
   }

@@ -11,6 +11,7 @@ import 'model/training_session.dart';
 import 'model/expanded_training_session_definition.dart';
 import 'training_session_controller.dart';
 import 'widgets/training_session_scaffold.dart';
+import '../../core/utils/logger.dart';
 
 /// Main screen for displaying training session progress
 class TrainingSessionProgressScreen extends StatefulWidget {
@@ -178,7 +179,7 @@ class _TrainingSessionProgressScreenState extends State<TrainingSessionProgressS
       );
     } catch (e) {
       // If expansion fails, create a minimal expanded session from the original
-      debugPrint('Failed to expand session: $e');
+      logger.d('Failed to expand session: $e');
       return widget.session.expand(
         userSettings: _userSettings!,
         config: null,

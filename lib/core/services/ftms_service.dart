@@ -1,6 +1,5 @@
 // This file was moved from lib/ftms_service.dart
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/utils/logger.dart';
 
@@ -35,7 +34,7 @@ class FTMSService {
       switch (opcodeType) {
         case MachineControlPointOpcodeType.requestControl:
           controlPoint = MachineControlPoint.requestControl();
-          debugPrint('📤 Sending: requestControl');
+          logger.d('📤 Sending: requestControl');
           break;
         case MachineControlPointOpcodeType.reset:
           controlPoint = MachineControlPoint.reset();
@@ -52,7 +51,7 @@ class FTMSService {
               resistanceLevel: resistanceLevel ?? 2);
           break;
         case MachineControlPointOpcodeType.setTargetPower:
-          debugPrint('📤 Sending: setTargetPower($power W)');
+          logger.d('📤 Sending: setTargetPower($power W)');
           controlPoint =
               MachineControlPoint.setTargetPower(power: power ?? 150);
           break;
@@ -68,9 +67,9 @@ class FTMSService {
       }
 
       await writeCharacteristic(ftmsDevice, controlPoint);
-      debugPrint('✅ Command executed');
+      logger.d('✅ Command executed');
     } catch (e) {
-      debugPrint('❌ writeCommand error: $e');
+      logger.d('❌ writeCommand error: $e');
       rethrow;
     }
   }
@@ -118,12 +117,12 @@ class FTMSService {
 
       // Read the characteristic value
       final value = await characteristic.read();
-      debugPrint('📖 Read Supported Resistance Level Range: ${value.join(', ')}');
+      logger.d('📖 Read Supported Resistance Level Range: ${value.join(', ')}');
 
       _supportedResistanceLevelRange = SupportedResistanceLevelRange.fromBytes(value);
       return _supportedResistanceLevelRange;
     } catch (e) {
-      debugPrint('❌ readSupportedResistanceLevelRange error: $e');
+      logger.d('❌ readSupportedResistanceLevelRange error: $e');
       rethrow;
     }
   }
@@ -150,12 +149,12 @@ class FTMSService {
 
       // Read the characteristic value
       final value = await characteristic.read();
-      debugPrint('📖 Read Supported Power Range: ${value.join(', ')}');
+      logger.d('📖 Read Supported Power Range: ${value.join(', ')}');
 
       _supportedPowerRange = SupportedPowerRange.fromBytes(value);
       return _supportedPowerRange;
     } catch (e) {
-      debugPrint('❌ readSupportedPowerRange error: $e');
+      logger.d('❌ readSupportedPowerRange error: $e');
       rethrow;
     }
   }
@@ -176,7 +175,7 @@ class FTMSService {
       _supportsPowerControl = features[MachineFeatureFlag.powerMeasurementFlag] ?? false;
       return _supportsPowerControl!;
     } catch (e) {
-      debugPrint('❌ supportsPowerControl error: $e');
+      logger.d('❌ supportsPowerControl error: $e');
       _supportsPowerControl = false;
       return false;
     }
@@ -198,7 +197,7 @@ class FTMSService {
       _supportsResistanceControl = features[MachineFeatureFlag.resistanceLevelFlag] ?? false;
       return _supportsResistanceControl!;
     } catch (e) {
-      debugPrint('❌ supportsResistanceControl error: $e');
+      logger.d('❌ supportsResistanceControl error: $e');
       _supportsResistanceControl = false;
       return false;
     }
@@ -212,9 +211,9 @@ class FTMSService {
         await command();
         return; // Success, exit
       } catch (e) {
-        debugPrint('Failed to $operationName (attempt ${attempt + 1}/$maxRetries): $e');
+        logger.d('Failed to $operationName (attempt ${attempt + 1}/$maxRetries): $e');
         if (attempt == maxRetries - 1) {
-          debugPrint('All retries failed for $operationName');
+          logger.d('All retries failed for $operationName');
           // Don't rethrow - FTMS commands should fail silently to not disrupt the session
           return;
         }

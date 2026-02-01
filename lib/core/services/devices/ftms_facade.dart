@@ -1,7 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
 import 'package:ftms/core/services/devices/flutter_blue_plus_facade_provider.dart';
 import 'package:ftms/core/services/user_settings_service.dart';
+import '../../utils/logger.dart';
 
 /// Facade interface for FTMS operations to enable testing
 abstract class FtmsFacade {
@@ -70,7 +70,7 @@ class DemoFtmsFacade extends FtmsFacade {
     final demoDevice = demoFacade.getDemoDevice(device);
     
     if (demoDevice != null) {
-      debugPrint('🎭 DEMO FACADE: Calling startDataEmission on demo device ${device.remoteId.str}');
+      logger.d('🎭 DEMO FACADE: Calling startDataEmission on demo device ${device.remoteId.str}');
       // Start emitting fake data for demo device
       demoDevice.startDataEmission(callback);
       return;

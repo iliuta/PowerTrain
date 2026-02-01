@@ -1,6 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'user_settings_service.dart';
+import '../utils/logger.dart';
 
 /// Singleton service for playing sounds throughout the application.
 class SoundService {
@@ -57,7 +57,7 @@ class SoundService {
     var soundPath = 'sounds/disappointing_beep.wav';
 
     if (settings.soundEnabled == false) {
-      debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
+      logger.d('🔔 Sound alerts disabled, skipping sound: $soundPath');
       return;
     }
     playSound(soundPath, _disappointingBeepPlayer);
@@ -69,7 +69,7 @@ class SoundService {
     var soundPath = 'sounds/tick_high.wav';
 
     if (settings.metronomeSoundEnabled == false) {
-      debugPrint('🔔 Metronome sound disabled, skipping sound: $soundPath');
+      logger.d('🔔 Metronome sound disabled, skipping sound: $soundPath');
       return;
     }
     playSound(soundPath, _tickPlayer);
@@ -81,7 +81,7 @@ class SoundService {
     var soundPath = 'sounds/tick_low.wav';
 
     if (settings.metronomeSoundEnabled == false) {
-      debugPrint('🔔 Metronome sound disabled, skipping sound: $soundPath');
+      logger.d('🔔 Metronome sound disabled, skipping sound: $soundPath');
       return;
     }
     playSound(soundPath, _tickPlayer);
@@ -93,7 +93,7 @@ class SoundService {
     var soundPath = 'sounds/beep.wav';
 
     if (settings.soundEnabled == false) {
-      debugPrint('🔔 Sound alerts disabled, skipping sound: $soundPath');
+      logger.d('🔔 Sound alerts disabled, skipping sound: $soundPath');
       return;
     }
     playSound(soundPath, _beepPlayer);
@@ -105,9 +105,9 @@ class SoundService {
   Future<void> playSound(String soundPath, AudioPlayer player) async {
     try {
       await player.play(AssetSource(soundPath));
-      debugPrint('🔔 Played sound: $soundPath');
+      logger.d('🔔 Played sound: $soundPath');
     } catch (e) {
-      debugPrint('🔔 Failed to play sound ($soundPath): $e');
+      logger.d('🔔 Failed to play sound ($soundPath): $e');
     }
   }
 

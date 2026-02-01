@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ftms/flutter_ftms.dart';
+
+import '../../utils/logger.dart';
 
 /// Wrapper around BluetoothDevice that provides demo functionality
 /// This wraps a real BluetoothDevice.fromId to get a valid BluetoothDevice instance
@@ -198,15 +199,15 @@ class DemoFtmsDevice extends BluetoothDevice {
   void Function(DeviceData)? _dataCallback;
 
   void startDataEmission(void Function(DeviceData) callback) {
-    debugPrint('🎭 DEMO: startDataEmission called');
+    logger.d('🎭 DEMO: startDataEmission called');
     _dataCallback = callback;
-    debugPrint('🎭 DEMO: ✅ Callback registered');
+    logger.d('🎭 DEMO: ✅ Callback registered');
   }
 
   /// Parse FTMS bytes into DeviceData and send to callback
   void _emitParsedData(List<int> bytes) {
     if (_dataCallback == null) {
-      debugPrint('🎭 DEMO: No callback registered, skipping data emission');
+      logger.d('🎭 DEMO: No callback registered, skipping data emission');
       return;
     }
     
@@ -214,10 +215,10 @@ class DemoFtmsDevice extends BluetoothDevice {
 
     try {
       final deviceData = Rower(bytes);
-      debugPrint('🎭 DEMO: ✅ Parsed ${bytes.length} bytes, calling callback');
+      logger.d('🎭 DEMO: ✅ Parsed ${bytes.length} bytes, calling callback');
       _dataCallback!(deviceData);
     } catch (e) {
-      debugPrint('🎭 DEMO: ❌ Failed to parse data: $e');
+      logger.d('🎭 DEMO: ❌ Failed to parse data: $e');
     }
   }
 
@@ -232,7 +233,7 @@ class DemoFtmsDevice extends BluetoothDevice {
 
     _dataEmissionTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       final bytes = _generateFakeDataBytes();
-      debugPrint('🎭 DEMO: Timer tick, emitting ${bytes.length} bytes');
+      logger.d('🎭 DEMO: Timer tick, emitting ${bytes.length} bytes');
       // Emit to stream for any stream listeners
       if (_dataCharacteristic != null) {
         (_dataCharacteristic as _MockBluetoothCharacteristic).emitData(bytes);
@@ -399,7 +400,7 @@ class DemoFtmsDevice extends BluetoothDevice {
           newLevel = newLevel.clamp(10, 150);
           // Round to nearest 10
           _resistanceLevel = ((newLevel / 10).round() * 10).clamp(10, 150);
-          debugPrint('🎭 DEMO: Resistance level set to $_resistanceLevel via control point');
+          logger.d('🎭 DEMO: Resistance level set to $_resistanceLevel via control point');
         }
         break;
       case 0x07: // Start or Resume
@@ -500,9 +501,9 @@ class _MockBluetoothCharacteristic extends BluetoothCharacteristic {
 
   void emitData(List<int> data) {
     _lastValue = data;
-    debugPrint('🎭 MOCK CHAR: emitData called with ${data.length} bytes, hasListener: ${_valueController.hasListener}');
+    logger.d('🎭 MOCK CHAR: emitData called with ${data.length} bytes, hasListener: ${_valueController.hasListener}');
     _valueController.add(data);
-    debugPrint('🎭 MOCK CHAR: Data added to stream controller');
+    logger.d('🎭 MOCK CHAR: Data added to stream controller');
   }
 
   @override

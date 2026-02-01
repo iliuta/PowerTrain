@@ -8,6 +8,7 @@ import '../../core/models/supported_resistance_level_range.dart';
 import '../../core/models/supported_power_range.dart';
 import '../../core/services/devices/ftms.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/utils/logger.dart';
 
 class MachineFeatureWidget extends StatefulWidget {
   const MachineFeatureWidget({super.key});
@@ -66,7 +67,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
       setState(() => _resistanceLevelRange = range);
     } catch (e) {
       // Not all devices support this characteristic, so we silently fail
-      debugPrint('Supported Resistance Level Range not available: $e');
+      logger.d('Supported Resistance Level Range not available: $e');
     }
   }
   
@@ -76,7 +77,7 @@ class _MachineFeatureWidgetState extends State<MachineFeatureWidget> {
       setState(() => _powerRange = range);
     } catch (e) {
       // Not all devices support this characteristic, so we silently fail
-      debugPrint('Supported Power Range not available: $e');
+      logger.d('Supported Power Range not available: $e');
     }
   }
   
