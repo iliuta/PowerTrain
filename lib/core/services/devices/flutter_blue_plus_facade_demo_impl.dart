@@ -92,10 +92,6 @@ class DemoFlutterBluePlusFacade implements FlutterBluePlusFacade {
       _demoRowerDevice.remoteId,
       'Demo Rower',
     );
-    _registerDemoDeviceName(
-      _demoBikeDevice.remoteId,
-      'Demo Indoor Bike',
-    );
 
     final demoResults = <ScanResult>[
       ScanResult(
@@ -111,21 +107,6 @@ class DemoFlutterBluePlusFacade implements FlutterBluePlusFacade {
           appearance: null,
         ),
         rssi: -45,
-        timeStamp: DateTime.now(),
-      ),
-      ScanResult(
-        device: _demoBikeDevice,
-        advertisementData: AdvertisementData(
-          advName: 'Demo Indoor Bike',
-          connectable: true,
-          manufacturerData: {},
-          serviceData: {},
-          serviceUuids: [Guid('00001826')],
-          // FTMS Service UUID
-          txPowerLevel: -50,
-          appearance: null,
-        ),
-        rssi: -50,
         timeStamp: DateTime.now(),
       ),
     ];
@@ -182,12 +163,6 @@ class DemoFlutterBluePlusFacade implements FlutterBluePlusFacade {
     return _demoRowerDevice;
   }
 
-  /// Get the demo bike device
-  DemoFtmsDevice get demoBikeDevice {
-    _ensureInitialized();
-    return _demoBikeDevice;
-  }
-
   /// Check if a device is a demo device
   bool isDemoDevice(BluetoothDevice device) {
     _ensureInitialized();
@@ -199,9 +174,6 @@ class DemoFlutterBluePlusFacade implements FlutterBluePlusFacade {
     _ensureInitialized();
     if (device.remoteId == _demoRowerDevice.remoteId) {
       return _demoRowerDevice;
-    }
-    if (device.remoteId == _demoBikeDevice.remoteId) {
-      return _demoBikeDevice;
     }
     return null;
   }

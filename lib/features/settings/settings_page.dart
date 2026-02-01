@@ -116,6 +116,57 @@ class _SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
+  void _showDemoModeConfirmationDialog() {
+    final isDemoModeCurrentlyEnabled = _userSettings?.demoModeEnabled ?? false;
+    final newState = !isDemoModeCurrentlyEnabled;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Demo Mode'),
+          content: Text(
+            newState
+                ? 'Enable demo mode to use simulated device data for testing?'
+                : 'Disable demo mode and return to normal operation?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _toggleDemoMode(newState);
+              },
+              child: Text(newState ? 'Enable' : 'Disable'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _toggleDemoMode(bool enabled) {
+    if (_userSettings == null) return;
+
+    _onUserSettingsChanged(
+      UserSettings(
+        cyclingFtp: _userSettings!.cyclingFtp,
+        rowingFtp: _userSettings!.rowingFtp,
+        developerMode: _userSettings!.developerMode,
+        soundEnabled: _userSettings!.soundEnabled,
+        metronomeSoundEnabled: _userSettings!.metronomeSoundEnabled,
+        demoModeEnabled: enabled,
+      ),
+    );
+
+    _saveSettings();
+    HapticFeedback.lightImpact();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -196,10 +247,13 @@ class _SettingsPageState extends State<SettingsPage> {
             SettingsSection(
               title: AppLocalizations.of(context)!.aboutSectionTitle,
               children: [
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: Text(_appVersion.isNotEmpty ? '${AppLocalizations.of(context)!.appName} $_appVersion' : AppLocalizations.of(context)!.appName),
-                  subtitle: Text(AppLocalizations.of(context)!.appDescription),
+                GestureDetector(
+                  onLongPress: _showDemoModeConfirmationDialog,
+                  child: ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: Text(_appVersion.isNotEmpty ? '${AppLocalizations.of(context)!.appName} $_appVersion' : AppLocalizations.of(context)!.appName),
+                    subtitle: Text(AppLocalizations.of(context)!.appDescription),
+                  ),
                 ),
               ],
             ),

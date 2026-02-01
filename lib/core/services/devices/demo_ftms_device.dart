@@ -25,7 +25,7 @@ class DemoFtmsDevice extends BluetoothDevice {
   int _totalDistance = 0;
   int _totalCalories = 0;
   double _elapsedTimeSeconds = 0;
-  int _resistanceLevel = 50; // Default resistance level
+  int _resistanceLevel = 5; // Default resistance level
 
   // Demo state
   BluetoothCharacteristic? _dataCharacteristic;
@@ -42,6 +42,12 @@ class DemoFtmsDevice extends BluetoothDevice {
 
   /// Device ID
   String get deviceId => _deviceId;
+
+  /// Override platformName to return demo device name
+  @override
+  String get platformName {
+    return deviceType == DeviceDataType.rower ? 'Demo Rower' : 'Demo Bike';
+  }
 
   /// Whether the device is connected
   @override
@@ -104,6 +110,7 @@ class DemoFtmsDevice extends BluetoothDevice {
       totalDistance: 0,
       instantaneousPace: 120,
       instantaneousPower: 150,
+      resistanceLevel: (_resistanceLevel/10).toInt(),
       totalEnergy: 0,
       energyPerHour: 540,
       energyPerMinute: 9,
@@ -278,6 +285,7 @@ class DemoFtmsDevice extends BluetoothDevice {
       totalDistance: _totalDistance,
       instantaneousPace: paceSeconds,
       instantaneousPower: power,
+      resistanceLevel: (_resistanceLevel/10).toInt(),
       totalEnergy: _totalCalories,
       energyPerHour: (power * 3.6 / 4.186).round(),
       energyPerMinute: (power / 69.78).round(),
@@ -293,6 +301,7 @@ class DemoFtmsDevice extends BluetoothDevice {
     required int totalDistance,
     required int instantaneousPace,
     required int instantaneousPower,
+    required int resistanceLevel,
     required int totalEnergy,
     required int energyPerHour,
     required int energyPerMinute,
@@ -344,9 +353,9 @@ class DemoFtmsDevice extends BluetoothDevice {
       instantaneousPower & 0xFF,
       // Average Power (same for simplicity)
       (instantaneousPower >> 8) & 0xFF,
-      _resistanceLevel & 0xFF,
+      resistanceLevel & 0xFF,
       // Resistance Level low byte
-      (_resistanceLevel >> 8) & 0xFF,
+      (resistanceLevel >> 8) & 0xFF,
       // Resistance Level high byte
       totalEnergy & 0xFF,
       // Energy low byte

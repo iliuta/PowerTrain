@@ -60,7 +60,7 @@ void main() {
       expect(find.text('Enable debugging options and beta features'), findsOneWidget);
 
       // Check switches - there should be 2 now (developer mode and sound alerts)
-      expect(find.byType(Switch), findsNWidgets(2));
+      expect(find.byType(Switch), findsNWidgets(1));
 
       // Check developer mode switch is off (second switch)
       final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
