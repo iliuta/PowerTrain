@@ -208,9 +208,11 @@ Widget _buildAvailableDeviceCard(ScanResult scanResult, BTDevice? deviceService,
               ],
               Expanded(
                 child: Text(
-                  scanResult.device.platformName.isEmpty
-                      ? AppLocalizations.of(context)!.unknownDevice
-                      : scanResult.device.platformName,
+                  scanResult.device.platformName.isNotEmpty
+                      ? scanResult.device.platformName
+                      : (scanResult.advertisementData.advName.isNotEmpty
+                          ? scanResult.advertisementData.advName
+                          : AppLocalizations.of(context)!.unknownDevice),
                 ),
               ),
             ],
@@ -225,9 +227,33 @@ Widget _buildAvailableDeviceCard(ScanResult scanResult, BTDevice? deviceService,
 }
 
 /// Button for connecting/disconnecting to a Bluetooth device
+/// Helper function to get the display name for a Bluetooth device
+/// Uses platformName first, then advName from the scan result, then falls back to unknownDevice
+String _getDeviceDisplayName(BluetoothDevice device, List<ScanResult> scanResults, BuildContext context) {
+  if (device.platformName.isNotEmpty) {
+    return device.platformName;
+  }
+  
+  // Try to find the corresponding ScanResult to get advName
+  try {
+    final scanResult = scanResults.firstWhere(
+      (result) => result.device.remoteId.str == device.remoteId.str,
+      orElse: () => throw Exception('ScanResult not found'),
+    );
+    if (scanResult.advertisementData.advName.isNotEmpty) {
+      return scanResult.advertisementData.advName;
+    }
+  } catch (e) {
+    // ScanResult not found, continue to fallback
+  }
+  
+  return AppLocalizations.of(context)!.unknownDevice;
+}
+
 Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
     List<ScanResult> scanResults) {
   final deviceTypeManager = SupportedBTDeviceManager();
+  final deviceDisplayName = _getDeviceDisplayName(device, scanResults, context);
 
   return StreamBuilder<BluetoothConnectionState>(
       stream: device.connectionState,
@@ -242,7 +268,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
               child: Text(AppLocalizations.of(context)!.connect),
               onPressed: () async {
                 final snackBar = SnackBar(
-                  content: Text(AppLocalizations.of(context)!.connectingTo(device.platformName)),
+                  content: Text(AppLocalizations.of(context)!.connectingTo(deviceDisplayName)),
                   duration: const Duration(seconds: 2),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -252,22 +278,22 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                     deviceTypeManager.getBTDevice(device, scanResults);
 
                 logger.i(
-                    '🔍 Device btDevice for ${device.platformName}: ${btDevice?.deviceTypeName ?? 'null'}');
+                    '🔍 Device btDevice for $deviceDisplayName: ${btDevice?.deviceTypeName ?? 'null'}');
 
                 if (btDevice != null) {
                   logger.i(
-                      '✅ Using primary device btDevice: ${btDevice.deviceTypeName} for ${device.platformName}');
+                      '✅ Using primary device btDevice: ${btDevice.deviceTypeName} for $deviceDisplayName');
                   // Try to connect using the appropriate device btDevice
                   final success = await btDevice.connectToDevice(device);
                   if (success && context.mounted) {
                     // Device is now automatically tracked in BTDevice system
                     logger.i(
-                        '📱 Device connected via new architecture: ${device.platformName}');
+                        '📱 Device connected via new architecture: $deviceDisplayName');
 
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(AppLocalizations.of(context)!.connectedTo(btDevice.deviceTypeName, device.platformName)),
+                          content: Text(AppLocalizations.of(context)!.connectedTo(btDevice.deviceTypeName, deviceDisplayName)),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -275,7 +301,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                   } else if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(AppLocalizations.of(context)!.failedToConnect(device.platformName)),
+                        content: Text(AppLocalizations.of(context)!.failedToConnect(deviceDisplayName)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -283,7 +309,7 @@ Widget getButtonForBluetoothDevice(BluetoothDevice device, BuildContext context,
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(AppLocalizations.of(context)!.unsupportedDevice(device.platformName)),
+                      content: Text(AppLocalizations.of(context)!.unsupportedDevice(deviceDisplayName)),
                       backgroundColor: Colors.red,
                     ),
                   );

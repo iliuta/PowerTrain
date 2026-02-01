@@ -197,6 +197,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
             rowingFtp: widget.userSettings.rowingFtp,
             developerMode: value,
             soundEnabled: widget.userSettings.soundEnabled,
+            metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+            demoModeEnabled: widget.userSettings.demoModeEnabled,
           ));
           HapticFeedback.lightImpact();
         },
@@ -208,11 +210,14 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
           rowingFtp: widget.userSettings.rowingFtp,
           developerMode: newValue,
           soundEnabled: widget.userSettings.soundEnabled,
+          metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+          demoModeEnabled: widget.userSettings.demoModeEnabled,
         ));
         HapticFeedback.lightImpact();
       },
     );
   }
+
 
   void _startEditing(String field) {
     setState(() {
@@ -237,6 +242,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         rowingFtp: widget.userSettings.rowingFtp,
         developerMode: widget.userSettings.developerMode,
         soundEnabled: widget.userSettings.soundEnabled,
+        metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+        demoModeEnabled: widget.userSettings.demoModeEnabled,
       ));
       HapticFeedback.lightImpact();
       setState(() {
@@ -259,6 +266,8 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
         rowingFtp: value,
         developerMode: widget.userSettings.developerMode,
         soundEnabled: widget.userSettings.soundEnabled,
+        metronomeSoundEnabled: widget.userSettings.metronomeSoundEnabled,
+        demoModeEnabled: widget.userSettings.demoModeEnabled,
       ));
       HapticFeedback.lightImpact();
       setState(() {

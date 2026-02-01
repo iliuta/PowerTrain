@@ -101,6 +101,7 @@ class UserSettingsService {
       developerMode: currentSettings.developerMode,
       soundEnabled: enabled,
       metronomeSoundEnabled: currentSettings.metronomeSoundEnabled,
+      demoModeEnabled: currentSettings.demoModeEnabled,
     );
     await saveSettings(updatedSettings);
     logger.d('Sound enabled setting updated to: $enabled');
@@ -115,9 +116,25 @@ class UserSettingsService {
       developerMode: currentSettings.developerMode,
       soundEnabled: currentSettings.soundEnabled,
       metronomeSoundEnabled: enabled,
+      demoModeEnabled: currentSettings.demoModeEnabled,
     );
     await saveSettings(updatedSettings);
     logger.d('Metronome sound enabled setting updated to: $enabled');
+  }
+
+  /// Update the demoModeEnabled setting.
+  Future<void> setDemoModeEnabled(bool enabled) async {
+    final currentSettings = await loadSettings();
+    final updatedSettings = UserSettings(
+      cyclingFtp: currentSettings.cyclingFtp,
+      rowingFtp: currentSettings.rowingFtp,
+      developerMode: currentSettings.developerMode,
+      soundEnabled: currentSettings.soundEnabled,
+      metronomeSoundEnabled: currentSettings.metronomeSoundEnabled,
+      demoModeEnabled: enabled,
+    );
+    await saveSettings(updatedSettings);
+    logger.d('Demo mode enabled setting updated to: $enabled');
   }
   
   static Future<UserSettings> _loadFromAsset() async {
