@@ -23,18 +23,13 @@ class ResponsiveUtils {
   /// Scales smoothly from 1.0 (small phones) to 3.0 (large tablets).
   static double scaleFactor(BuildContext context) {
 
-    final size = MediaQuery.of(context).size;
-    final shortestSide = size.shortestSide;
-
-    // Start scaling up from 500px, reach max at 1000px
-    if (shortestSide < 500) {
+    if (!isBigScreen(context)) {
+      // normal phones get no scaling
       return 1.0;
-    } else if (shortestSide > 1000) {
-      return 3.0;
-    } else {
-      // Linear interpolation between 1.0 and 2.2
-      return 1.0 + ((shortestSide - 500) / 500) * 3.0;
     }
+
+    final width = MediaQuery.of(context).size.width;
+    return 1.0 + width / 1600;
   }
 
 
