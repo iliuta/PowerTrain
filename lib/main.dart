@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -138,58 +140,60 @@ class _FlutterFTMSAppState extends State<FlutterFTMSApp> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.appTitle),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 4.0),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              icon: const Icon(
-                Icons.coffee,
-                color: Colors.brown,
-                size: 18,
-              ),
-              label: Text(
-                AppLocalizations.of(context)!.buyMeCoffee,
-                style: const TextStyle(
-                  color: Colors.brown,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
+        actions: Platform.isIOS || Platform.isMacOS
+            ? []
+            : [
+                Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: const Icon(
+                      Icons.coffee,
+                      color: Colors.brown,
+                      size: 18,
+                    ),
+                    label: Text(
+                      AppLocalizations.of(context)!.buyMeCoffee,
+                      style: const TextStyle(
+                        color: Colors.brown,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onPressed: () async {
+                      final Uri url = Uri.parse('https://coff.ee/iliuta');
+                      try {
+                        final bool launched = await launchUrl(
+                          url,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        
+                        if (!launched && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.coffeeLinkError),
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.coffeeLinkErrorWithDetails(e)),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
                 ),
-              ),
-              onPressed: () async {
-                final Uri url = Uri.parse('https://coff.ee/iliuta');
-                try {
-                  final bool launched = await launchUrl(
-                    url,
-                    mode: LaunchMode.externalApplication,
-                  );
-                  
-                  if (!launched && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppLocalizations.of(context)!.coffeeLinkError),
-                        duration: const Duration(seconds: 4),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppLocalizations.of(context)!.coffeeLinkErrorWithDetails(e)),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
-          ),
-        ],
+              ],
       ),
       body: Stack(
         children: [
