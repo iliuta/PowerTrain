@@ -85,7 +85,7 @@ class AnalyticsService {
         'is_distance_based': isDistanceBased.toString(),
         'is_free_ride': isFreeRide.toString(),
         'total_duration_seconds': totalDurationSeconds,
-        if (totalDistanceMeters != null) 'total_distance_meters': totalDistanceMeters,
+        'total_distance_meters': ?totalDistanceMeters,
         'interval_count': intervalCount,
       },
     );
@@ -199,7 +199,7 @@ class AnalyticsService {
         'target_value': targetValue,
         'has_warmup': hasWarmup.toString(),
         'has_cooldown': hasCooldown.toString(),
-        if (resistanceLevel != null) 'resistance_level': resistanceLevel,
+        'resistance_level': ?resistanceLevel,
         'has_gpx_route': hasGpxRoute.toString(),
       },
     );
@@ -250,7 +250,7 @@ class AnalyticsService {
       parameters: {
         'workout_type': workoutType,
         'duration_minutes': duration,
-        if (resistanceLevel != null) 'resistance_level': resistanceLevel,
+        'resistance_level': ?resistanceLevel,
       },
     );
   }
@@ -266,7 +266,7 @@ class AnalyticsService {
       parameters: {
         'machine_type': machineType.name,
         'duration_seconds': durationSeconds,
-        if (distanceMeters != null) 'distance_meters': distanceMeters,
+        'distance_meters': ?distanceMeters,
       },
     );
   }

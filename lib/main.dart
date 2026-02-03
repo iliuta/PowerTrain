@@ -9,8 +9,10 @@ import 'package:ftms/core/services/analytics/analytics_service.dart';
 import 'package:ftms/core/services/devices/flutter_blue_plus_facade_provider.dart';
 import 'package:ftms/core/services/user_settings_service.dart';
 import 'package:ftms/core/utils/logger.dart';
+import 'package:ftms/core/utils/platform_utils.dart';
 import 'package:ftms/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'features/scan/scan_page.dart';
 import 'features/scan/scan_widgets.dart';
@@ -21,19 +23,11 @@ import 'features/common/bottom_action_buttons.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize window manager for desktop platforms
+  await initWindowSize();
+  
   // Initialize Firebase (only available when Google Services plugin is applied and not in debug mode)
-  logger.i('🔥 kDebugMode: $kDebugMode');
-  if (!kDebugMode) {
-    try {
-      await Firebase.initializeApp();
-      AnalyticsService().initialize();
-      logger.i('🔥 Firebase initialized successfully');
-    } catch (e) {
-      logger.i('🔥 Firebase not available (likely dev build): $e');
-    }
-  } else {
-    logger.i('🔥 Firebase not initialized in debug mode');
-  }
+  await initAnalytics();
   
   // Note: Edge-to-edge is automatically enabled on Android 15+ (Flutter 3.27+)
   // We do NOT call SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)
@@ -57,6 +51,38 @@ void main() async {
   logger.i('🚀 Starting app with ${SupportedBTDeviceManager().allConnectedDevices.length} connected devices');
 
   runApp(const MyApp());
+}
+
+Future<void> initAnalytics() async {
+  // Initialize Firebase (only available when Google Services plugin is applied and not in debug mode)
+  logger.i('🔥 kDebugMode: $kDebugMode');
+  if (!kDebugMode) {
+    try {
+      await Firebase.initializeApp();
+      AnalyticsService().initialize();
+      logger.i('🔥 Firebase initialized successfully');
+    } catch (e) {
+      logger.i('🔥 Firebase not available (likely dev build): $e');
+    }
+  } else {
+    logger.i('🔥 Firebase not initialized in debug mode');
+  }
+}
+
+Future<void> initWindowSize() async {
+  // Initialize window manager for desktop platforms
+  if (PlatformUtils.isDesktopPlatform()) {
+    await windowManager.ensureInitialized();
+    WindowOptions windowOptions = const WindowOptions(
+      minimumSize: Size(650, 350),
+      size: Size(850, 650),
+      center: true,
+    );
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 }
 
 

@@ -7,4 +7,8 @@ class PlatformUtils {
   static bool isWebViewSupported() {
     return Platform.isAndroid || Platform.isIOS || Platform.isMacOS;
   }
+
+  static bool isDesktopPlatform() {
+    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  }
 }
