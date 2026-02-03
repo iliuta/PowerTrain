@@ -1,5 +1,5 @@
 {
-  "appTitle": "PowerTrain",
+  "appTitle": "RowerTrain",
   "buyMeCoffee": "Offrez-moi un café",
   "coffeeLinkError": "Impossible d'ouvrir le lien. Veuillez visiter https://coff.ee/iliuta manuellement.",
   "coffeeLinkErrorWithDetails": "Erreur lors de l'ouverture du lien : {error}",

@@ -107,6 +107,7 @@ class _MyAppState extends State<MyApp> {
     
     return MaterialApp(
       title: 'Fitness machines',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
       ),
