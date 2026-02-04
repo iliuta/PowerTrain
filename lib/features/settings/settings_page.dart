@@ -234,31 +234,34 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UserPreferencesSection(
-              userSettings: _userSettings!,
-              onChanged: _onUserSettingsChanged,
-            ),
-            const SizedBox(height: 24),
-            SettingsSection(
-              title: AppLocalizations.of(context)!.aboutSectionTitle,
-              children: [
-                GestureDetector(
-                  onLongPress: _showDemoModeConfirmationDialog,
-                  child: ListTile(
-                    leading: const Icon(Icons.info_outline),
-                    title: Text(_appVersion.isNotEmpty ? '${AppLocalizations.of(context)!.appName} $_appVersion' : AppLocalizations.of(context)!.appName),
-                    subtitle: Text(AppLocalizations.of(context)!.appDescription),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              UserPreferencesSection(
+                userSettings: _userSettings!,
+                onChanged: _onUserSettingsChanged,
+              ),
+              const SizedBox(height: 24),
+              SettingsSection(
+                title: AppLocalizations.of(context)!.aboutSectionTitle,
+                children: [
+                  GestureDetector(
+                    onLongPress: _showDemoModeConfirmationDialog,
+                    child: ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(_appVersion.isNotEmpty ? '${AppLocalizations.of(context)!.appName} $_appVersion' : AppLocalizations.of(context)!.appName),
+                      subtitle: Text(AppLocalizations.of(context)!.appDescription),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-          ],
+                ],
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
