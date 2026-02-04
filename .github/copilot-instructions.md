@@ -1,7 +1,7 @@
 # AI Copilot Instructions for FTMS Flutter App
 
 ## Project Overview
-PowerTrain (FTMS) is a Flutter fitness app for controlling FTMS-compatible machines (rowers, indoor bikes) via Bluetooth Low Energy. 
+RowerTrain (FTMS) is a Flutter fitness app for controlling FTMS-compatible machines (rowers, indoor bikes) via Bluetooth Low Energy. 
 
 
 ## Role of AI Copilot

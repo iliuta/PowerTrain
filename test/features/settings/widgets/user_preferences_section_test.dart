@@ -53,7 +53,7 @@ void main() {
 
       // Check rowing FTP display
       expect(find.text('Rowing FTP'), findsOneWidget);
-      expect(find.text('1:45 per 500m'), findsOneWidget);
+      expect(find.text('1:45/ 500m'), findsOneWidget);
 
       // Check developer mode
       expect(find.text('Developer Mode'), findsOneWidget);
@@ -179,7 +179,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Tap on rowing FTP field
-      await tester.tap(find.text('1:45 per 500m'));
+      await tester.tap(find.text('1:45/ 500m'));
       await tester.pump();
 
       // Should show text field
@@ -194,7 +194,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Enter edit mode
-      await tester.tap(find.text('1:45 per 500m'));
+      await tester.tap(find.text('1:45/ 500m'));
       await tester.pump();
 
       // Enter new value
@@ -216,7 +216,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Enter edit mode
-      await tester.tap(find.text('1:45 per 500m'));
+      await tester.tap(find.text('1:45/ 500m'));
       await tester.pump();
 
       // Enter invalid format
@@ -239,7 +239,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Enter edit mode
-      await tester.tap(find.text('1:45 per 500m'));
+      await tester.tap(find.text('1:45/ 500m'));
       await tester.pump();
 
       // Enter invalid value (too many minutes)
@@ -262,7 +262,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Enter edit mode
-      await tester.tap(find.text('1:45 per 500m'));
+      await tester.tap(find.text('1:45/ 500m'));
       await tester.pump();
 
       // Enter new value
@@ -275,7 +275,7 @@ void main() {
       await tester.pump();
 
       // Should revert to original value and exit edit mode
-      expect(find.text('1:45 per 500m'), findsOneWidget);
+      expect(find.text('1:45/ 500m'), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
 
       // Should not call onChanged
@@ -323,7 +323,7 @@ void main() {
 
       // Should display updated values
       expect(find.text('300 watts'), findsOneWidget);
-      expect(find.text('2:00 per 500m'), findsOneWidget);
+      expect(find.text('2:00/ 500m'), findsOneWidget);
 
       // Developer mode switch should be on (second switch)
       final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
@@ -352,7 +352,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Enter edit mode
-      await tester.tap(find.text('1:45 per 500m'));
+      await tester.tap(find.text('1:45/ 500m'));
       await tester.pump();
 
       // Enter new value and submit via keyboard
@@ -461,7 +461,7 @@ void main() {
 
       // Rowing FTP should always be visible (config has availableInDeveloperModeOnly: false)
       expect(find.text('Rowing FTP'), findsOneWidget);
-      expect(find.text('1:45 per 500m'), findsOneWidget);
+      expect(find.text('1:45/ 500m'), findsOneWidget);
     });
   });
 }

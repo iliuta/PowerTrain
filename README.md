@@ -1,4 +1,4 @@
-# PowerTrain
+# RowerTrain
 FTMS Training App
 
 I started this app because I bought a rowing machine Domyos Woodrower from Decathlon and the free app I was using didn't have the features I wanted and only worked by setting the trainer resistance: 

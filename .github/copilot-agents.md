@@ -1,6 +1,6 @@
 # Copilot Agents Guide - FTMS Flutter App
 
-This document provides guidance for autonomous agents working on the PowerTrain (FTMS) Flutter codebase. It complements `copilot-instructions.md` with agent-specific workflows, decision trees, and automation guidelines.
+This document provides guidance for autonomous agents working on the RowerTrain (FTMS) Flutter codebase. It complements `copilot-instructions.md` with agent-specific workflows, decision trees, and automation guidelines.
 
 ## Agent Responsibilities & Constraints
 

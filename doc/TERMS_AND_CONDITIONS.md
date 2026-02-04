@@ -1,22 +1,22 @@
-# Terms and Conditions for PowerTrain
+# Terms and Conditions for RowerTrain
 
 **Effective Date:** July 19, 2025  
 **Last Updated:** July 19, 2025
 
 ## Introduction
 
-These Terms and Conditions ("Terms") govern your use of the PowerTrain mobile application ("App") developed by iliuta. By downloading, installing, or using the App, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the App.
+These Terms and Conditions ("Terms") govern your use of the RowerTrain mobile application ("App") developed by iliuta. By downloading, installing, or using the App, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the App.
 
 ## Nature of the App
 
 ### Personal Project
-- PowerTrain is a **personal project** developed and maintained by an individual developer
+- RowerTrain is a **personal project** developed and maintained by an individual developer
 - This is **not a commercial product** with dedicated customer support or guaranteed service levels
 - The App is provided as an open-source project for the fitness community
 - Development and updates are done on a volunteer basis in spare time
 
 ### Free Application
-- PowerTrain is provided **free of charge**
+- RowerTrain is provided **free of charge**
 - No warranty or service guarantee is provided with this free software
 - Though, you may buy me a coffee if you like the app. https://www.buymeacoffee.com/iliuta
 
@@ -94,7 +94,7 @@ You are responsible for:
 ## Open Source Nature
 
 ### Source Code Availability
-- PowerTrain is open source and available at: https://github.com/iliuta/ftms
+- RowerTrain is open source and available at: https://github.com/iliuta/ftms
 - You may inspect, modify, or contribute to the code under the project's license
 - Community contributions are welcome but not guaranteed to be accepted
 
@@ -147,4 +147,4 @@ These Terms, along with the Privacy Policy, constitute the entire agreement betw
 
 ---
 
-**IMPORTANT REMINDER**: PowerTrain is a personal project provided free of charge. Use at your own risk and ensure your fitness equipment is compatible with FTMS before expecting full functionality. Always prioritize safety during exercise and consult healthcare professionals for fitness advice.
+**IMPORTANT REMINDER**: RowerTrain is a personal project provided free of charge. Use at your own risk and ensure your fitness equipment is compatible with FTMS before expecting full functionality. Always prioritize safety during exercise and consult healthcare professionals for fitness advice.

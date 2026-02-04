@@ -235,7 +235,7 @@ class TrainingDataRecorder {
       ..timeCreated = startTimestamp
       ..manufacturer = Manufacturer.development.value
       ..product = 1 
-      ..productName = 'PowerTrain mobile application' 
+      ..productName = 'RowerTrain mobile application'
       ..serialNumber = 0x12345678;
     builder.add(fileIdMessage);
 

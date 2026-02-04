@@ -113,15 +113,15 @@ void main() {
       test('should extract activity name correctly', () {
         expect(
           FitFileManager.extractActivityNameFromFilename('Cycling_20240101_1200.fit'),
-          'Cycling - PowerTrain',
+          'Cycling - RowerTrain',
         );
         expect(
           FitFileManager.extractActivityNameFromFilename('Rowing_Indoor_20240101_1200.fit'),
-          'Rowing Indoor - PowerTrain',
+          'Rowing Indoor - RowerTrain',
         );
         expect(
           FitFileManager.extractActivityNameFromFilename('Running_Outdoor_20240101_1200.fit'),
-          'Running Outdoor - PowerTrain',
+          'Running Outdoor - RowerTrain',
         );
       });
     });

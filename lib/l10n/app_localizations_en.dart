@@ -170,7 +170,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String per500m(Object value) {
-    return '$value per 500m';
+    return '$value/ 500m';
   }
 
   @override
@@ -784,7 +784,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enjoyingAppReviewPrompt =>
-      'Enjoying PowerTrain? Rate it on the app store!';
+      'Enjoying RowerTrain? Rate it on the app store!';
 
   @override
   String get rateNow => 'Rate Now';
@@ -805,7 +805,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutSectionTitle => 'About';
 
   @override
-  String get appName => 'PowerTrain';
+  String get appName => 'RowerTrain';
 
   @override
   String get appDescription =>

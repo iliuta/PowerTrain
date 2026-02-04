@@ -1,4 +1,4 @@
-# Description PowerTrain - Version Française (Google Play Store)
+# Description RowerTrain - Version Française (Google Play Store)
 
 ## Description Courte (80 caractères max)
 Connectez vos appareils de fitness FTMS. Suivi d'entraînement rameur.
@@ -7,9 +7,9 @@ Connectez vos appareils de fitness FTMS. Suivi d'entraînement rameur.
 
 Connectez vos appareils de fitness FTMS. Suivi d'entraînement rameur.
 
-**PowerTrain - Application de Suivi d'Entraînement FTMS**
+**RowerTrain - Application de Suivi d'Entraînement FTMS**
 
-PowerTrain est une application qui permet de connecter votre smartphone à des équipements de fitness compatibles FTMS via Bluetooth. Développée et testée principalement avec une machine Domyos Woodrower, cette application peut fonctionner avec d'autres équipements FTMS mais sans garantie de compatibilité.
+RowerTrain est une application qui permet de connecter votre smartphone à des équipements de fitness compatibles FTMS via Bluetooth. Développée et testée principalement avec une machine Domyos Woodrower, cette application peut fonctionner avec d'autres équipements FTMS mais sans garantie de compatibilité.
 
 ** ÉQUIPEMENTS TESTÉS ET SUPPORTÉS**
 • Rameur Domyos Woodrower (testé et fonctionnel). En fait, l'application récommandée par le fabriquant ne m'a pas satifait, donc j'ai développé cette application.
@@ -31,7 +31,7 @@ PowerTrain est une application qui permet de connecter votre smartphone à des �
 • **Projet personnel** : Développé par un passionné pour la communauté
 
 **⚙️ COMPATIBILITÉ ET LIMITATIONS**
-PowerTrain a été développé et testé avec un rameur Domyos Woodrower. Probablément ça fonctionne avec d'autres rameurs connectés de chez Décathlon, mais il n'y a pas de garantie. Vous pouvez contribuer au projet en testant d'autres équipements et en partageant vos retours.
+RowerTrain a été développé et testé avec un rameur Domyos Woodrower. Probablément ça fonctionne avec d'autres rameurs connectés de chez Décathlon, mais il n'y a pas de garantie. Vous pouvez contribuer au projet en testant d'autres équipements et en partageant vos retours.
 
 **🔒 CONFIDENTIALITÉ ET SÉCURITÉ**
 • Aucune collecte de données personnelles
@@ -41,16 +41,16 @@ PowerTrain a été développé et testé avec un rameur Domyos Woodrower. Probab
 ** UTILISATION **
 1. Activez le Bluetooth sur votre appareil
 2. Allumez votre équipement fitness FTMS
-3. Lancez PowerTrain et connectez-vous à votre appareil. Renseignez dans les options votre FTP. Connectez-vous à Strava, si vous voulez.
+3. Lancez RowerTrain et connectez-vous à votre appareil. Renseignez dans les options votre FTP. Connectez-vous à Strava, si vous voulez.
 4. Sélectionnez un entraînement et commencez à ramer !
 5. (Optionnel) La séance est envoyée à la fin de l'entraînement vers Strava
 6. Créez votre séance d'entraînement et sauvegardez-la sur votre appareil.
 
 
 ** SUPPORT DU DÉVELOPPEUR**
-Si PowerTrain vous aide dans vos entraînements, vous pouvez soutenir le développement en offrant un café au développeur via le lien dans l'application.
+Si RowerTrain vous aide dans vos entraînements, vous pouvez soutenir le développement en offrant un café au développeur via le lien dans l'application.
 
-Testez PowerTrain si vous possédez un équipement compatible et partagez votre expérience avec la communauté.
+Testez RowerTrain si vous possédez un équipement compatible et partagez votre expérience avec la communauté.
 
 ---
 **Mots-clés** : FTMS, Domyos, Woodrower, Bluetooth fitness, rameur, Strava, entraînement, aviron, capteurs, données sportives

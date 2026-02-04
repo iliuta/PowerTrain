@@ -1,11 +1,11 @@
-# Privacy Policy for PowerTrain
+# Privacy Policy for RowerTrain
 
 **Effective Date:** July 19, 2025  
 **Last Updated:** July 19, 2025
 
 ## Introduction
 
-PowerTrain ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our PowerTrain mobile application (the "App"). This App is designed to connect to Bluetooth fitness equipment and track your workouts.
+RowerTrain ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our RowerTrain mobile application (the "App"). This App is designed to connect to Bluetooth fitness equipment and track your workouts.
 
 ## Information We Collect
 
@@ -106,7 +106,7 @@ If you have any questions, concerns, or requests regarding this Privacy Policy o
 
 ## Developer Information
 
-PowerTrain is developed by iliuta.  
+RowerTrain is developed by iliuta.  
 This app is open source and available at: https://github.com/iliuta/ftms
 
 ## Consent
@@ -115,4 +115,4 @@ By using our App, you consent to the collection, use, and disclosure of your inf
 
 ---
 
-**Note**: This privacy policy is specifically designed for the PowerTrain fitness app and covers its Bluetooth connectivity, local data storage, and optional Strava integration features.
+**Note**: This privacy policy is specifically designed for the RowerTrain fitness app and covers its Bluetooth connectivity, local data storage, and optional Strava integration features.

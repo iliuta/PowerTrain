@@ -379,7 +379,7 @@ abstract class AppLocalizations {
   /// No description provided for @per500m.
   ///
   /// In en, this message translates to:
-  /// **'{value} per 500m'**
+  /// **'{value}/ 500m'**
   String per500m(Object value);
 
   /// No description provided for @developerMode.
@@ -1453,7 +1453,7 @@ abstract class AppLocalizations {
   /// No description provided for @enjoyingAppReviewPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Enjoying PowerTrain? Rate it on the app store!'**
+  /// **'Enjoying RowerTrain? Rate it on the app store!'**
   String get enjoyingAppReviewPrompt;
 
   /// No description provided for @rateNow.
@@ -1495,7 +1495,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'PowerTrain'**
+  /// **'RowerTrain'**
   String get appName;
 
   /// No description provided for @appDescription.
