@@ -333,8 +333,10 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(
         children: [
           // Session Title
           Padding(
@@ -447,6 +449,7 @@ class _AddTrainingSessionPageState extends State<AddTrainingSessionPage> {
                   ),
           ),
         ],
+      ),
       ),
       ),
       floatingActionButton: Column(
