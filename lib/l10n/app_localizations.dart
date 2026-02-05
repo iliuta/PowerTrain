@@ -151,7 +151,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpUrl.
   ///
   /// In en, this message translates to:
-  /// **'https://iliuta.github.io/powertrain-training-sessions/'**
+  /// **'https://iliuta.github.io/rowertrain-docs/'**
   String get helpUrl;
 
   /// No description provided for @disconnectedFromDevice.

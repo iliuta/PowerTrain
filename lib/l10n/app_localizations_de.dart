@@ -37,7 +37,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get helpUrl =>
-      'https://iliuta.github.io/powertrain-training-sessions/index_de.html';
+      'https://iliuta.github.io/rowertrain-docs/index_de.html';
 
   @override
   String disconnectedFromDevice(Object deviceName) {
