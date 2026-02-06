@@ -37,7 +37,7 @@
     </queries>
 
     <application
-        android:label="PowerTrain"
+        android:label="RowerTrain"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:allowBackup="false"
