@@ -108,7 +108,7 @@ class FitFileManager {
     final baseName = fileName
         .replaceAll(RegExp(r'_\d{8}_\d{4}\.fit$'), '')
         .replaceAll('_', ' ');
-    return '$baseName - PowerTrain';
+    return '$baseName - RowerTrain';
   }
 
   /// Get the FIT files directory

@@ -153,7 +153,7 @@ class _UserPreferencesSectionState extends State<UserPreferencesSection> {
                 controller: _rowingFtpController,
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context)!.enterTimeHint,
-                  suffixText: 'per 500m',
+                  suffixText: '/500m',
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),

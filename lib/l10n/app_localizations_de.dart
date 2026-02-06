@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'PowerTrain';
+  String get appTitle => 'RowerTrain';
 
   @override
   String get buyMeCoffee => 'Kaufen Sie mir einen Kaffee';
@@ -37,7 +37,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get helpUrl =>
-      'https://iliuta.github.io/powertrain-training-sessions/index_de.html';
+      'https://iliuta.github.io/rowertrain-docs/index_de.html';
 
   @override
   String disconnectedFromDevice(Object deviceName) {
@@ -173,7 +173,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String per500m(Object value) {
-    return '$value pro 500m';
+    return '$value/ 500m';
   }
 
   @override
@@ -796,7 +796,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get enjoyingAppReviewPrompt =>
-      'Gefällt Ihnen PowerTrain? Bewerten Sie es im App Store!';
+      'Gefällt Ihnen RowerTrain? Bewerten Sie es im App Store!';
 
   @override
   String get rateNow => 'Jetzt bewerten';
@@ -817,7 +817,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aboutSectionTitle => 'Über';
 
   @override
-  String get appName => 'PowerTrain';
+  String get appName => 'RowerTrain';
 
   @override
   String get appDescription =>

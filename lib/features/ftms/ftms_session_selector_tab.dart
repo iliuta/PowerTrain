@@ -88,9 +88,12 @@ class _FTMSessionSelectorTabState extends State<FTMSessionSelectorTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: _buildBody(context),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: _buildBody(context),
+        ),
       ),
     );
   }

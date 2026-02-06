@@ -1710,7 +1710,7 @@ void main() {
         verify(mockStravaService.isAuthenticated()).called(1);
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Test Session - PowerTrain',
+          'Test Session - RowerTrain',
           activityType: 'ride', // indoor bike -> ride
         )).called(1);
 
@@ -1792,7 +1792,7 @@ void main() {
         // Verify upload was attempted but failed
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Test Session - PowerTrain',
+          'Test Session - RowerTrain',
           activityType: 'ride',
         )).called(1);
 
@@ -1889,7 +1889,7 @@ void main() {
         // Verify correct activity type was used
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Rowing Test - PowerTrain',
+          'Rowing Test - RowerTrain',
           activityType: 'rowing', // rower -> rowing
         )).called(1);
 
@@ -2031,7 +2031,7 @@ void main() {
         verify(mockStravaService.isAuthenticated()).called(1);
         verify(mockStravaService.uploadActivity(
           fitFilePath,
-          'Test Session - PowerTrain',
+          'Test Session - RowerTrain',
           activityType: 'ride',
         )).called(1);
 

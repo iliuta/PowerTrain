@@ -812,7 +812,7 @@ class TrainingSessionController extends ChangeNotifier
 
       logger.i('Attempting automatic Strava upload...');
 
-      final activityName = '${session.title} - PowerTrain';
+      final activityName = '${session.title} - RowerTrain';
       final deviceType = session.ftmsMachineType;
       final activityType = StravaActivityTypes.fromFtmsMachineType(deviceType);
 

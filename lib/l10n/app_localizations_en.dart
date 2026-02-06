@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'PowerTrain';
+  String get appTitle => 'RowerTrain';
 
   @override
   String get buyMeCoffee => 'Buy me a coffee';
@@ -36,8 +36,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get help => 'Help';
 
   @override
-  String get helpUrl =>
-      'https://iliuta.github.io/powertrain-training-sessions/';
+  String get helpUrl => 'https://iliuta.github.io/rowertrain-docs/';
 
   @override
   String disconnectedFromDevice(Object deviceName) {
@@ -170,7 +169,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String per500m(Object value) {
-    return '$value per 500m';
+    return '$value/ 500m';
   }
 
   @override
@@ -784,7 +783,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enjoyingAppReviewPrompt =>
-      'Enjoying PowerTrain? Rate it on the app store!';
+      'Enjoying RowerTrain? Rate it on the app store!';
 
   @override
   String get rateNow => 'Rate Now';
@@ -805,7 +804,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutSectionTitle => 'About';
 
   @override
-  String get appName => 'PowerTrain';
+  String get appName => 'RowerTrain';
 
   @override
   String get appDescription =>
